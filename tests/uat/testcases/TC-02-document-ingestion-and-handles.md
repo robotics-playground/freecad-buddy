@@ -264,9 +264,9 @@ mcp query_object { doc: <handle>, object: "Pad" }
 mcp feature_set_parameters { doc: <handle>, feature: "Pad", parameters: { Length: { value: 0, unit: "mm" } } }
 mcp query_object { doc: <handle>, object: "Pad" }
 ```
-**And** the Pad is broken outside the bracket with `script_exec`, so FreeCAD marks it invalid, then recomputed and read again. `script_exec` opens no transaction, so `document_undo` cannot revert it (see Cleanup)  
+**And** the Pad is broken outside the typed-tool bracket with `script_exec` and `recompute:false`, so the later `document_recompute` finds the error. Without `recompute:false` the `script_exec` bracket recomputes and itself returns `RECOMPUTE_ERROR`  
 ```
-mcp script_exec { doc: <handle>, code: "doc.getObject('Pad').Length = 0" }
+mcp script_exec { doc: <handle>, recompute: false, code: "doc.getObject('Pad').Length = 0" }
 mcp document_recompute { doc: <handle> }
 mcp query_object { doc: <handle>, object: "Pad" }
 ```
@@ -283,7 +283,7 @@ mcp query_object { doc: <handle>, object: "Pad" }
 **And** *(visual)* after the restore in Cleanup, the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* look at the window and say what is on screen: a padded solid restored to the same extent it had in the before image, not a collapsed zero-length one; no error marker or exclamation icon on the `Pad` tree item; no error dialog — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-02-06-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and judge them. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image; a clean restore envelope over a collapsed solid on screen is the defect this closer catches.  
 
-**Cleanup**: restore the recorded `Length` so later scenarios see a healthy document. `document_undo` does not revert a `script_exec` change, so restore it the same way.
+**Cleanup**: restore the recorded `Length` so later scenarios see a healthy document. Restore it with `script_exec`, which recomputes the Pad in its bracket.
 ```
 mcp script_exec { doc: <handle>, code: "doc.getObject('Pad').Length = <recorded Length>" }
 mcp document_recompute { doc: <handle> }

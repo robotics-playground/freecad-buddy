@@ -7,8 +7,11 @@ Quality bar: quality-bar-13-15.md.
 | R1-1 | Q4, Q6 | medium (product) | blind ac46ce7983f872c54 / edge a6c640398f275a239 / gap ae06149357a2a30d3 | fixed-proven | bound ignored direction (5 mm X shift beside 5 mm Z support move excused); now per axis; mutant "one maximum" -> 1 red (builder) |
 | R1-2 | Q1, Q6 | medium (test gap) | r1 lenses | fixed-proven (r2 found it could not fail on a swap: R2-2) | written-baseline branch untested; 2 tests added (audit with written; feature_set_parameters end to end) |
 | R1-4 | Q6 | medium (test gap) | r1 lenses | fixed-proven | history-equality mutant survived; layer assertion + 3 unit cases; mutant now 4 red (builder) |
-| RT2-1 | Q5, Q6 | high | redteam-13-15b | open (triage-13-15-rt2.md T1) | p13_grid_index.py: 2-direction LinearPattern grid, L 60 -> 100: OK/CLEAN, datum moves boss (3,7) -> (42,17); base SPEC_FAILED/REPOINTED; MultiTransform p14 same |
-| RT2-L1 | Q7 | low | redteam-13-15b | open (T2) | snapshot 0.641 s vs 0.081 s at base (80 features, 200 refs) |
+| RT3-1 | outside the diff (AD-5 written baseline) | medium (pre-existing; base 538db0be also CLEAN) | redteam-13-15c | deferred | w1_inner_recompute.py: an op that recomputes inside the bracket (feature_fillet/chamfer) makes refs_written a post-recompute reading, so a pending edit's re-point grades CLEAN; not via the excuse |
+| RT3-L1 | Q4 | low | redteam-13-15c | open (builder: real-geometry count-guard test if one exists) | count guard mutant killed only by the synthetic tampered-count test |
+| RT3-L2 | Q7 | low | redteam-13-15c | accepted | all 200 refs moved: audit 0.323 s (base 0.152 s) |
+| RT2-1 | Q5, Q6 | high | redteam-13-15b | fixed-proven (6d6bdc60: count guard + instance-index forms; PatternGridTest red first; redteam-13-15c: 96 edit runs, no excused re-point) | p13_grid_index.py: 2-direction LinearPattern grid, L 60 -> 100: OK/CLEAN, datum moves boss (3,7) -> (42,17); base SPEC_FAILED/REPOINTED; MultiTransform p14 same |
+| RT2-L1 | Q7 | low | redteam-13-15b | fixed (lineage at grading time; p15 audit 0.241 s, all-moved 0.323 s) | snapshot 0.641 s vs 0.081 s at base (80 features, 200 refs) |
 | R5-1 | Q5, Q6 | high | r5 blind ab10f8369b8d24a17 + edge a67d4bffa3a56a461 (both reproduced) | fixed-proven (redteam-13-15b: lineage across 1-4 pass-through features holds) | two pass-through features hash the older name part, `;:M3` disappears from name and history source; datum x 16 -> 33 CLEAN; fix: refuse when any name in `getElementHistory(recursive=True)` carries a counter or the chain is unreadable; cost 0.022 -> 0.034 s |
 | R5-2 | Q6 | medium (product) | r5 lenses | fixed | `;:G0#` form not detected |
 | R5-3 | Q6 | medium (test) x5 | r5 gap a2efbad7520524d06 | fixed | two-digit indexes, `;:G` sibling half, history-source check, cache key, `;D` lookahead |
@@ -49,3 +52,6 @@ The lineage fix for R5-1 has no independent review: leader dispatches a second, 
 | RT2 | e7f9d717 | redteam-13-15b | 0 -> 1 (RT2-1 high) | 2 (R5-1, D-1) | 1 | 0 |
 
 Fourth real re-point through a naming form. Leader decision 48: close the class by a count guard (same element count before and after), plus the instance-index forms; one more narrow red team; if it reproduces another real re-point, stop and ask the user (fallback: drop the excuse, keep the exact-witness fix).
+| RT3 | 6d6bdc60 | redteam-13-15c | 1 -> 0 | 1 (RT2-1) | 0 in the diff (RT3-1 pre-existing, deferred) | 0 |
+
+Third red team PASS for the batch. Next: verifier-13-15 re-run at the final head incl. TC-18 01-04 and 04b in the container.

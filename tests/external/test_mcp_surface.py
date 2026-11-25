@@ -996,7 +996,7 @@ def _catalog_with_short_exec(monkeypatch, exec_body):
 
 def test_script_exec_overrunning_its_budget_times_out_via_the_real_catalog(monkeypatch, release):
     registry = _catalog_with_short_exec(
-        monkeypatch, lambda _registry, _doc, _code: release.wait(30.0)
+        monkeypatch, lambda _registry, _doc, _code, _recompute: release.wait(30.0)
     )
     started = time.monotonic()
 
@@ -1021,7 +1021,7 @@ def test_only_script_exec_runs_off_the_main_thread(monkeypatch):
     )
     registry = _catalog_with_short_exec(
         monkeypatch,
-        lambda _registry, _doc, _code: {
+        lambda _registry, _doc, _code, _recompute: {
             "thread": seen.setdefault("script_exec", threading.get_ident())
         },
     )
@@ -1622,3 +1622,88 @@ def test_Should_pass_the_facet_counts_to_both_oracles_When_the_proxy_verifies_an
     # Assert
     assert seen["stl_counts"] == [12, 12]
     assert seen["stdlib_counts"] == [12, 12]
+
+
+def test_Should_write_both_digests_on_the_after_line_When_script_exec_returns_them(tmp_path):
+    # Arrange
+    audit_path = tmp_path / "audit.jsonl"
+    registry = MethodRegistry()
+    registry.register(
+        RpcMethod(
+            name=SCRIPT_EXEC_SPEC.name,
+            handler=lambda **_p: {
+                "schema": "fcb.result-envelope/1",
+                "status": "OK",
+                "detail": None,
+                "structured_content": {
+                    "fingerprint_before": "a" * 64,
+                    "fingerprint_after": "b" * 64,
+                },
+                "text": "ok",
+            },
+            mutating=SCRIPT_EXEC_SPEC.mutating,
+            audit_event=SCRIPT_EXEC_SPEC.audit_event,
+        )
+    )
+    server = build_server(registry, Capabilities(script_exec=True), AuditSink(audit_path))
+
+    # Act
+    _call_tool_via_server(server, "script_exec", {"doc": "fcb-doc:a", "code": "1+1"})
+
+    # Assert
+    lines = [json.loads(line) for line in audit_path.read_text(encoding="utf-8").splitlines()]
+    after = [line for line in lines if line.get("verify_verdict") == "OK"][-1]
+    assert after["fingerprint_before"] == "a" * 64
+    assert after["fingerprint_after"] == "b" * 64
+
+
+def test_Should_advertise_recompute_as_an_optional_boolean_When_script_exec_is_listed():
+    # Arrange
+    registry = _registry(Capabilities(script_exec=True))
+
+    # Act
+    tool = next(
+        t
+        for t in registered_tools(registry, Capabilities(script_exec=True))
+        if t.name == "script_exec"
+    )
+
+    # Assert
+    assert tool.inputSchema["properties"]["recompute"]["type"] == "boolean"
+    assert "recompute" not in tool.inputSchema["required"]
+
+
+def test_Should_accept_recompute_false_When_script_exec_is_called_through_the_server(tmp_path):
+    # Arrange
+    seen = {}
+    registry = MethodRegistry()
+    registry.register(
+        RpcMethod(
+            name=SCRIPT_EXEC_SPEC.name,
+            handler=lambda **params: (
+                seen.update(params)
+                or {
+                    "schema": "fcb.result-envelope/1",
+                    "status": "OK",
+                    "detail": None,
+                    "structured_content": {},
+                    "text": "ok",
+                }
+            ),
+            input_schema=SCRIPT_EXEC_SPEC.input_schema,
+            mutating=SCRIPT_EXEC_SPEC.mutating,
+            audit_event=SCRIPT_EXEC_SPEC.audit_event,
+        )
+    )
+    server = build_server(
+        registry, Capabilities(script_exec=True), AuditSink(tmp_path / "audit.jsonl")
+    )
+
+    # Act
+    result = _call_tool_via_server(
+        server, "script_exec", {"doc": "fcb-doc:a", "code": "1", "recompute": False}
+    )
+
+    # Assert
+    assert result.isError is False
+    assert seen["recompute"] is False

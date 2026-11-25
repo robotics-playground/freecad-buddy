@@ -1,0 +1,10 @@
+[
+ {"name":"create","tool":"document_create","args":{"label":"UndoOff"}},
+ {"name":"fx1","tool":"script_exec","args":{"doc":"$DOC","code":"FreeCAD.closeActiveTransaction()\ndoc.addObject('Part::Box', 'Box')\ndoc.recompute()"}},
+ {"name":"preview","tool":"preview_dry_run","args":{"doc":"$DOC","operation":{"tool":"feature_body_create","args":{"name":"Probe"}}}},
+ {"name":"body","tool":"feature_body_create","args":{"doc":"$DOC","name":"Probe","confirm":{"preview_id":"$preview.structured_content.preview_id"}}},
+ {"name":"fx2","tool":"script_exec","args":{"doc":"$DOC","recompute":false,"code":"FreeCAD.closeActiveTransaction()\ndoc.getObject('Box').Length = 0"}},
+ {"name":"undo","tool":"document_undo","args":{"doc":"$DOC"}},
+ {"name":"undo_again","tool":"document_undo","args":{"doc":"$DOC"}},
+ {"name":"close","tool":"document_close","args":{"doc":"$DOC"}}
+]

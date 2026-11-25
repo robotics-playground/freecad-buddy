@@ -838,16 +838,17 @@ mcp script_exec { doc: <handle-off>, code: "from freecad_buddy.usecases import s
 mcp document_undo { doc: <handle-off> }
 mcp script_exec { doc: <handle-off>, code: "from freecad_buddy.usecases import shim\nshim.enable_undo = shim._saved_enable_undo\ndel shim._saved_enable_undo\ndoc.UndoMode = 1" }
 ```
-**And** an undo is made to leave an object broken. `script_exec` opens no transaction, so `document_undo` never reverts its change: a box is added and later broken outside the undo stack, and the undo of a typed mutation between them then recomputes the broken box  
+**And** an undo is made to leave an object broken. `script_exec` records an undo entry, so each of these scripts first closes the bridge transaction with `FreeCAD.closeActiveTransaction()`: its writes then stay outside the undo stack (`undo_steps` 0). A box is added and later broken outside the undo stack, and the undo of a typed mutation between them then recomputes the broken box  
 ```
-mcp script_exec { doc: <handle-off>, code: "doc.addObject('Part::Box', 'Box')\ndoc.recompute()" }
+mcp script_exec { doc: <handle-off>, code: "FreeCAD.closeActiveTransaction()\ndoc.addObject('Part::Box', 'Box')\ndoc.recompute()" }
 mcp preview_dry_run { doc: <handle-off>, operation: { tool: "feature_body_create", args: { name: "Probe" } } }
 mcp feature_body_create { doc: <handle-off>, name: "Probe", confirm: { preview_id: "<token>" } }
-mcp script_exec { doc: <handle-off>, code: "doc.getObject('Box').Length = 0" }
+mcp script_exec { doc: <handle-off>, recompute: false, code: "FreeCAD.closeActiveTransaction()\ndoc.getObject('Box').Length = 0" }
 mcp document_undo { doc: <handle-off> }
 ```
 
 **Then** an empty stack is refused, not reported as done — verify: the first call returns `nothing to undo on <Name>: the undo stack is empty`  
+**And** the two `script_exec` writes stayed outside the undo stack — verify: each of those two `script_exec` results has `structured_content.undo_steps` `0`  
 **And** the first real undo succeeds — verify: the first `document_undo` after the mutation returns `status: "OK"` with `undone` equal to `buddy: <the body-create label>`  
 **And** exhausting the stack is refused — verify: the second `document_undo` after the mutation returns the same empty-stack refusal  
 **And** the refusal never carries a fabricated result — verify: neither refusal returns a `matches_pre_op`, `fingerprint_after` or `undone` field  

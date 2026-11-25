@@ -1,0 +1,184 @@
+[
+ {
+  "name": "create",
+  "tool": "document_create",
+  "args": {
+   "label": "V1313Guard"
+  },
+  "seconds": 0.208,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:EZ7gfK_fWjb_68zldgsbEA",
+    "name": "V1313Guard",
+    "label": "V1313Guard"
+   },
+   "text": "doc: fcb-doc:EZ7gfK_fWjb_68zldgsbEA\nlabel: V1313Guard\nname: V1313Guard"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:EZ7gfK_fWjb_68zldgsbEA\",\"name\":\"V1313Guard\",\"label\":\"V1313Guard\"},\"text\":\"doc: fcb-doc:EZ7gfK_fWjb_68zldgsbEA\\nlabel: V1313Guard\\nname: V1313Guard\"}"
+  ]
+ },
+ {
+  "name": "mkbox",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:EZ7gfK_fWjb_68zldgsbEA",
+   "code": "doc.addObject('Part::Box', 'Box')\nresult = list(doc.UndoNames)"
+  },
+  "seconds": 0.033,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:EZ7gfK_fWjb_68zldgsbEA",
+    "stdout": "",
+    "value_repr": "[\"script_exec doc.addObject('Part::Box', 'Box')\"]",
+    "fingerprint_before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "fingerprint_after": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+    "changed": [
+     {
+      "name": "Box",
+      "volume": 1000.0,
+      "area": 600.0,
+      "com": [
+       5.0,
+       5.0,
+       5.0
+      ]
+     }
+    ],
+    "new_errors": [],
+    "undo_steps": 1
+   },
+   "text": "changed: [1 items]\ndoc: fcb-doc:EZ7gfK_fWjb_68zldgsbEA\nfingerprint_after: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\nfingerprint_before: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\nnew_errors: [0 items]\nstdout: \nundo_steps: 1\nvalue_repr: [\"script_exec doc.addObject('Part::Box', 'Box')\"]\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:EZ7gfK_fWjb_68zldgsbEA\",\"stdout\":\"\",\"value_repr\":\"[\\\"script_exec doc.addObject('Part::Box', 'Box')\\\"]\",\"fingerprint_before\":\"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\",\"fingerprint_after\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"changed\":[{\"name\":\"Box\",\"volume\":1000.0,\"area\":600.0,\"com\":[5.0,5.0,5.0]}],\"new_errors\":[],\"undo_steps\":1},\"text\":\"changed: [1 items]\\ndoc: fcb-doc:EZ7gfK_fWjb_68zldgsbEA\\nfingerprint_after: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\\nfingerprint_before: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 1\\nvalue_repr: [\\\"script_exec doc.addObject('Part::Box', 'Box')\\\"]\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.41,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "name": "register",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:EZ7gfK_fWjb_68zldgsbEA",
+   "code": "import FreeCADGui\nfrom PySide import QtCore\nfrom freecad_buddy.usecases import script_exec as se\nNAME = doc.Name\nclass _Probe:\n    def GetResources(self):\n        return {\"MenuText\": \"FCB guard probe\"}\n    def IsActive(self):\n        return True\n    def Activated(self):\n        d = FreeCAD.getDocument(NAME)\n        rec = {\"guarded_active_before\": FreeCAD.getActiveTransaction()}\n        env = se._run_bracket(\"probe\", d, \"doc.getObject('Box').Width = 17\", True)\n        sc = env[\"structured_content\"]\n        rec.update(status=env[\"status\"], undo_steps=sc[\"undo_steps\"], changed=sc[\"changed\"], text=env[\"text\"],\n                   active_inside_after_bracket=FreeCAD.getActiveTransaction(), undo_names_inside=list(d.UndoNames))\n        d.getObject('Box').Height = 21\n        rec[\"undo_names_after_second_write_inside\"] = list(d.UndoNames)\n        FreeCAD._fcb_probe = rec\ndef _fire():\n    FreeCADGui.runCommand(\"FCB_GuardProbe\")\n    d = FreeCAD.getDocument(NAME)\n    FreeCAD._fcb_probe[\"active_after_command\"] = FreeCAD.getActiveTransaction()\n    FreeCAD._fcb_probe[\"undo_names_after_command\"] = list(d.UndoNames)\nFreeCADGui.addCommand(\"FCB_GuardProbe\", _Probe())\nQtCore.QTimer.singleShot(1500, _fire)\nresult = \"registered\""
+  },
+  "seconds": 0.034,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:EZ7gfK_fWjb_68zldgsbEA",
+    "stdout": "",
+    "value_repr": "'registered'",
+    "fingerprint_before": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+    "fingerprint_after": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:EZ7gfK_fWjb_68zldgsbEA\nfingerprint_after: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\nfingerprint_before: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: 'registered'\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:EZ7gfK_fWjb_68zldgsbEA\",\"stdout\":\"\",\"value_repr\":\"'registered'\",\"fingerprint_before\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"fingerprint_after\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:EZ7gfK_fWjb_68zldgsbEA\\nfingerprint_after: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\\nfingerprint_before: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: 'registered'\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.41,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "shell": "sleep 6",
+  "rc": 0,
+  "out": "",
+  "err": ""
+ },
+ {
+  "name": "read",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:EZ7gfK_fWjb_68zldgsbEA",
+   "recompute": false,
+   "code": "result = getattr(FreeCAD, '_fcb_probe', None)"
+  },
+  "seconds": 0.126,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:EZ7gfK_fWjb_68zldgsbEA",
+    "stdout": "",
+    "value_repr": "{'guarded_active_before': None, 'status': 'OK', 'undo_steps': 1, 'changed': [{'name': 'Box', 'volume': 1700.0, 'area': 880.0, 'com': [5.0, 8.5, 5.0]}], 'text': 'changed: [1 items]\\ndoc: probe\\nfingerprint_after: 127195f15ad73156d5ee35f2521f082c7bf833bc2af62735c298d34620dc6d4a\\nfingerprint_before: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 1\\nvalue_repr: None', 'active_inside_after_bracket': (\"script_exec doc.getObject('Box').Width = 17\", 28), 'undo_names_inside': [\"script_exec doc.getObject('Box').Width = 17\", \"script_exec doc.addObject('Part::Box', 'Box')\"], 'undo_names_after_second_write_inside': [\"script_exec doc.getObject('Box').Width = 17\", \"script_exec doc.addObject('Part::Box', 'Box')\"], 'active_after_command': None, 'undo_names_after_command': [\"script_exec doc.getObject('Box').Width = 17\", \"script_exec doc.addObject('Part::Box', 'Box')\"]}",
+    "fingerprint_before": "ef16f640ad668e0455ec8683ea600c3804635e10eed08451f68b6b53c602e607",
+    "fingerprint_after": "ef16f640ad668e0455ec8683ea600c3804635e10eed08451f68b6b53c602e607",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:EZ7gfK_fWjb_68zldgsbEA\nfingerprint_after: ef16f640ad668e0455ec8683ea600c3804635e10eed08451f68b6b53c602e607\nfingerprint_before: ef16f640ad668e0455ec8683ea600c3804635e10eed08451f68b6b53c602e607\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: <927 chars>\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:EZ7gfK_fWjb_68zldgsbEA\",\"stdout\":\"\",\"value_repr\":\"{'guarded_active_before': None, 'status': 'OK', 'undo_steps': 1, 'changed': [{'name': 'Box', 'volume': 1700.0, 'area': 880.0, 'com': [5.0, 8.5, 5.0]}], 'text': 'changed: [1 items]\\\\ndoc: probe\\\\nfingerprint_after: 127195f15ad73156d5ee35f2521f082c7bf833bc2af62735c298d34620dc6d4a\\\\nfingerprint_before: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\\\\nnew_errors: [0 items]\\\\nstdout: \\\\nundo_steps: 1\\\\nvalue_repr: None', 'active_inside_after_bracket': (\\\"script_exec doc.getObject('Box').Width = 17\\\", 28), 'undo_names_inside': [\\\"script_exec doc.getObject('Box').Width = 17\\\", \\\"script_exec doc.addObject('Part::Box', 'Box')\\\"], 'undo_names_after_second_write_inside': [\\\"script_exec doc.getObject('Box').Width = 17\\\", \\\"script_exec doc.addObject('Part::Box', 'Box')\\\"], 'active_after_command': None, 'undo_names_after_command': [\\\"script_exec doc.getObject('Box').Width = 17\\\", \\\"script_exec doc.addObject('Part::Box', 'Box')\\\"]}\",\"fingerprint_before\":\"ef16f640ad668e0455ec8683ea600c3804635e10eed08451f68b6b53c602e607\",\"fingerprint_after\":\"ef16f640ad668e0455ec8683ea600c3804635e10eed08451f68b6b53c602e607\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:EZ7gfK_fWjb_68zldgsbEA\\nfingerprint_after: ef16f640ad668e0455ec8683ea600c3804635e10eed08451f68b6b53c602e607\\nfingerprint_before: ef16f640ad668e0455ec8683ea600c3804635e10eed08451f68b6b53c602e607\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: <927 chars>\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "name": "tree",
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:EZ7gfK_fWjb_68zldgsbEA"
+  },
+  "seconds": 0.061,
+  "isError": false,
+  "structuredContent": null,
+  "text": [
+   "OK: 1 objects, 1 shown.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\nframing: does not fit, computed\nv [BOX] Box"
+  ]
+ },
+ {
+  "name": "close",
+  "tool": "document_close",
+  "args": {
+   "doc": "fcb-doc:EZ7gfK_fWjb_68zldgsbEA"
+  },
+  "seconds": 0.076,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:EZ7gfK_fWjb_68zldgsbEA",
+    "name": "V1313Guard",
+    "closed": true
+   },
+   "text": "Closed V1313Guard (doc=fcb-doc:EZ7gfK_fWjb_68zldgsbEA)."
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:EZ7gfK_fWjb_68zldgsbEA\",\"name\":\"V1313Guard\",\"closed\":true},\"text\":\"Closed V1313Guard (doc=fcb-doc:EZ7gfK_fWjb_68zldgsbEA).\"}"
+  ]
+ }
+]

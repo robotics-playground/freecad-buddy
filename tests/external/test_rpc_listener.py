@@ -72,12 +72,16 @@ class RecordingAudit:
     def __init__(self):
         self.before_calls = []
         self.after_calls = []
+        self.after_fingerprints = []
 
     def before(self, event, tool, doc, params):
         self.before_calls.append((event, tool, doc))
 
-    def after(self, event, tool, doc, params, verdict):
+    def after(
+        self, event, tool, doc, params, verdict, fingerprint_before=None, fingerprint_after=None
+    ):
         self.after_calls.append((event, tool, doc, verdict))
+        self.after_fingerprints.append((fingerprint_before, fingerprint_after))
 
 
 def _ok_envelope(structured=None):
@@ -550,6 +554,57 @@ def test_listener_writes_the_before_line_of_a_script_exec_call_before_it_runs(tm
         assert order == ["before", "handler"]
         assert audit.before_calls == [("exec", "script_exec", "fcb-doc:a")]
         assert audit.after_calls == [("exec", "script_exec", "fcb-doc:a", "OK")]
+        conn.close()
+    finally:
+        listener.stop()
+
+
+def test_listener_passes_both_digests_to_the_after_line_of_a_script_exec_call(tmp_path):
+    audit = RecordingAudit()
+    registry = MethodRegistry()
+    registry.register(
+        RpcMethod(
+            name=SCRIPT_EXEC_SPEC.name,
+            handler=lambda **_params: _ok_envelope(
+                {"fingerprint_before": "a" * 64, "fingerprint_after": "b" * 64}
+            ),
+            mutating=SCRIPT_EXEC_SPEC.mutating,
+            audit_event=SCRIPT_EXEC_SPEC.audit_event,
+            timeout_s=SCRIPT_EXEC_SPEC.timeout_s,
+        )
+    )
+    listener, host, port = _start_listener(registry, ThreadedExecutor(), tmp_path, audit=audit)
+    try:
+        conn = Conn(host, port)
+        conn.hello()
+        conn.call("script_exec", {"doc": "fcb-doc:a", "code": "1+1"})
+        time.sleep(0.05)
+        assert audit.after_fingerprints == [("a" * 64, "b" * 64)]
+        conn.close()
+    finally:
+        listener.stop()
+
+
+def test_listener_records_no_digest_on_the_after_line_when_a_script_exec_call_times_out(tmp_path):
+    audit = RecordingAudit()
+    registry = MethodRegistry()
+    registry.register(
+        RpcMethod(
+            name=SCRIPT_EXEC_SPEC.name,
+            handler=lambda **_params: time.sleep(1.0) or _ok_envelope(),
+            mutating=SCRIPT_EXEC_SPEC.mutating,
+            audit_event=SCRIPT_EXEC_SPEC.audit_event,
+            timeout_s=0.1,
+        )
+    )
+    listener, host, port = _start_listener(registry, ThreadedExecutor(), tmp_path, audit=audit)
+    try:
+        conn = Conn(host, port)
+        conn.hello()
+        reply = conn.call("script_exec", {"doc": "fcb-doc:a", "code": "1+1"})
+        time.sleep(0.05)
+        assert reply["result"]["status"] == "TIMEOUT"
+        assert audit.after_fingerprints == [(None, None)]
         conn.close()
     finally:
         listener.stop()

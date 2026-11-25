@@ -427,6 +427,21 @@ def close_pending_transaction(name: str) -> None:
         FreeCAD.closeActiveTransaction(True)
 
 
+def commit_active_transaction() -> None:
+    """Commit the application-level transaction a commit left open, whatever its name.
+
+    ``Document::commitTransaction`` closes the application transaction only when the document
+    holds one of its own (``App/Document.cpp``); a read-only script, or one that changed only
+    another document, leaves it open and the next change by any caller joins it. Unlike
+    ``close_pending_transaction`` this commits: a pending change in another document belongs to
+    the script and must stay undoable, so nothing is aborted.
+    """
+    import FreeCAD
+
+    if FreeCAD.getActiveTransaction() is not None:
+        FreeCAD.closeActiveTransaction(False)
+
+
 def enable_undo(doc: object) -> bool:
     """Turn on ``doc``'s undo stack when the build honours the switch; report whether it is on.
 

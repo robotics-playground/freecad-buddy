@@ -1425,20 +1425,49 @@ SCRIPT_EXEC_SPEC = ToolSpec(
     name="script_exec",
     make_handler=lambda doc_registry, export_registry, caps, render_port, viewport_port: (
         lambda **params: script_exec_uc.script_exec(
-            doc_registry, params.get("doc"), params.get("code", "")
+            doc_registry,
+            params.get("doc"),
+            params.get("code", ""),
+            params.get("recompute") is not False,
         )
     ),
     input_schema={
         "type": "object",
-        "properties": {"doc": _DOC_SCHEMA, "code": {"type": "string"}},
+        "properties": {
+            "doc": _DOC_SCHEMA,
+            "code": {"type": "string"},
+            "recompute": {
+                "type": "boolean",
+                "description": "Default true: recompute after the script when an object is "
+                "Touched. false leaves it Touched and new_errors as the script left them.",
+            },
+        },
         "required": ["doc", "code"],
         "additionalProperties": False,
     },
     description="Run Python inside FreeCAD for an operation no typed tool covers. Globals: "
-    "`FreeCAD`/`App`, `Part`, `doc`; set `result` to return its repr. Raw: no transaction, "
-    "fingerprint or rollback. Open and commit a transaction in the script so `document_undo` "
-    "covers it, and check geometry with `verify_*` afterwards. Every call is audit-logged with "
-    "its source. Before using it, check the typed tool families in the server instructions.",
+    "`FreeCAD`/`App`, `Part`, `doc`; set `result` to return its repr. The call is bracketed: "
+    "one transaction named `script_exec <first line>` (start with a comment that says what the "
+    "script does), then a recompute when any object is Touched (pass `recompute` false for a "
+    "read-only probe) and a commit, so one `document_undo` reverts the script (not when the "
+    "script calls doc.undo() itself: a note says so). Nothing is "
+    "rolled back: a script that raises "
+    "(any exception, SystemExit included) returns INVALID_INPUT `exec.python_error` and keeps "
+    "the changes it made. Result {doc, stdout, value_repr, fingerprint_before, "
+    "fingerprint_after, changed, new_errors, undo_steps}: changed lists objects whose shape "
+    "changed, new_errors the objects the script left invalid (RECOMPUTE_ERROR), undo_steps the "
+    "undo entries the call added (null when the undo list cannot be read; counted by name, so "
+    "it can read low when a script calls doc.undo() and its first line repeats an earlier "
+    "entry, high, up to 20, on a full stack, and is null when all 20 entries carry one name). "
+    "undo_steps 0 (read-only script, or one that "
+    "touched only another document) means document_undo would revert an earlier step. "
+    "Limits: a script "
+    "that opens its own transaction adds one undo entry per transaction; a write after the "
+    "script commits the bridge transaction is not recorded; a script that closes its document "
+    "leaves a stale handle and fingerprint_after null. On TIMEOUT the late return still "
+    "commits and nothing aborts it; run a query_* read before the next mutation. Check "
+    "geometry with `verify_*` afterwards. Every call is audit-logged with its source. Before "
+    "using it, check the typed tool families in the server instructions.",
     timeout_s=30.0,
     mutating=True,
     audit_event="exec",
@@ -1926,6 +1955,7 @@ def with_framing(
     raw: Callable[..., dict],
     doc_registry: DocumentRegistry,
     viewport_port: ViewportPort | None,
+    fresh: bool = False,
 ) -> Callable[..., dict]:
     """Wrap ``raw`` so its ``OK`` results carry the live-viewport framing verdict (AD-32).
 
@@ -1941,6 +1971,9 @@ def with_framing(
     On **any** non-``OK`` terminal status the block is omitted entirely — one rule, no either/or.
     A verdict on a ``TIMEOUT`` invites a reader to treat a cached answer as current, and geometry
     a rollback undid must never be measured.
+
+    ``fresh`` skips the cache: ``script_exec`` can change what the viewport shows (``Visibility``)
+    without changing the fingerprint digest the cache key holds.
     """
     if viewport_port is None:
         return raw
@@ -1949,7 +1982,9 @@ def with_framing(
         envelope = raw(**params)
         if not isinstance(envelope, dict) or envelope.get("status") != "OK":
             return envelope
-        verdict = _read_framing_quietly(doc_registry, viewport_port, params.get("doc"), envelope)
+        verdict = _read_framing_quietly(
+            doc_registry, viewport_port, params.get("doc"), envelope, fresh
+        )
         if verdict is None:
             return envelope
         text = with_framing_text(envelope["text"], verdict)
@@ -1963,6 +1998,7 @@ def _read_framing_quietly(
     viewport_port: ViewportPort,
     doc: object,
     envelope: dict,
+    fresh: bool = False,
 ) -> dict | None:
     """``read_framing`` for the document the call targeted, or ``None`` when it cannot answer.
 
@@ -1973,7 +2009,9 @@ def _read_framing_quietly(
     if not isinstance(doc, str):
         return None
     try:
-        return framing.read_framing(doc_registry, viewport_port, doc, _geometry_proxy(envelope))
+        return framing.read_framing(
+            doc_registry, viewport_port, doc, _geometry_proxy(envelope), fresh
+        )
     except Exception:  # noqa: BLE001 - an advisory verdict must never fail a completed call
         return None
 
@@ -2067,7 +2105,7 @@ def build_inline_handlers(
         raw = spec.make_handler(doc_registry, export_registry, caps, port, viewport_port)
         if spec.name == "script_exec":
             raw = bound_off_main_thread(raw, spec.timeout_s)
-        framed = with_framing(raw, doc_registry, viewport_port)
+        framed = with_framing(raw, doc_registry, viewport_port, fresh=spec.name == "script_exec")
         methods.register(
             RpcMethod(
                 name=spec.name,

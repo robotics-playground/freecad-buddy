@@ -1,0 +1,427 @@
+[
+ {
+  "name": "undo1",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "expect_fingerprint": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14"
+  },
+  "seconds": 0.277,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+    "name": "V1313Core",
+    "undone": "script_exec doc.getObject('Box').Length = 25",
+    "fingerprint_before": "273eefd0a4f2e060cacedd9c4050567065d20ba737c2dff3fb146ce4f53856e0",
+    "fingerprint_after": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+    "matches_pre_op": true,
+    "restored_objects": [
+     "Box"
+    ],
+    "undo_count": 1,
+    "errors": []
+   },
+   "text": "Undid \"script_exec doc.getObject('Box').Length = 25\" on V1313Core: restored the pre-op state (273eefd0a4f2 -> 07a23484713e).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.35,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\",\"name\":\"V1313Core\",\"undone\":\"script_exec doc.getObject('Box').Length = 25\",\"fingerprint_before\":\"273eefd0a4f2e060cacedd9c4050567065d20ba737c2dff3fb146ce4f53856e0\",\"fingerprint_after\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"matches_pre_op\":true,\"restored_objects\":[\"Box\"],\"undo_count\":1,\"errors\":[]},\"text\":\"Undid \\\"script_exec doc.getObject('Box').Length = 25\\\" on V1313Core: restored the pre-op state (273eefd0a4f2 -> 07a23484713e).\",\"framing\":{\"fits\":true,\"ratio\":0.35,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "name": "len_after_undo",
+  "tool": "query_object",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "object": "Box"
+  },
+  "seconds": 0.073,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Box",
+    "label": "Box",
+    "type": "Part::Box",
+    "properties": {
+     "AttacherEngine": "Engine 3D",
+     "AttacherType": "Attacher::AttachEngine3D",
+     "AttachmentOffset": "Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]",
+     "AttachmentSupport": [],
+     "ExpressionEngine": [],
+     "Height": "10.0 mm",
+     "Label": "Box",
+     "Label2": "",
+     "Length": "10.0 mm",
+     "MapMode": "Deactivated",
+     "MapPathParameter": 0.0,
+     "MapReversed": false,
+     "Placement": "Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]",
+     "Shape": "<Solid object at 0x55c6f5f29ba0>",
+     "ShapeMaterial": "<Material at 0x55c6ef8d98d0>",
+     "Visibility": true,
+     "Width": "10.0 mm",
+     "_ElementMapVersion": "15.70200.5"
+    },
+    "error": null
+   },
+   "text": "error: None\nlabel: Box\nname: Box\nproperties: {18 fields}\ntype: Part::Box",
+   "framing": {
+    "fits": true,
+    "ratio": 0.35,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"name\":\"Box\",\"label\":\"Box\",\"type\":\"Part::Box\",\"properties\":{\"AttacherEngine\":\"Engine 3D\",\"AttacherType\":\"Attacher::AttachEngine3D\",\"AttachmentOffset\":\"Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]\",\"AttachmentSupport\":[],\"ExpressionEngine\":[],\"Height\":\"10.0 mm\",\"Label\":\"Box\",\"Label2\":\"\",\"Length\":\"10.0 mm\",\"MapMode\":\"Deactivated\",\"MapPathParameter\":0.0,\"MapReversed\":false,\"Placement\":\"Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]\",\"Shape\":\"<Solid object at 0x55c6f5f29ba0>\",\"ShapeMaterial\":\"<Material at 0x55c6ef8d98d0>\",\"Visibility\":true,\"Width\":\"10.0 mm\",\"_ElementMapVersion\":\"15.70200.5\"},\"error\":null},\"text\":\"error: None\\nlabel: Box\\nname: Box\\nproperties: {18 fields}\\ntype: Part::Box\",\"framing\":{\"fits\":true,\"ratio\":0.35,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "name": "readonly",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "code": "result = doc.getObject('Box').Length.Value"
+  },
+  "seconds": 0.018,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+    "stdout": "",
+    "value_repr": "10.0",
+    "fingerprint_before": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+    "fingerprint_after": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\nfingerprint_after: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\nfingerprint_before: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: 10.0\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step",
+   "framing": {
+    "fits": true,
+    "ratio": 0.35,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\",\"stdout\":\"\",\"value_repr\":\"10.0\",\"fingerprint_before\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"fingerprint_after\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\\nfingerprint_after: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\\nfingerprint_before: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: 10.0\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\",\"framing\":{\"fits\":true,\"ratio\":0.35,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "name": "sysexit",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "code": "raise SystemExit(3)"
+  },
+  "seconds": 0.054,
+  "isError": true,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "exec.python_error",
+    "message": "SystemExit: 3",
+    "data": {
+     "exception": "SystemExit",
+     "traceback": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nSystemExit: 3\n"
+    }
+   },
+   "structured_content": {
+    "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_before": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+    "fingerprint_after": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\nfingerprint_after: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\nfingerprint_before: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: None\nscript raised SystemExit: 3\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"exec.python_error\",\"message\":\"SystemExit: 3\",\"data\":{\"exception\":\"SystemExit\",\"traceback\":\"Traceback (most recent call last):\\n  File \\\"<string>\\\", line 1, in <module>\\nSystemExit: 3\\n\"}},\"structured_content\":{\"doc\":\"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\",\"stdout\":\"\",\"value_repr\":null,\"fingerprint_before\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"fingerprint_after\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\\nfingerprint_after: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\\nfingerprint_before: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: None\\nscript raised SystemExit: 3\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\"}"
+  ]
+ },
+ {
+  "shell": "curl -fsS http://127.0.0.1:18765/healthz",
+  "rc": 0,
+  "out": "{\"service\":\"freecad-buddy-mcp-proxy\",\"freecad_pid\":882,\"session_id\":\"1fb6f9441a16f213\"}",
+  "err": ""
+ },
+ {
+  "name": "after_exit",
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg"
+  },
+  "seconds": 0.048,
+  "isError": false,
+  "structuredContent": null,
+  "text": [
+   "OK: 1 objects, 1 shown.\nframing: fits, ratio 0.35, computed\nv [BOX] Box"
+  ]
+ },
+ {
+  "name": "raise_after_write",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "code": "doc.getObject('Box').Height = 30\nraise ValueError('boom after write')"
+  },
+  "seconds": 0.096,
+  "isError": true,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "exec.python_error",
+    "message": "ValueError: boom after write",
+    "data": {
+     "exception": "ValueError",
+     "traceback": "Traceback (most recent call last):\n  File \"<string>\", line 2, in <module>\nValueError: boom after write\n"
+    }
+   },
+   "structured_content": {
+    "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_before": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+    "fingerprint_after": "4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26",
+    "changed": [
+     {
+      "name": "Box",
+      "volume": 3000.0,
+      "area": 1400.0,
+      "com": [
+       5.0,
+       5.0,
+       15.0
+      ]
+     }
+    ],
+    "new_errors": [],
+    "undo_steps": 1
+   },
+   "text": "changed: [1 items]\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\nfingerprint_after: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\nfingerprint_before: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\nnew_errors: [0 items]\nstdout: \nundo_steps: 1\nvalue_repr: None\nscript raised ValueError: boom after write; the changes it made so far are kept"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"exec.python_error\",\"message\":\"ValueError: boom after write\",\"data\":{\"exception\":\"ValueError\",\"traceback\":\"Traceback (most recent call last):\\n  File \\\"<string>\\\", line 2, in <module>\\nValueError: boom after write\\n\"}},\"structured_content\":{\"doc\":\"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\",\"stdout\":\"\",\"value_repr\":null,\"fingerprint_before\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"fingerprint_after\":\"4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\",\"changed\":[{\"name\":\"Box\",\"volume\":3000.0,\"area\":1400.0,\"com\":[5.0,5.0,15.0]}],\"new_errors\":[],\"undo_steps\":1},\"text\":\"changed: [1 items]\\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\\nfingerprint_after: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\\nfingerprint_before: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 1\\nvalue_repr: None\\nscript raised ValueError: boom after write; the changes it made so far are kept\"}"
+  ]
+ },
+ {
+  "name": "height_kept",
+  "tool": "query_object",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "object": "Box"
+  },
+  "seconds": 0.024,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Box",
+    "label": "Box",
+    "type": "Part::Box",
+    "properties": {
+     "AttacherEngine": "Engine 3D",
+     "AttacherType": "Attacher::AttachEngine3D",
+     "AttachmentOffset": "Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]",
+     "AttachmentSupport": [],
+     "ExpressionEngine": [],
+     "Height": "30.0 mm",
+     "Label": "Box",
+     "Label2": "",
+     "Length": "10.0 mm",
+     "MapMode": "Deactivated",
+     "MapPathParameter": 0.0,
+     "MapReversed": false,
+     "Placement": "Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]",
+     "Shape": "<Solid object at 0x55c6f61e0360>",
+     "ShapeMaterial": "<Material at 0x55c6ef8d98d0>",
+     "Visibility": true,
+     "Width": "10.0 mm",
+     "_ElementMapVersion": "15.70200.5"
+    },
+    "error": null
+   },
+   "text": "error: None\nlabel: Box\nname: Box\nproperties: {18 fields}\ntype: Part::Box",
+   "framing": {
+    "fits": true,
+    "ratio": 0.35,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"name\":\"Box\",\"label\":\"Box\",\"type\":\"Part::Box\",\"properties\":{\"AttacherEngine\":\"Engine 3D\",\"AttacherType\":\"Attacher::AttachEngine3D\",\"AttachmentOffset\":\"Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]\",\"AttachmentSupport\":[],\"ExpressionEngine\":[],\"Height\":\"30.0 mm\",\"Label\":\"Box\",\"Label2\":\"\",\"Length\":\"10.0 mm\",\"MapMode\":\"Deactivated\",\"MapPathParameter\":0.0,\"MapReversed\":false,\"Placement\":\"Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]\",\"Shape\":\"<Solid object at 0x55c6f61e0360>\",\"ShapeMaterial\":\"<Material at 0x55c6ef8d98d0>\",\"Visibility\":true,\"Width\":\"10.0 mm\",\"_ElementMapVersion\":\"15.70200.5\"},\"error\":null},\"text\":\"error: None\\nlabel: Box\\nname: Box\\nproperties: {18 fields}\\ntype: Part::Box\",\"framing\":{\"fits\":true,\"ratio\":0.35,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "name": "syntax",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "code": "def broken(:\n    pass"
+  },
+  "seconds": 0.204,
+  "isError": true,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "exec.python_error",
+    "message": "SyntaxError: invalid syntax (<string>, line 1)",
+    "data": {
+     "exception": "SyntaxError",
+     "traceback": "  File \"<string>\", line 1\n    def broken(:\n               ^\nSyntaxError: invalid syntax\n"
+    }
+   },
+   "structured_content": {
+    "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_before": "4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26",
+    "fingerprint_after": "4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\nfingerprint_after: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\nfingerprint_before: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: None\nscript raised SyntaxError: invalid syntax (<string>, line 1)\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"exec.python_error\",\"message\":\"SyntaxError: invalid syntax (<string>, line 1)\",\"data\":{\"exception\":\"SyntaxError\",\"traceback\":\"  File \\\"<string>\\\", line 1\\n    def broken(:\\n               ^\\nSyntaxError: invalid syntax\\n\"}},\"structured_content\":{\"doc\":\"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\",\"stdout\":\"\",\"value_repr\":null,\"fingerprint_before\":\"4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\",\"fingerprint_after\":\"4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\\nfingerprint_after: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\\nfingerprint_before: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: None\\nscript raised SyntaxError: invalid syntax (<string>, line 1)\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\"}"
+  ]
+ },
+ {
+  "name": "invalid_box",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "code": "doc.getObject('Box').Width = 0"
+  },
+  "seconds": 0.169,
+  "isError": true,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "RECOMPUTE_ERROR",
+   "detail": {
+    "code": "recompute.failed_objects",
+    "message": "the script left invalid objects: Box",
+    "data": {
+     "objects": [
+      "Box"
+     ]
+    }
+   },
+   "structured_content": {
+    "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_before": "4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26",
+    "fingerprint_after": "4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26",
+    "changed": [],
+    "new_errors": [
+     "Box"
+    ],
+    "undo_steps": 1
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\nfingerprint_after: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\nfingerprint_before: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\nnew_errors: [1 items]\nstdout: \nundo_steps: 1\nvalue_repr: None\nnew invalid objects: Box"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"RECOMPUTE_ERROR\",\"detail\":{\"code\":\"recompute.failed_objects\",\"message\":\"the script left invalid objects: Box\",\"data\":{\"objects\":[\"Box\"]}},\"structured_content\":{\"doc\":\"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\",\"stdout\":\"\",\"value_repr\":null,\"fingerprint_before\":\"4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\",\"fingerprint_after\":\"4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\",\"changed\":[],\"new_errors\":[\"Box\"],\"undo_steps\":1},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\\nfingerprint_after: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\\nfingerprint_before: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\\nnew_errors: [1 items]\\nstdout: \\nundo_steps: 1\\nvalue_repr: None\\nnew invalid objects: Box\"}"
+  ]
+ },
+ {
+  "name": "undo_invalid",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg"
+  },
+  "seconds": 0.086,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+    "name": "V1313Core",
+    "undone": "script_exec doc.getObject('Box').Width = 0",
+    "fingerprint_before": "4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26",
+    "fingerprint_after": "4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26",
+    "matches_pre_op": null,
+    "restored_objects": [
+     "Box"
+    ],
+    "undo_count": 2,
+    "errors": []
+   },
+   "text": "Undid \"script_exec doc.getObject('Box').Width = 0\" on V1313Core: no pre-op digest supplied to compare against (4bae8a79eaf3 -> 4bae8a79eaf3).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.35,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\",\"name\":\"V1313Core\",\"undone\":\"script_exec doc.getObject('Box').Width = 0\",\"fingerprint_before\":\"4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\",\"fingerprint_after\":\"4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\",\"matches_pre_op\":null,\"restored_objects\":[\"Box\"],\"undo_count\":2,\"errors\":[]},\"text\":\"Undid \\\"script_exec doc.getObject('Box').Width = 0\\\" on V1313Core: no pre-op digest supplied to compare against (4bae8a79eaf3 -> 4bae8a79eaf3).\",\"framing\":{\"fits\":true,\"ratio\":0.35,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "name": "names_end",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "recompute": false,
+   "code": "result = list(doc.UndoNames)"
+  },
+  "seconds": 0.021,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+    "stdout": "",
+    "value_repr": "[\"script_exec doc.getObject('Box').Height = 30\", \"script_exec b = doc.addObject('Part::Box', 'Box')\"]",
+    "fingerprint_before": "4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26",
+    "fingerprint_after": "4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\nfingerprint_after: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\nfingerprint_before: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: <101 chars>\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step",
+   "framing": {
+    "fits": true,
+    "ratio": 0.35,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\",\"stdout\":\"\",\"value_repr\":\"[\\\"script_exec doc.getObject('Box').Height = 30\\\", \\\"script_exec b = doc.addObject('Part::Box', 'Box')\\\"]\",\"fingerprint_before\":\"4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\",\"fingerprint_after\":\"4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\\nfingerprint_after: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\\nfingerprint_before: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: <101 chars>\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\",\"framing\":{\"fits\":true,\"ratio\":0.35,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ }
+]

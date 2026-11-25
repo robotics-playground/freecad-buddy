@@ -27,14 +27,13 @@ builds the parts, because no typed tool makes Part primitives:
 Keep the generator on disk, so each call is short:
 
 ```python
+# build STAGE (this first line names the undo entry)
 p = r"D:/path/to/build_fcstd.py"
 STAGE = "params"                         # then "part_a", "part_b", ... in later calls
-doc.openTransaction("build " + STAGE)
 try:
     exec(compile(open(p, encoding="utf-8").read(), p, "exec"),
          {"doc": doc, "STAGE": STAGE, "__name__": "fcb_build"})
     doc.recompute()
-    doc.commitTransaction()
 except Exception:
     doc.abortTransaction()
     raise

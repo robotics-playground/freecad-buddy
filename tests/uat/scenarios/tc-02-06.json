@@ -61,6 +61,7 @@
       "mcp": "script_exec",
       "args": {
         "doc": "$create.structured_content.doc",
+        "recompute": false,
         "code": "doc.getObject('Pad').Length = 0"
       }
     },

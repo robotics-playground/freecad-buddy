@@ -1,0 +1,461 @@
+[
+ {
+  "name": "create",
+  "tool": "document_create",
+  "args": {
+   "label": "V1313Edit"
+  },
+  "seconds": 0.236,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:h3KOw5OkVXbFGL1APRL7jg",
+    "name": "V1313Edit",
+    "label": "V1313Edit"
+   },
+   "text": "doc: fcb-doc:h3KOw5OkVXbFGL1APRL7jg\nlabel: V1313Edit\nname: V1313Edit"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:h3KOw5OkVXbFGL1APRL7jg\",\"name\":\"V1313Edit\",\"label\":\"V1313Edit\"},\"text\":\"doc: fcb-doc:h3KOw5OkVXbFGL1APRL7jg\\nlabel: V1313Edit\\nname: V1313Edit\"}"
+  ]
+ },
+ {
+  "name": "body",
+  "tool": "feature_body_create",
+  "args": {
+   "doc": "fcb-doc:h3KOw5OkVXbFGL1APRL7jg",
+   "name": "Body"
+  },
+  "seconds": 0.099,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Body"
+     ]
+    },
+    "feature": "Body",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Body",
+     "readable": false
+    }
+   },
+   "text": "Mutation committed; fingerprint 283569b3f782.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Body\",\"volume\":0.0,\"area\":0.0,\"com\":[0.0,0.0,0.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":null,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Body\"]},\"feature\":\"Body\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"Body\",\"readable\":false}},\"text\":\"Mutation committed; fingerprint 283569b3f782.\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"no visible shape-bearing objects to measure\"}}"
+  ]
+ },
+ {
+  "name": "sketch",
+  "tool": "sketch_create",
+  "args": {
+   "doc": "fcb-doc:h3KOw5OkVXbFGL1APRL7jg",
+   "body": "Body",
+   "plane": "XY",
+   "name": "Sketch"
+  },
+  "seconds": 0.116,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Sketch",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Sketch"
+     ]
+    },
+    "sketch": "Sketch",
+    "sketch_state": {
+     "schema": "fcb.sketch-state/1",
+     "sketch": "Sketch",
+     "readable": true,
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 0,
+     "constraint_count": 0,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    }
+   },
+   "text": "Mutation committed; fingerprint 3f7a8ffb0fe0.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Sketch\",\"volume\":0.0,\"area\":0.0,\"com\":[0.0,0.0,0.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":true,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Sketch\"]},\"sketch\":\"Sketch\",\"sketch_state\":{\"schema\":\"fcb.sketch-state/1\",\"sketch\":\"Sketch\",\"readable\":true,\"dof\":0,\"fully_constrained\":true,\"geometry_count\":0,\"constraint_count\":0,\"conflicting\":[],\"malformed\":[],\"redundant\":[],\"partially_redundant\":[],\"solver_status_code\":0}},\"text\":\"Mutation committed; fingerprint 3f7a8ffb0fe0.\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"no visible shape-bearing objects to measure\"}}"
+  ]
+ },
+ {
+  "name": "geo",
+  "tool": "sketch_add_geometry",
+  "args": {
+   "doc": "fcb-doc:h3KOw5OkVXbFGL1APRL7jg",
+   "sketch": "Sketch",
+   "geometry": [
+    {
+     "kind": "line_segment",
+     "start": [
+      0,
+      0
+     ],
+     "end": [
+      20,
+      0
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      20,
+      0
+     ],
+     "end": [
+      20,
+      10
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      20,
+      10
+     ],
+     "end": [
+      0,
+      10
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      0,
+      10
+     ],
+     "end": [
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  "seconds": 0.224,
+  "isError": true,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "SPEC_FAILED",
+   "detail": {
+    "code": "mutation.spec_failed",
+    "message": "verify_sketch failed on Sketch (dof=16): sketch.fully_constrained"
+   },
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+      "serializer": "exportBinary"
+     },
+     "changed": [],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": false,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": false,
+      "explanation": "verify_sketch failed on Sketch (dof=16): sketch.fully_constrained"
+     },
+     "rolled_back": true,
+     "rollback_proven": "rolled_back_verified",
+     "touched": [
+      "Sketch"
+     ]
+    },
+    "sketch": "Sketch",
+    "sketch_state": {
+     "schema": "fcb.sketch-state/1",
+     "sketch": "Sketch",
+     "readable": true,
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 0,
+     "constraint_count": 0,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    },
+    "geo_ids": [],
+    "constraint_ids": []
+   },
+   "text": "Mutation rolled back (rolled_back_verified): verify_sketch failed on Sketch (dof=16): sketch.fully_constrained"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"SPEC_FAILED\",\"detail\":{\"code\":\"mutation.spec_failed\",\"message\":\"verify_sketch failed on Sketch (dof=16): sketch.fully_constrained\"},\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\",\"serializer\":\"exportBinary\"},\"changed\":[],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":false,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":false,\"explanation\":\"verify_sketch failed on Sketch (dof=16): sketch.fully_constrained\"},\"rolled_back\":true,\"rollback_proven\":\"rolled_back_verified\",\"touched\":[\"Sketch\"]},\"sketch\":\"Sketch\",\"sketch_state\":{\"schema\":\"fcb.sketch-state/1\",\"sketch\":\"Sketch\",\"readable\":true,\"dof\":0,\"fully_constrained\":true,\"geometry_count\":0,\"constraint_count\":0,\"conflicting\":[],\"malformed\":[],\"redundant\":[],\"partially_redundant\":[],\"solver_status_code\":0},\"geo_ids\":[],\"constraint_ids\":[]},\"text\":\"Mutation rolled back (rolled_back_verified): verify_sketch failed on Sketch (dof=16): sketch.fully_constrained\"}"
+  ]
+ },
+ {
+  "name": "setedit",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:h3KOw5OkVXbFGL1APRL7jg",
+   "code": "import FreeCADGui\nFreeCADGui.getDocument(doc.Name).setEdit(doc.getObject('Sketch'))\nresult = str(FreeCADGui.getDocument(doc.Name).getInEdit())"
+  },
+  "seconds": 1.633,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:h3KOw5OkVXbFGL1APRL7jg",
+    "stdout": "",
+    "value_repr": "'<View provider geometry object at 0x55c6f9dcddb0>'",
+    "fingerprint_before": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+    "fingerprint_after": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 1
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:h3KOw5OkVXbFGL1APRL7jg\nfingerprint_after: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\nfingerprint_before: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\nnew_errors: [0 items]\nstdout: \nundo_steps: 1\nvalue_repr: '<View provider geometry object at 0x55c6f9dcddb0>'",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:h3KOw5OkVXbFGL1APRL7jg\",\"stdout\":\"\",\"value_repr\":\"'<View provider geometry object at 0x55c6f9dcddb0>'\",\"fingerprint_before\":\"3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\",\"fingerprint_after\":\"3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\",\"changed\":[],\"new_errors\":[],\"undo_steps\":1},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:h3KOw5OkVXbFGL1APRL7jg\\nfingerprint_after: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\\nfingerprint_before: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 1\\nvalue_repr: '<View provider geometry object at 0x55c6f9dcddb0>'\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"no visible shape-bearing objects to measure\"}}"
+  ]
+ },
+ {
+  "name": "camera_ro",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:h3KOw5OkVXbFGL1APRL7jg",
+   "recompute": false,
+   "code": "import FreeCADGui\ng = FreeCADGui.getDocument(doc.Name)\nresult = [str(g.getInEdit()), g.ActiveView.getCameraType(), list(doc.UndoNames)]"
+  },
+  "seconds": 0.298,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:h3KOw5OkVXbFGL1APRL7jg",
+    "stdout": "",
+    "value_repr": "['<View provider geometry object at 0x55c6f9dcddb0>', 'Orthographic', ['script_exec import FreeCADGui', 'buddy: create sketch Sketch', 'buddy: create body Body']]",
+    "fingerprint_before": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+    "fingerprint_after": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:h3KOw5OkVXbFGL1APRL7jg\nfingerprint_after: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\nfingerprint_before: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: <162 chars>\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:h3KOw5OkVXbFGL1APRL7jg\",\"stdout\":\"\",\"value_repr\":\"['<View provider geometry object at 0x55c6f9dcddb0>', 'Orthographic', ['script_exec import FreeCADGui', 'buddy: create sketch Sketch', 'buddy: create body Body']]\",\"fingerprint_before\":\"3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\",\"fingerprint_after\":\"3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:h3KOw5OkVXbFGL1APRL7jg\\nfingerprint_after: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\\nfingerprint_before: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: <162 chars>\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"no visible shape-bearing objects to measure\"}}"
+  ]
+ },
+ {
+  "name": "camera_ro_default",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:h3KOw5OkVXbFGL1APRL7jg",
+   "code": "import FreeCADGui\ng = FreeCADGui.getDocument(doc.Name)\nresult = [str(g.getInEdit()), g.ActiveView.getCameraType()]"
+  },
+  "seconds": 0.102,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:h3KOw5OkVXbFGL1APRL7jg",
+    "stdout": "",
+    "value_repr": "['<View provider geometry object at 0x55c6f9dcddb0>', 'Orthographic']",
+    "fingerprint_before": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+    "fingerprint_after": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:h3KOw5OkVXbFGL1APRL7jg\nfingerprint_after: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\nfingerprint_before: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: ['<View provider geometry object at 0x55c6f9dcddb0>', 'Orthographic']\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:h3KOw5OkVXbFGL1APRL7jg\",\"stdout\":\"\",\"value_repr\":\"['<View provider geometry object at 0x55c6f9dcddb0>', 'Orthographic']\",\"fingerprint_before\":\"3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\",\"fingerprint_after\":\"3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:h3KOw5OkVXbFGL1APRL7jg\\nfingerprint_after: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\\nfingerprint_before: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: ['<View provider geometry object at 0x55c6f9dcddb0>', 'Orthographic']\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"no visible shape-bearing objects to measure\"}}"
+  ]
+ },
+ {
+  "shell": "docker exec -u cua fcb-desktop bash -c 'eval \"$(fcb-session-env)\"; echo \"{\\\"screenshot_out_file\\\":\\\"/repo/tests/uat/run/13-13-r1/evidence/tc03-editmode-open.png\\\"}\" | /usr/local/bin/cua-driver call get_desktop_state' | grep -c path",
+  "rc": 0,
+  "out": "1\n",
+  "err": ""
+ },
+ {
+  "name": "resetedit",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:h3KOw5OkVXbFGL1APRL7jg",
+   "code": "import FreeCADGui\nFreeCADGui.getDocument(doc.Name).resetEdit()\nresult = str(FreeCADGui.getDocument(doc.Name).getInEdit())"
+  },
+  "seconds": 0.112,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:h3KOw5OkVXbFGL1APRL7jg",
+    "stdout": "",
+    "value_repr": "'None'",
+    "fingerprint_before": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+    "fingerprint_after": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 1
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:h3KOw5OkVXbFGL1APRL7jg\nfingerprint_after: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\nfingerprint_before: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\nnew_errors: [0 items]\nstdout: \nundo_steps: 1\nvalue_repr: 'None'",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:h3KOw5OkVXbFGL1APRL7jg\",\"stdout\":\"\",\"value_repr\":\"'None'\",\"fingerprint_before\":\"3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\",\"fingerprint_after\":\"3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\",\"changed\":[],\"new_errors\":[],\"undo_steps\":1},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:h3KOw5OkVXbFGL1APRL7jg\\nfingerprint_after: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\\nfingerprint_before: 3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 1\\nvalue_repr: 'None'\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"no visible shape-bearing objects to measure\"}}"
+  ]
+ },
+ {
+  "name": "tree",
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:h3KOw5OkVXbFGL1APRL7jg"
+  },
+  "seconds": 0.064,
+  "isError": false,
+  "structuredContent": null,
+  "text": [
+   "OK: 10 objects, 1 shown.\nframing: unknown, unavailable, no visible shape-bearing objects to measure\nv [BODY] Body (+2)"
+  ]
+ }
+]

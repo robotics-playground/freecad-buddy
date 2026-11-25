@@ -61,7 +61,7 @@ JobState = Literal["QUEUED", "RUNNING"] | TerminalStatus   # non-terminal states
 class ErrorDetail(TypedDict, total=False):
     code: str            # machine code, dotted namespace: "recompute.failed_objects",
                          # "tnp.unsupported", "sketch.conflicting", "rpc.handshake_mismatch",
-                         # "exec.python_error"
+                         # "exec.python_error", "exec.bracket_failed"
     message: str         # human-readable explanation (spine Errors convention) — required
     objects: list[str]   # affected FreeCAD immutable Names
     constraint_ids: list[dict]  # {"solver_id": int(1-based), "name": str}  ← Constraints[id-1] map

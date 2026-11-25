@@ -1,0 +1,92 @@
+[
+ {
+  "name": "undo1",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "expect_fingerprint": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14"
+  }
+ },
+ {
+  "name": "len_after_undo",
+  "tool": "query_object",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "object": "Box"
+  }
+ },
+ {
+  "name": "readonly",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "code": "result = doc.getObject('Box').Length.Value"
+  }
+ },
+ {
+  "name": "sysexit",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "code": "raise SystemExit(3)"
+  }
+ },
+ {
+  "shell": "curl -fsS http://127.0.0.1:18765/healthz"
+ },
+ {
+  "name": "after_exit",
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg"
+  }
+ },
+ {
+  "name": "raise_after_write",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "code": "doc.getObject('Box').Height = 30\nraise ValueError('boom after write')"
+  }
+ },
+ {
+  "name": "height_kept",
+  "tool": "query_object",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "object": "Box"
+  }
+ },
+ {
+  "name": "syntax",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "code": "def broken(:\n    pass"
+  }
+ },
+ {
+  "name": "invalid_box",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "code": "doc.getObject('Box').Width = 0"
+  }
+ },
+ {
+  "name": "undo_invalid",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg"
+  }
+ },
+ {
+  "name": "names_end",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "recompute": false,
+   "code": "result = list(doc.UndoNames)"
+  }
+ }
+]

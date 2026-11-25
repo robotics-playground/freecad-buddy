@@ -1,0 +1,68 @@
+freecad_buddy from C:\Users\thuan\AppData\Local\Temp\claude\3d3814eab912640f\17c8e5ee-89aa-4e27-ba05-1fe1774e804a\scratchpad\verifier-13-13\rt2\copy\src\freecad_buddy\__init__.py
+test_E1_undo_the_only_entry_then_write (probe_mod.Empty.test_E1_undo_the_only_entry_then_write) ...     FACT E1 before ['script_exec doc.Box.Height = 12'] after ['script_exec doc.undo()'] status OK undo_steps 1 undid_note False zero_note False matches_pre_op False H 10.0 mm W 20.0 mm
+FAIL
+test_E2_undo_both_entries_then_write (probe_mod.Empty.test_E2_undo_both_entries_then_write) ...     FACT E2 before ['script_exec doc.Box.Height = 13', 'script_exec doc.Box.Height = 12'] after ['script_exec doc.undo()'] status OK undo_steps 1 undid_note False zero_note False matches_pre_op False H 10.0 mm W 20.0 mm
+FAIL
+test_E3_undo_the_only_entry_no_write (probe_mod.Empty.test_E3_undo_the_only_entry_no_write) ...     FACT E3 before ['script_exec doc.Box.Height = 12'] after ['script_exec doc.undo()'] status OK undo_steps 1 undid_note False zero_note False matches_pre_op False H 10.0 mm W 20.0 mm
+FAIL
+test_E4_same_name_undo_then_write (probe_mod.Empty.test_E4_same_name_undo_then_write) ...     FACT E4 before ['script_exec # same name probe'] after ['script_exec # same name probe'] status OK undo_steps 0 undid_note False zero_note True matches_pre_op False H 10.0 mm W 20.0 mm
+FAIL
+
+======================================================================
+FAIL: test_E1_undo_the_only_entry_then_write (probe_mod.Empty.test_E1_undo_the_only_entry_then_write)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\3d3814eab912640f\17c8e5ee-89aa-4e27-ba05-1fe1774e804a\scratchpad\verifier-13-13\rt2\probes\probe_v2.py", line 27, in test_E1_undo_the_only_entry_then_write
+    self.assertTrue(se._SCRIPT_UNDID_NOTE in env["text"] or undo["structured_content"].get("matches_pre_op"))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_E2_undo_both_entries_then_write (probe_mod.Empty.test_E2_undo_both_entries_then_write)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\3d3814eab912640f\17c8e5ee-89aa-4e27-ba05-1fe1774e804a\scratchpad\verifier-13-13\rt2\probes\probe_v2.py", line 31, in test_E2_undo_both_entries_then_write
+    self.assertTrue(se._SCRIPT_UNDID_NOTE in env["text"] or undo["structured_content"].get("matches_pre_op"))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_E3_undo_the_only_entry_no_write (probe_mod.Empty.test_E3_undo_the_only_entry_no_write)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\3d3814eab912640f\17c8e5ee-89aa-4e27-ba05-1fe1774e804a\scratchpad\verifier-13-13\rt2\probes\probe_v2.py", line 35, in test_E3_undo_the_only_entry_no_write
+    self.assertTrue(se._SCRIPT_UNDID_NOTE in env["text"] or undo["structured_content"].get("matches_pre_op"))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_E4_same_name_undo_then_write (probe_mod.Empty.test_E4_same_name_undo_then_write)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\3d3814eab912640f\17c8e5ee-89aa-4e27-ba05-1fe1774e804a\scratchpad\verifier-13-13\rt2\probes\probe_v2.py", line 39, in test_E4_same_name_undo_then_write
+    self.assertTrue(se._SCRIPT_UNDID_NOTE in env["text"] or undo["structured_content"].get("matches_pre_op"))
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.196s
+
+FAILED (failures=4)
+FreeCAD 1.1.4, Libs: 1.1.4R20260928 (Git shallow)
+(C) 2001-2026 FreeCAD contributors
+FreeCAD is free and open-source software licensed under the terms of LGPL2+ license.
+
+Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									
