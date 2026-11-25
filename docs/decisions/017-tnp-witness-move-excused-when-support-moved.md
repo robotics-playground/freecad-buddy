@@ -13,6 +13,14 @@ Layer 1 does not grade a moved witness `REPOINTED` when all of these hold:
   shift of the element's two bounding-box faces lies in the range spanned by zero and both of the
   support's face shifts.
 
+- The support holds as many elements of the entry's type (faces for a face, edges for an edge,
+  vertices for a vertex) after the op as before. This is the main defence. Every positional name
+  form met in review (`;:M<n>`, a counter hidden in a hash, the pattern instance index `;_<n>;`
+  and instance 1's empty code `;:H,`, `FeatureTransformed.cpp:366`) renumbers only when the piece
+  count changes, and name forms cannot be listed to the end. Counts are read with `countElement`
+  once per target per walk; an unreadable count gives no excuse. Residual: a reorder that keeps
+  every count (swapped pieces) is not seen by the count guard; the name-form checks below stay as
+  a second defence.
 - The name carries no positional piece counter. FreeCAD 1.1 numbers the pieces of a split face or
   edge by the order OCC reports them: `;:M`, `;:MG` (any index, also the bare form), `;:G` and
   `;:U` followed by an index or a hash id (`ElementNamingUtils.h:67-70`;
@@ -29,7 +37,7 @@ Layer 1 does not grade a moved witness `REPOINTED` when all of these hold:
   a mapped name into a `#id` (`ElementMap.cpp:668`) and `TopoShape.getElementHistory` steps back
   one object, so two features that leave an element unchanged hide `;:M3` from the name and the
   history source (review round 5: the plate datum moved from x 16 to x 33 and passed). The
-  capture reads `Part.Feature.getElementHistory(name, recursive=True, showName=True)` and tests
+  grade step reads `Part.Feature.getElementHistory(name, recursive=True, showName=True)` and tests
   every name and intermediate name in the chain; an unreadable lineage is not excused. An element
   with a modified ancestor (for example after a Pocket) therefore stays `REPOINTED` when it moves.
 
@@ -109,7 +117,9 @@ Decision 014; `verification-design.md` §3.2 Layer 1; spec
 - `Fillet.Base` entries that FreeCAD renumbers after a Pad change (`Edge1`, `Edge2`) still grade
   `BROKEN`; only the entries that keep their element identity pass.
 - `snapshot_references` reads `ElementMap` once per target per walk, and only when an entry has a bare
-  `;:G`/`;:U` name (200 references on one heavy support: 0.022 s before, 0.034 s with the lineage read).
+  `;:G`/`;:U` name (200 references on one heavy support: 0.022 s). The lineage walk runs at grading time, on the live
+  entry of a moved element only (80 features, 200 references: snapshot 0.19 s, audit 0.26 s; the
+  walk on every entry at capture cost 0.79 s).
 - The witness box comes from `optimalBoundingBox(False, False)` (exact geometry). `BoundBox` reads the
   display mesh after a view tessellates the shape, which moved a curved face's extreme by 0.016 mm
   in the GUI (UAT TC-18-04b) and graded a ride-along `REPOINTED` there but not headless.

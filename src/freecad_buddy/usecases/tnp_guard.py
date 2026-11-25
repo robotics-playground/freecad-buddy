@@ -61,9 +61,11 @@ _WITNESS_EPSILON = 1e-7
 # ";:G0#" is positional. A hash id of a multi-source name follows the marker directly, so a "#"
 # after ";:G" marks the same positional form. ";K<n>" and ";:I<n>" (PartFeature.cpp:291) number
 # extra sources and ancestor faces. A bare ";:G" or ";:U" is index 1 and is positional only while
-# a sibling with an index exists (``_split_sibling_stems``).
+# a sibling with an index exists (``_split_sibling_stems``). A pattern names instance n as the
+# transform op code ";_<n>" and instance 1 as the empty code, which leaves ";:H," with no tag
+# (FeatureTransformed.cpp:366, ElementNamingUtils.cpp:116-123): a position in the instance list.
 _POSITIONAL_COUNTER = re.compile(
-    r";:MG|;:M|;:[GU](?:[1-9]|0{0,2}#)|;K[0-9]|;:I[0-9]|;D[0-9a-f]+(?=;|$)"
+    r";:MG|;:M|;:[GU](?:[1-9]|0{0,2}#)|;K[0-9]|;:I[0-9]|;D[0-9a-f]+(?=;|$)|;_[0-9]|;:H,"
 )
 _INDEXED_MARKER = re.compile(r";:[GU](?:[1-9]|#)")
 _BARE_MARKER = re.compile(r";:[GU](?![0-9#])")
@@ -82,6 +84,11 @@ AxisShifts = tuple[tuple[float, float], tuple[float, float], tuple[float, float]
 # target more than once.
 RecordKey = tuple[str, str, str | None, int]
 
+# Element counts of a whole target shape by ``ShapeType``: the faces, edges and vertices a
+# referenced element can be.
+ElementCounts = dict[str, int]
+_COUNTED_TYPES = ("Face", "Edge", "Vertex")
+
 
 class RefEntry(TypedDict):
     mapped: str | None
@@ -89,8 +96,9 @@ class RefEntry(TypedDict):
     missing: bool
     witness: Witness | None
     history: tuple[int, str] | None
-    # True when a positional piece counter appears anywhere in the element's recorded lineage, or
-    # the lineage cannot be read (``_lineage_has_counter``). Absent in an older snapshot record.
+    # True when a positional piece counter appears anywhere in the element's lineage, or the
+    # lineage cannot be read (``_lineage_has_counter``). Set at grading time, on the live entry
+    # only and only for a moved element, because the walk costs time per feature.
     lineage_counter: NotRequired[bool]
     # True when the mapped name carries a bare ";:G" or ";:U" and the same shape holds a sibling
     # with an indexed marker after the same text. Absent in a record from an older snapshot.
@@ -104,6 +112,8 @@ class RefRecord(TypedDict):
     entries: list[RefEntry]
     element_map_version: str | None
     target_witness: Witness | None
+    # Absent in an older snapshot record; ``None`` when the counts could not be read.
+    target_counts: NotRequired[ElementCounts | None]
 
 
 def _element_map_version(obj: object) -> str | None:
@@ -333,7 +343,6 @@ def _follows_support(
         and before["mapped"] == after["mapped"]
         and before["history"] is not None
         and before["history"] == after["history"]
-        and not before.get("lineage_counter", False)
         and not after.get("lineage_counter", False)
         and not before.get("split_siblings", False)
         and not after.get("split_siblings", False)
@@ -414,8 +423,6 @@ def _capture_entry(
     if element is not None:
         entry["witness"] = _witness(element)
     entry["history"] = _history(shape, entry["mapped"])
-    if entry["mapped"]:
-        entry["lineage_counter"] = _lineage_has_counter(target, entry["mapped"])
     if entry["mapped"] and _BARE_MARKER.search(entry["mapped"]):
         cache = sibling_stems if sibling_stems is not None else {}
         key = getattr(target, "Name", None)
@@ -493,6 +500,32 @@ def _expression_records(obj: object, prop: str, value: object) -> list[RefRecord
     return records
 
 
+def _support_counts(target: object) -> ElementCounts | None:
+    """Return the face, edge and vertex count of ``target``'s shape, or ``None`` when unreadable."""
+    try:
+        shape = _shape_of(target)
+        if shape is None:
+            return None
+        return {kind: int(shape.countElement(kind)) for kind in _COUNTED_TYPES}
+    except Exception:  # noqa: BLE001 - unreadable counts cost only the excuse, never the record
+        return None
+
+
+def _same_element_count(
+    before: ElementCounts | None, after: ElementCounts | None, element_type: str | None
+) -> bool:
+    """Whether the support held as many elements of ``element_type`` before as after.
+
+    Every positional name form renumbers only when the number of pieces changes (a split, a
+    pattern grid, a column count). Name forms cannot be listed to the end, so an excuse needs the
+    count of the referenced type unchanged. Unreadable counts, or a type that is not counted,
+    give no proof.
+    """
+    if before is None or after is None or element_type not in _COUNTED_TYPES:
+        return False
+    return before.get(element_type) == after.get(element_type)
+
+
 def snapshot_references(doc: object) -> list[RefRecord]:
     """Return one ``RefRecord`` per subelement link and expression binding on ``doc``.
 
@@ -506,6 +539,7 @@ def snapshot_references(doc: object) -> list[RefRecord]:
     """
     records: list[RefRecord] = []
     support_witnesses: dict[str | None, Witness | None] = {}
+    support_counts: dict[str | None, ElementCounts | None] = {}
     sibling_stems: dict[str | None, frozenset[str]] = {}
     for obj in sorted(doc.Objects, key=lambda o: o.Name):
         for prop in sorted(getattr(obj, "PropertiesList", None) or ()):
@@ -524,6 +558,7 @@ def snapshot_references(doc: object) -> list[RefRecord]:
                     target_name = getattr(target, "Name", None)
                     if target_name not in support_witnesses:
                         support_witnesses[target_name] = _support_witness(target)
+                        support_counts[target_name] = _support_counts(target)
                     records.append(
                         {
                             "owner": obj.Name,
@@ -532,6 +567,7 @@ def snapshot_references(doc: object) -> list[RefRecord]:
                             "entries": [_capture_entry(target, sub, sibling_stems) for sub in subs],
                             "element_map_version": version,
                             "target_witness": support_witnesses[target_name],
+                            "target_counts": support_counts[target_name],
                         }
                     )
             except Exception:  # noqa: BLE001 - an unreadable property records no reference
@@ -879,7 +915,7 @@ def _grade_entry(
     ``_follows_support`` excuses it. An entry surviving all four resolves and matches on name and
     either matches on witness or moved with its support — the design's definition of ambiguous —
     so Layer 2 grades it. ``support_shift`` is how the record's whole target shape moved on each
-    axis.
+    axis, or ``None`` when the target's element count of the entry's type changed or is unknown.
     """
     name = _entry_name(before)
     if not name:
@@ -904,9 +940,11 @@ def _grade_entry(
         )
 
     tolerance = _element_tolerance(element) if element is not None else _WITNESS_EPSILON
-    if _witness_moved(before["witness"], after["witness"], tolerance) and not _follows_support(
-        before, after, support_shift, tolerance
-    ):
+    moved = _witness_moved(before["witness"], after["witness"], tolerance)
+    if moved and support_shift is not None and after["mapped"]:
+        target = doc.getObject(record["target"]) if record["target"] else None
+        after = {**after, "lineage_counter": _lineage_has_counter(target, after["mapped"])}
+    if moved and not _follows_support(before, after, support_shift, tolerance):
         return _finding(
             record,
             before,
@@ -938,7 +976,14 @@ def _grade_entries(
             )
         ]
     support_shift = _axis_shifts(baseline["target_witness"], live["target_witness"])
-    return [_grade_entry(doc, record, b, a, support_shift) for b, a in zip(before, after)]
+    counts_before, counts_after = baseline.get("target_counts"), live.get("target_counts")
+
+    def shift_for(entry: RefEntry) -> AxisShifts | None:
+        element_type = entry["witness"][0] if entry["witness"] else None
+        stable = _same_element_count(counts_before, counts_after, element_type)
+        return support_shift if stable else None
+
+    return [_grade_entry(doc, record, b, a, shift_for(b)) for b, a in zip(before, after)]
 
 
 def _grade_record(

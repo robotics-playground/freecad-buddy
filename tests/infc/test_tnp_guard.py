@@ -96,6 +96,26 @@ class _BodyFixture(unittest.TestCase):
         self.document.recompute()
         return fillet
 
+    def _rectangle(self, name, x_min, y_min, x_max, y_max, attach=None):
+        sketch = self.document.addObject("Sketcher::SketchObject", name)
+        self.plate.addObject(sketch)
+        if attach is not None:
+            sketch.AttachmentSupport = [(attach, "")]
+            sketch.MapMode = "FlatFace"
+        corners = [
+            (x_min, y_min, x_max, y_min),
+            (x_max, y_min, x_max, y_max),
+            (x_max, y_max, x_min, y_max),
+            (x_min, y_max, x_min, y_min),
+        ]
+        for x1, y1, x2, y2 in corners:
+            sketch.addGeometry(
+                Part.LineSegment(App.Vector(x1, y1, 0), App.Vector(x2, y2, 0)), False
+            )
+        for index in range(4):
+            sketch.addConstraint(Sketcher.Constraint("Coincident", index, 2, (index + 1) % 4, 1))
+        return sketch
+
     def _audit(self, snapshot, written=None):
         return tnp_guard.audit_references(self.document, snapshot, written)
 
@@ -1235,6 +1255,35 @@ class SupportFollowTest(_BodyFixture):
         self.assertNotIn("REPOINTED", [f["verdict"] for f in findings])
         self.assertEqual(audit["status"], "FLAGGED")
 
+    def test_Should_flag_repointed_When_the_support_element_count_changed(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        for record in snapshot:
+            record["target_counts"] = {"Face": 5, "Edge": 12, "Vertex": 8}
+        self._grow_pad()
+
+        # Act
+        audit, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([f["verdict"] for f in findings], ["REPOINTED"])
+        self.assertEqual(audit["status"], "FLAGGED")
+
+    def test_Should_pass_the_datum_When_the_support_element_count_is_unchanged(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        record = self._datum_record(snapshot)
+        self._grow_pad()
+
+        # Act
+        audit, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual(record["target_counts"], {"Face": 6, "Edge": 12, "Vertex": 8})
+        self.assertEqual([f["verdict"] for f in findings], ["PASS"])
+
     def test_Should_flag_repointed_When_the_element_moved_farther_than_its_support(self):
         # Arrange
         self._attach_datum_to_top_face()
@@ -1713,7 +1762,7 @@ class FollowsSupportTest(unittest.TestCase):
 
     def test_Should_not_excuse_the_move_When_the_lineage_holds_a_counter(self):
         # Arrange
-        before = dict(self._entry(), lineage_counter=True)
+        before = self._entry()
         after = dict(self._entry(shift=(0.0, 0.0, 5.0)), lineage_counter=True)
 
         # Act
@@ -1845,26 +1894,6 @@ class SplitPieceCounterTest(_BodyFixture):
     PLATE_WIDTH = 10.0
     PLATE_THICKNESS = 10.0
     EDITED_LENGTH = 60.0
-
-    def _rectangle(self, name, x_min, y_min, x_max, y_max, attach=None):
-        sketch = self.document.addObject("Sketcher::SketchObject", name)
-        self.plate.addObject(sketch)
-        if attach is not None:
-            sketch.AttachmentSupport = [(attach, "")]
-            sketch.MapMode = "FlatFace"
-        corners = [
-            (x_min, y_min, x_max, y_min),
-            (x_max, y_min, x_max, y_max),
-            (x_max, y_max, x_min, y_max),
-            (x_min, y_max, x_min, y_min),
-        ]
-        for x1, y1, x2, y2 in corners:
-            sketch.addGeometry(
-                Part.LineSegment(App.Vector(x1, y1, 0), App.Vector(x2, y2, 0)), False
-            )
-        for index in range(4):
-            sketch.addConstraint(Sketcher.Constraint("Coincident", index, 2, (index + 1) % 4, 1))
-        return sketch
 
     def _build_slotted_plate(self, pass_through=0):
         """A plate whose length drives a groove pattern; the groove count changes with it.
@@ -2010,6 +2039,130 @@ class WitnessMeshTest(unittest.TestCase):
         self.assertAlmostEqual(witness[2], 2.0, places=9)
 
 
+class PatternGridTest(_BodyFixture):
+    """A pattern instance index renumbers when the column count changes."""
+
+    EDITED_LENGTH = 100.0
+
+    def _build_grid(self):
+        self.plate = self.document.addObject("PartDesign::Body", "Plate")
+        xy_plane = next(f for f in self.plate.Origin.OriginFeatures if f.TypeId == "App::Plane")
+        sketch = self._rectangle("PlateSketch", 0, 0, 60, 24, xy_plane)
+        for constraint in (
+            Sketcher.Constraint("Horizontal", 0),
+            Sketcher.Constraint("Horizontal", 2),
+            Sketcher.Constraint("Vertical", 1),
+            Sketcher.Constraint("Vertical", 3),
+            Sketcher.Constraint("Coincident", 0, 1, -1, 1),
+        ):
+            sketch.addConstraint(constraint)
+        length_index = sketch.addConstraint(Sketcher.Constraint("DistanceX", 0, 1, 0, 2, 60.0))
+        sketch.renameConstraint(length_index, "L")
+        width_index = sketch.addConstraint(Sketcher.Constraint("DistanceY", 1, 1, 1, 2, 24.0))
+        sketch.setExpression(f"Constraints[{width_index}]", "Constraints.L * 0.4")
+        pad = self.document.addObject("PartDesign::Pad", "PlatePad")
+        self.plate.addObject(pad)
+        pad.Profile = sketch
+        pad.Length = 5.0
+        self.document.recompute()
+        boss_sketch = self._rectangle("BossSketch", 3, 17, 7, 21, xy_plane)
+        boss_sketch.AttachmentOffset = App.Placement(App.Vector(0, 0, 5), App.Rotation())
+        boss = self.document.addObject("PartDesign::Pad", "Boss")
+        self.plate.addObject(boss)
+        boss.Profile = boss_sketch
+        boss.Length = 3.0
+        self.document.recompute()
+        grid = self.document.addObject("PartDesign::LinearPattern", "Grid")
+        self.plate.addObject(grid)
+        grid.Originals = [boss]
+        grid.Direction = (sketch, ["V_Axis"])
+        grid.Reversed = True
+        grid.Mode = "Spacing"
+        grid.Offset = 10
+        grid.Occurrences = 2
+        grid.Direction2 = (sketch, ["H_Axis"])
+        grid.Mode2 = "Spacing"
+        grid.Offset2 = 13
+        grid.setExpression("Occurrences2", "PlateSketch.Constraints.L / 20 mm")
+        self.document.recompute()
+        grid.Spacings2 = [-1.0] * (grid.Occurrences2 - 1)
+        self.document.recompute()
+        self.plate.Tip = grid
+        return grid
+
+    def test_Should_flag_repointed_When_a_grid_column_count_renumbers_the_instances(self):
+        # Arrange
+        grid = self._build_grid()
+        shape = grid.Shape
+        target = next(
+            f"Face{index}"
+            for index, face in enumerate(shape.Faces, start=1)
+            if abs(face.BoundBox.ZMin - 8.0) < 1e-6
+            and abs(face.BoundBox.ZMax - 8.0) < 1e-6
+            and ";_3;" in shape.getElementMappedName(f"Face{index}")
+        )
+        datum = self.document.addObject("PartDesign::Point", "BossPoint")
+        self.plate.addObject(datum)
+        datum.AttachmentSupport = [(grid, (target,))]
+        datum.MapMode = "CenterOfMass"
+        self.document.recompute()
+        posture = confirm.set_auto_approve(True)
+        self.addCleanup(confirm.set_auto_approve, posture)
+
+        # Act
+        envelope = sketches.sketch_set_datum(
+            self.registry,
+            doc=self.handle,
+            sketch="PlateSketch",
+            constraint="L",
+            value={"value": self.EDITED_LENGTH, "unit": "mm"},
+        )
+
+        # Assert
+        audit = envelope["structured_content"]["mutation"]["post_verify"]["tnp_audit"]
+        findings = [f for f in audit["findings"] if f["owner"] == "BossPoint"]
+        self.assertIn("REPOINTED", [f["verdict"] for f in findings])
+        self.assertEqual(envelope["status"], "SPEC_FAILED")
+
+
+class SameElementCountTest(unittest.TestCase):
+    COUNTS = {"Face": 6, "Edge": 12, "Vertex": 8}
+
+    def test_Should_accept_the_move_When_the_count_of_the_element_type_is_equal(self):
+        # Arrange
+        after = {"Face": 6, "Edge": 14, "Vertex": 9}
+
+        # Act
+        result = tnp_guard._same_element_count(self.COUNTS, after, "Face")
+
+        # Assert
+        self.assertTrue(result)
+
+    def test_Should_refuse_the_move_When_the_count_of_the_element_type_changed(self):
+        # Arrange
+        after = {"Face": 10, "Edge": 12, "Vertex": 8}
+
+        # Act
+        result = tnp_guard._same_element_count(self.COUNTS, after, "Face")
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_refuse_the_move_When_a_count_is_unreadable_or_the_type_is_not_counted(self):
+        # Arrange
+        cases = [
+            (None, self.COUNTS, "Face"),
+            (self.COUNTS, None, "Face"),
+            (self.COUNTS, self.COUNTS, "Solid"),
+        ]
+
+        # Act
+        results = [tnp_guard._same_element_count(b, a, t) for b, a, t in cases]
+
+        # Assert
+        self.assertEqual(results, [False, False, False])
+
+
 class PositionalCounterTest(unittest.TestCase):
     def test_Should_detect_the_counter_When_the_name_carries_a_FreeCAD_split_marker(self):
         # Arrange
@@ -2029,6 +2182,8 @@ class PositionalCounterTest(unittest.TestCase):
             "g1;:G00#5;CUT;:Hcc3:a,F",
             "g1;K2;:Hcc3:8,F",
             "g1;:I4;:Hcc3:8,F",
+            "#24:1;:G0;XTR;:Hac3:8,F;_3;:H:3,F;:Hac4,F",
+            "#24:1;:G0;XTR;:Hac3:8,F;:H,F;:Hac4,F",
         ]
 
         # Act
