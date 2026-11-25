@@ -189,6 +189,8 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `feature_pattern` | 2 | Linear/polar pattern of features | yes |
 | `feature_mirror` | 2 | Mirror features across plane/datum | yes |
 | `feature_datum` | 2 | Create datum plane/axis/point/CS (TNP-defensive referencing) | yes |
+| `feature_part_primitive` | 2 | Part box/cylinder/cone/sphere/torus at document level, outside any Body; optional placement (§3.7.5) | yes |
+| `feature_part_boolean` | 2 | Part cut/fuse/common of top-level solids; refuses untrusted or too-complex inputs, rolls back an empty or invalid result (§3.7.5) | yes |
 | `feature_set_parameters` | 2 | Edit object properties / driving dimensions, a `Placement` or `AttachmentOffset` (`{base, rotation}`), and string properties including `Label` | yes |
 | `feature_parameters_define` | 2 | Create a VarSet when missing and add or update typed parameters on it (`length`, `angle`, `float`, `integer`, `bool`, `string`); refuses a name the expression parser reads as a unit or constant | yes |
 | `feature_set_expression` | 2 | Bind or clear expressions on numeric property paths (`Length`, `.Constraints.<name>`, `.AttachmentOffset.Base.z`), all items in one transaction; refuses a binding FreeCAD would store wrongly (a unit of another dimension, an infinite value, a dead path, a text that crashes the parser) | yes |
@@ -216,15 +218,15 @@ Specified vs shipped. "Shipped" = returned by `hosts/tool_catalog.py:tool_specs(
 | `export_` | 3 | — | — | — | 3 | 3 |
 | `verify_` | 7 | — | 1 | — | 8 | 6 (`verify_fingerprint`, `verify_references` planned) |
 | `sketch_` | — | — | 8 | — | 8 | 8 |
-| `feature_` | — | — | 15 | — | 15 | 15 |
+| `feature_` | — | — | 17 | — | 17 | 17 |
 | `preview_` | — | — | 1 | — | 1 | 1 |
 | `view_` | — | — | — | — | 1 | 1 |
-| **AI-visible total** (typed tools) | | | | | **56** | **53** |
+| **AI-visible total** (typed tools) | | | | | **58** | **55** |
 | `script_exec` (escape route, outside `tool_specs()`) | 1 | — | — | — | 1 | 1 |
 
 **G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus `script_exec` (registered by default, gated by §5, kept outside `tool_specs()` so the G0.2 count is unchanged) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule), except that a `text_blocks` tool (`query_tree_summary`) ships no `outputSchema`.
 
-The three planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **53**; with `SCRIPT_EXEC_SPEC` that is 54 registered specs.
+The three planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **55**; with `SCRIPT_EXEC_SPEC` that is 56 registered specs.
 
 Not in this table, by design: the `internal=True` RPC-only methods (`export_self_read_stl`, `export_self_read_3mf`). They carry the `export_` prefix and exist because the mesh oracles live outside FreeCAD (AD-9/AD-12), but they are never MCP tools and never reach the AI surface (spine Conventions, "Internal RPC methods").
 
@@ -576,6 +578,8 @@ Refusals that every `feature_*` tool returns as `INVALID_INPUT` before the brack
 - `feature_set_parameters`: a value outside the property's type family — a `Quantity` or number for a quantity property, a number for a unitless float property, an integer for an integer property, a boolean for `App::PropertyBool`, a member string for `App::PropertyEnumeration`, a `{base: {x, y, z}, rotation: {axis, angle}}` object for `App::PropertyPlacement` (omitted keys keep their value), a string for `App::PropertyString`. A read-only property is refused, which covers the `Placement` of an attached object (write its `AttachmentOffset`) and of a feature inside a Body (move the Body, or the `AttachmentOffset` of the feature's sketch); an `AttachmentOffset` of an unattached object is refused with `parameters.not_attached`, a string FreeCAD would cut with `parameters.invalid_string` (the same code `feature_parameters_define` uses), and a rotation axis FreeCAD cannot normalise exactly, or an `axis` without an `angle` while the current rotation is zero, is refused. A placement base component beyond ±1e9 mm (the shape fingerprint fails near 1e118 mm) and an integer beyond ±2147483647 are refused with `parameters.out_of_range`. Any other property type (for example `Part::PropertyPartShape`) is refused. The message names `<feature>.<prop>` and its type.
 - `feature_loft`: `sections` empty, repeating a sketch or holding the `profile` (`loft.invalid_sections`); a section with a different wire count from the profile, which FreeCAD raises at recompute (`loft.wire_count_mismatch`); `closed: true` with fewer than 2 `sections`, which FreeCAD resets without a message, `FeatureLoft.cpp:209` (`loft.closed_needs_sections`); a sketch with no wire; a non-boolean flag; `subtractive: true` in a Body with no solid (`loft.nothing_to_subtract`).
 - `feature_sweep`: a `spine` that is the `profile`, a Body, a selector that does not resolve to an Edge, or a whole object that is not an edge, a wire or a compound of those (`sweep.invalid_spine`, also for a selector that does not resolve); a `mode` other than `standard` or `frenet` (`sweep.invalid_mode`); a string `spine` that is not a sketch; `subtractive: true` in a Body with no solid (`sweep.nothing_to_subtract`); a non-boolean flag.
+- `feature_part_primitive`: a field the kind does not take or lacks, a size at or below 0, a cone with both radii 0, a torus with `radius2` not below `radius1` (§3.7.5).
+- `feature_part_boolean`: `tools` empty, above 20 or repeating an input, an input inside a Body or `App::Part`, an input that is reversed, invalid or not made of solids, inputs above the measured cost limits (§3.7.5).
 - `feature_fillet` / `feature_chamfer`: a `base` that is not the Body's `Tip`; the message names the Tip. The dress-up builds from its base alone, so a base below the Tip would drop every later feature. FreeCAD's GUI allows this; the bridge refuses it.
 
 **`feature_set_parameters` after validation.** After the bracket opens, a written value of any family (quantity, number, boolean, enumeration, placement, string except `Label`) that the recompute still changes (an expression or a Python feature drives it, or the property clamps it) fails the call as `RECOMPUTE_ERROR` `parameters.value_overwritten` and rolls back; the rollback proof reads the written properties back, because the AD-6 fingerprint does not see them (decisions 32, 46). Result fields: `feature` and `feature_state` as for every `feature_*` tool, `label: {requested, stored}` when `Label` is written (FreeCAD makes labels unique), `placements: {property: {requested, stored}}` for each written placement property (`stored` read back in the wire shape), and `undo_steps`. A call whose parameters are all placements or strings the object already holds opens no transaction: it returns `OK` with `unchanged` (the names) and `undo_steps: 0`, no `mutation` block and no `feature_state`; like the no-change results of `feature_parameters_define` and `feature_set_expression` it runs before the confirm gate, because it has no effect to authorize. `Label` is exempt from the read-back because FreeCAD makes labels unique (unless the `DuplicateLabels` preference is on); the stored label is reported. The transaction is named `set parameters on <object> <n>`, with a per-process counter, so the call's own undo step can be told from an earlier one.
@@ -741,6 +745,49 @@ Two refusals protect the bridge, because the OCC builds hold the interpreter loc
 - `sweep.degenerate_spine`. A BSpline spine that doubles back on itself has a point of zero velocity, and an `AdditivePipe` over one held the interpreter for more than 280 s (8 points through `x = 0.5 i cos(0.3 i)`, probed on 1.1.4; a spine of straight edges that reverse at a corner did not hang). Only BSpline-like spine edges are sampled (a line or an analytic curve cannot reverse), at 400 parameters each, or eight per pole when that is more (a long helix turns a quarter turn between two of 400 samples after about 100 turns, and a 120-turn `Part::Helix` builds valid in 0.85 s), for at most 100 such edges and 100,000 samples in all (more is `sweep.too_complex`), and the cost check runs first; two consecutive tangents with a negative dot product, or a sample with no tangent, refuse the call. A BSpline edge that turns more than 90 degrees between two samples is refused for the same reason. A zero-velocity point without a reversal is not detected. The reversing BSpline reads dot = -1.0; a helix, a sine curve, a hairpin, a circle and a 100-segment polyline stay above 0.98.
 
 `preview_dry_run` accepts both tools: `preview_op_table` derives the table from the `feature_` spec list.
+
+### 3.7.5 `feature_part_primitive` and `feature_part_boolean`
+
+```json
+{ "feature_part_primitive": { "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "kind": { "enum": ["box", "cylinder", "cone", "sphere", "torus"] },
+    "name": { "type": "string" },
+    "length": { "$ref": "#/$defs/Quantity", "description": "box" },
+    "width": { "$ref": "#/$defs/Quantity", "description": "box" },
+    "height": { "$ref": "#/$defs/Quantity", "description": "box, cylinder, cone" },
+    "radius": { "$ref": "#/$defs/Quantity", "description": "cylinder, sphere" },
+    "radius1": { "$ref": "#/$defs/Quantity", "description": "cone base radius; torus ring radius" },
+    "radius2": { "$ref": "#/$defs/Quantity", "description": "cone top radius; torus tube radius" },
+    "placement": { "type": "object", "description": "{base: {x, y, z}, rotation: {axis, angle}}; an omitted key keeps the default of a new object" },
+    "confirm": { "$ref": "#/$defs/Confirm" }
+  }, "required": ["doc", "kind", "name"] } },
+  "feature_part_boolean": { "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "operation": { "enum": ["cut", "fuse", "common"] },
+    "base": { "type": "string", "description": "top-level object Name" },
+    "tools": { "type": "array", "items": { "type": "string" }, "minItems": 1, "maxItems": 20 },
+    "name": { "type": "string" },
+    "refine": { "type": "boolean", "default": true },
+    "confirm": { "$ref": "#/$defs/Confirm" }
+  }, "required": ["doc", "operation", "base", "tools", "name"] } } }
+```
+
+Both tools run in one AD-5 bracket, return `feature` and `feature_state` like every `feature_*` tool, and never call the PartDesign gate: they need only the `Part` module. They build `Part::` objects at document level, outside any Body. `preview_dry_run` accepts both.
+
+`feature_part_primitive` makes one `Part::Box`, `Cylinder`, `Cone`, `Sphere` or `Torus` named `name` (Name and Label). Each kind takes only its own fields (`length`, `width`, `height` for a box; `radius`, `height` for a cylinder; `radius1`, `radius2`, `height` for a cone; `radius` for a sphere; `radius1`, `radius2` for a torus); the others are refused. The `Angle*` properties stay at FreeCAD's full-turn default. `placement` uses the value shape of `feature_set_parameters` and its parser: a base component beyond 1e9 mm or a rotation angle beyond 1e6 degrees is refused `parameters.out_of_range` (a larger angle loses its value in the remainder modulo 360).
+
+`feature_part_boolean` builds, for one tool, `Part::Cut`, `Part::Fuse` or `Part::Common`; for several tools, `Part::MultiFuse` or `Part::MultiCommon` over the base then the tools (the common is the intersection of all). A cut by several tools is a `Part::Cut` of the base by a `Part::MultiFuse` named `<name>_tools`. `Refine` is set from `refine` on every object made, because FreeCAD otherwise reads it from the user preference `Mod/Part/Boolean/RefineModel`. The inputs and the intermediate fuse get `Visibility` false inside the transaction, as `ViewProviderBoolean.cpp` does in a GUI session, so a headless call reads the same and `document_undo` restores it.
+
+Refusals (`INVALID_INPUT`, before the bracket, with a `detail.code`):
+
+- `part_primitive.fields`: a field the kind does not take, or a field it needs is missing. `part_primitive.dimension`: a size at or below 0 (a cone radius may be 0), a cone with both radii 0, a torus with `radius2` not below `radius1`, a sphere or torus radius above 3.4e38 mm (FreeCAD clamps it silently: `PrimitiveFeature.cpp` `quantityRange`). A `name` (or `<name>_tools`) that is already another object's Label is refused, so Name and Label stay equal.
+- `part_boolean.invalid_input`: `tools` not a list of 1 to 20 Names, or an input named twice (the base inside `tools`).
+- `part_boolean.not_top_level`: an input whose `getParentGeoFeatureGroup()` is not `None` (a Body feature, a sketch inside a Body, a member of an `App::Part`). A Body itself is allowed.
+- `part_boolean.untrusted_shape`: an input that is not valid, not made only of solids, holds a solid of volume 0 or less, or is not recomputed: the input itself or any object in its dependency closure (`OutListRecursive`) is in a `Touched`, `Invalid` or `Error` state, so its shape may be out of date (an input that reads Up-to-date while an object it is built from is `Touched` measured an old shape: a cut gave 1500 where 500 is right). The tool does not recompute other objects; the caller recomputes the document and repeats the call. The check does not detect solids that overlap inside one compound (`deferred-work.md`, 13-fu entry), so a fuse or cut of such an input counts the overlap twice. On FreeCAD 1.1.4 a reversed solid made `Part::Cut` return 1500 where 500 is right and `Part::Fuse` return 500 where 1500 is right, and a self-intersecting solid made `Part::Common` return an empty compound, all with status `Valid`. The check is `usecases/shape_trust.py`, shared with `query_interference`.
+- `part_boolean.too_complex`: inputs above 3,000 faces in total, or above 1,000 solid pairs. The pairs are the solids of every input times the solids of every other input (several tools are also intersected with each other; a plate cut by two families of 100 crossing cylinders, 606 faces, took 68.9 s), plus the solid pairs inside each input whose bounding boxes overlap (`Part::Cut` fuses the tool solids pairwise: a plate cut by one compound of 100 + 100 crossing cylinders ran longer than 600 s). The in-input pass runs only when the face and across-input counts pass (it is quadratic when solids share one x range: 2.7 s for 3,000 spheres in a column), sorts on x and stops above the limit; it took 0.031 s on 990 disjoint cylinders (count 0), and a plate cut by one compound of 30 + 30 crossing cylinders (960 pairs) took 21.9 s. Face count alone does not bound the cost: a box cut by 1,000 disjoint cylinders (3,006 faces) took 8.9 s, the common of two families of 36 crossing cylinders (216 faces, 1,296 pairs) took 37.7 s, and the OCC call holds the interpreter lock, so the 120 s timeout cannot stop it. The slowest case measured within both limits, for inputs whose solids do not overlap inside one compound, is 13.4 s (30 x 30 crossing cylinders, 900 pairs); a compound whose solids overlap is still counted as trusted, but the in-input pair count bounds the solid-pair cost; the limits do not count intersecting face pairs, so two single-solid combs with crossing teeth (652 faces, 1 pair) ran longer than 88 s; an interleaved box cut took 22.4 s at 3,072 faces, just above the face limit. Near-tangent curved crossings can exceed the budget too: two families of cylinders crossing at 2 degrees passed the pair guard and fused for more than 130 s (20 x 20) and more than 300 s (25 x 25), because OCC boolean cost on curved, near-tangent intersections is bounded by neither solid nor face counts (`deferred-work.md`). The pair count uses bounding boxes, so slanted, closely packed tools whose boxes overlap although the solids are disjoint can be refused `part_boolean.too_complex` although the boolean is cheap (disjoint slanted slots, "at least 941" pairs, raw cut 0.81 s); split such a call into several calls of fewer tools.
+
+FreeCAD reports an empty or invalid boolean result as up to date (a common of disjoint or touching solids and a cut that removes everything give a `Compound` with no solid and status `Valid`), so after the recompute the tool checks the result and ends `RECOMPUTE_ERROR` with a proven rollback: `part_boolean.empty_result` for no solid or a solid of volume 0 or less, `part_boolean.invalid_result` when `isValid()` is false or the boolean object is in an error state (FreeCAD's own model check, `Mod/Part/Boolean/CheckModel`, fails it and leaves no shape; the message carries FreeCAD's text). A fuse of disjoint solids gives several solids and is accepted. The rollback proof reads the `Visibility` of every object back, because the AD-6 fingerprint sees shapes only.
 
 ### 3.8 `preview_dry_run` (AD-10)
 

@@ -40,6 +40,8 @@ FEATURE_TOOLS = {
     "feature_parameters_define",
     "feature_set_expression",
     "feature_body_create",
+    "feature_part_primitive",
+    "feature_part_boolean",
 }
 
 
@@ -436,3 +438,107 @@ def test_Should_offer_only_standard_and_frenet_When_the_sweep_mode_is_validated(
     # Assert
     assert accepted == [True, True]
     assert refused == [False, False, False]
+
+
+def test_Should_require_the_fields_of_each_kind_When_the_part_primitive_schema_is_read():
+    # Arrange
+    schema = _specs_by_name()["feature_part_primitive"].input_schema
+
+    # Act
+    branches = {
+        rule["if"]["properties"]["kind"]["const"]: rule["then"]["required"]
+        for rule in schema["allOf"]
+    }
+
+    # Assert
+    assert branches == {
+        "box": ["length", "width", "height"],
+        "cylinder": ["radius", "height"],
+        "cone": ["radius1", "radius2", "height"],
+        "sphere": ["radius"],
+        "torus": ["radius1", "radius2"],
+    }
+    assert schema["required"] == ["doc", "kind", "name"]
+    assert schema["additionalProperties"] is False
+
+
+def test_Should_refuse_a_box_without_a_height_When_the_part_primitive_schema_validates():
+    # Arrange
+    schema = _specs_by_name()["feature_part_primitive"].input_schema
+    box = {
+        "doc": "d",
+        "kind": "box",
+        "name": "Block",
+        "length": {"value": 1, "unit": "mm"},
+        "width": {"value": 1, "unit": "mm"},
+        "height": {"value": 1, "unit": "mm"},
+        "placement": {"base": {"x": {"value": 1, "unit": "mm"}}},
+    }
+    without_height = {key: value for key, value in box.items() if key != "height"}
+
+    # Act
+    def act():
+        jsonschema.validate(without_height, schema)
+
+    # Assert
+    jsonschema.validate(box, schema)
+    with pytest.raises(jsonschema.ValidationError):
+        act()
+
+
+def test_Should_bound_the_tools_to_one_through_twenty_When_the_part_boolean_schema_validates():
+    # Arrange
+    schema = _specs_by_name()["feature_part_boolean"].input_schema
+    call = {"doc": "d", "operation": "cut", "base": "A", "tools": ["B"], "name": "R"}
+    too_few = {**call, "tools": []}
+    too_many = {**call, "tools": [f"T{index}" for index in range(21)]}
+    unknown_operation = {**call, "operation": "slice"}
+
+    # Act
+    def act(candidate):
+        jsonschema.validate(candidate, schema)
+
+    # Assert
+    act(call)
+    for candidate in (too_few, too_many, unknown_operation):
+        with pytest.raises(jsonschema.ValidationError):
+            act(candidate)
+    assert schema["properties"]["refine"]["default"] is True
+
+
+def test_Should_not_call_the_partdesign_gate_When_the_part_tools_are_read():
+    # Arrange
+    tree = ast.parse(FEATURES_SOURCE.read_text(encoding="utf-8"))
+    names = {"feature_part_primitive", "feature_part_boolean"}
+
+    # Act
+    functions = [
+        node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name in names
+    ]
+    called = {
+        node.name: {
+            child.func.id
+            for child in ast.walk(node)
+            if isinstance(child, ast.Call) and isinstance(child.func, ast.Name)
+        }
+        for node in functions
+    }
+
+    # Assert
+    assert set(called) == names
+    for name, calls in called.items():
+        assert "_require_partdesign" not in calls, name
+
+
+def test_Should_reach_the_wire_as_a_code_When_a_part_tool_refuses_a_request():
+    # Arrange
+    from freecad_buddy.adapters.rpc_dispatch import _refusal_code
+    from freecad_buddy.usecases import features
+
+    refusal = features.PartToolRefusal("part_boolean.too_complex", "too many faces")
+
+    # Act
+    code = _refusal_code(refusal)
+
+    # Assert
+    assert code == "part_boolean.too_complex"

@@ -52,6 +52,7 @@ freecad-buddy/
 │       │   ├── tnp_guard.py          # snapshot/audit_references (AD-7; capability-gated via shim)
 │       │   ├── documents.py          # document_* lifecycle, explicit handles (AD-20); owns the AD-25 session workdir
 │       │   ├── queries.py            # query_* (tree, object, shape props, recompute status)
+│       │   ├── shape_trust.py        # is_measurable_solid: shapes the boolean and distance kernels can be trusted on
 │       │   ├── sketches.py           # sketch_* typed mutations (AD-5 bracket)
 │       │   ├── features.py           # feature_* typed mutations incl. feature_body_create
 │       │   ├── exports.py            # export_step / export_stl / export_3mf; unit pinned per call
