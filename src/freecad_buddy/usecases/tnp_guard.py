@@ -223,9 +223,11 @@ def _follows_support(
 
     FreeCAD itself must call it the same element — an equal mapped name and an equal history
     source on both sides, neither unreadable — and the support object must really have changed.
-    Each face shift of the element must then lie between zero and the support's own face shifts on
-    that axis, so the element moves the way the support grew and no farther. A shift along an axis
-    the support did not move on, or against its direction, stays ``REPOINTED``.
+    Each face shift of the element must then lie in the range spanned by zero and both of the
+    support's face shifts on that axis. A shift along an axis the support did not move on, or
+    outside that range, stays ``REPOINTED``. The range joins both support faces because a face
+    must be able to follow the support's other face (midplane growth); the cost is that a tampered
+    shift opposite to its own face but inside that range is excused.
     """
     element_shift = _axis_shifts(before["witness"], after["witness"])
     if element_shift is None or support_shift is None:

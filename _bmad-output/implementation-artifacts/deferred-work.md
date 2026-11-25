@@ -2344,3 +2344,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `verification-design.md:222-229` against `tnp_guard.py` `RefEntry` and `RefRecord`; found by review r1 (blind lens) of Story 13-15. Story 13-15 only added `target_witness` to the block.
   blocker: a design edit outside Story 13-15 scope (the spec allows only the Layer 1 text and the new field).
   unblock: one documentation pass over §3.1 against `tnp_guard.py`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-15-tnp-expected-reattachment.md`
+  summary: A datum on a Pad face still grades `REPOINTED` (audit FLAGGED, mutation rolls back) when the same element changes shape inside an unchanged support box: an inward-tapered pad (`TaperAngle` -10) on a `Pad.Length` edit, a `Revolution.Angle` edit with a datum on the end face, a `Pad.Reversed` toggle, and a pocket floor that moves inside an unchanged box.
+  evidence: review round 3 of Story 13-15, FreeCAD 1.1.4 probes (blind and edge lenses): inward taper top face shifts (+0.88, -0.88) on x and y while the support box shifts (0, 0); revolve 90 to 120 end face shifts z (+2.01, +0.67) with the support z extent unchanged; `Reversed` support z (-10, -10) against element z (-20, -20). Same verdict before the Story; recorded as safe-side residuals in decision 017.
+  blocker: the bounding-box witness cannot show these moves, and a looser rule (element inside the new support box) would excuse a tampered witness.
+  unblock: a leader or user decision to accept the residual, or a witness richer than the bounding box (for example a point on the element in the support local frame).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-15-tnp-expected-reattachment.md`
+  summary: A datum on a vertical pad edge grades `REPOINTED` after a `Pad.Length` edit because the mapped name changes in its hashed `#id` segment (`#11:2;:G;XTR;:H11a5:7,E` to `#1e:6;:G;XTR;:H11a5:7,E`) while the edge and its history source are unchanged.
+  evidence: review round 3 of Story 13-15 (edge lens probe); `_grade_entry` compares `before["mapped"] != after["mapped"]` as strings.
+  blocker: resolving `#id` segments needs the document `StringHasher`, which this guard does not read.
+  unblock: compare the mapped names with the hashed segments resolved, or compare the history source and a stable suffix instead.

@@ -114,9 +114,24 @@ Round 2 (three lenses, opus, on the round-1 fix batch).
 | R2-10 | Second residual missing from the design; "decision 40" ambiguous; alias placement (blind) | low | patch | Design text, `epic-13-decisions.md` pointer, alias moved beside `Witness`. |
 | R2-11 | Rotated support moves an element beyond its bounding-box faces (edge) | low | rejected | A false positive on the safe side; documented as a residual in 017, a fix needs the support frame and adds complexity. |
 
+Round 3 (three lenses, opus, on the round-2 fix batch; the last round).
+
+| # | Finding | Verdict | Route | Evidence |
+| --- | --- | --- | --- | --- |
+| R3-1 | Inward-tapered pad: datum on the top face grades REPOINTED on a Length edit (blind, edge) | medium | defer | Probed: top face shifts (+0.88, -0.88) on x and y while the support box does not move. Same verdict before this change; no cheap rule keeps the tamper check. Residual in 017; deferred entry; leader decision. |
+| R3-2 | Revolution Angle edit and Pad.Reversed toggle grade REPOINTED (blind, edge) | medium | defer | Probed. Same cause: the element moves in a way the support box does not show. Residual in 017; one deferred entry with R3-1. |
+| R3-3 | Vertical edge grades REPOINTED from the mapped-name check (hashed id changes) (edge) | medium | defer | Pre-existing, outside the witness rule. Deferred entry. |
+| R3-4 | Docstring and 017 claim direction is enforced; a midplane tamper is excused (blind) | low | patch | Text states that the range spans both support faces and names the cost. |
+| R3-5 | No shrink or midplane test; the mutant without the zero term survived (blind) | low | patch | Shrink and midplane audit tests, unit shrink case; the mutant is red. |
+| R3-6 | Unreadable-shape test checks only the helper; its name overstates (blind, gap) | low | patch | Renamed; a new test drives snapshot_references with a raising-Shape whole-object link; red under the inline-read mutant. |
+| R3-7 | End-to-end test reads a proxy, not the audit finding (blind) | low | rejected | The block lists non-PASS findings only; CLEAN, the recorded datum and the moved placement together went red under the written-baseline mutant in round 2. |
+| R3-8 | Residual sentence gives the wrong cause; long line (blind) | low | patch | Reworded in the design and in 017. |
+| R3-9 | Fillet and chamfer ops recompute inside the op, so their baseline is post-recompute (edge) | low | rejected | Pre-existing path outside this change. |
+| R3-10 | Scale-only change excused by the bound but blocked by the no-history rule (edge) | low | rejected | Same verdict as before the change; safe side. |
+
 ## Design Notes
 
-Why the support-movement bound (not only "support changed"): measured on the prototype, "support changed" alone passed `test_a_missing_entry_does_not_suppress_a_repoint_on_the_same_record` (witness +500 beside a real pad shrink). Bound check: per axis, each signed shift of the element's two bounding-box faces lies between zero and the support's own two face shifts; same `ShapeType`; a non-finite value reads as not bounded.
+Why the support-movement bound (not only "support changed"): measured on the prototype, "support changed" alone passed `test_a_missing_entry_does_not_suppress_a_repoint_on_the_same_record` (witness +500 beside a real pad shrink). Bound check: per axis, each signed shift of the element's two bounding-box faces lies in the range spanned by zero and both of the support's face shifts; same `ShapeType`; a non-finite value reads as not bounded.
 
 ## Verification
 

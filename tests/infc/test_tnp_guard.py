@@ -1417,7 +1417,7 @@ class SupportFollowTest(_BodyFixture):
         self.assertEqual(audit["status"], "CLEAN")
         self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
 
-    def test_Should_record_the_datum_without_a_support_witness_When_the_shape_is_unreadable(self):
+    def test_Should_return_no_witness_When_the_support_shape_cannot_be_read(self):
         # Arrange
         class _UnreadableShape:
             @property
@@ -1429,6 +1429,64 @@ class SupportFollowTest(_BodyFixture):
 
         # Assert
         self.assertIsNone(witness)
+
+    def test_Should_pass_the_datum_When_the_pad_shrinks(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.pad.Length = PAD_LENGTH - 5.0
+        self.document.recompute()
+
+        # Act
+        audit, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
+
+    def test_Should_pass_the_datum_When_a_midplane_pad_grows_on_both_sides(self):
+        # Arrange
+        self.pad.Midplane = True
+        self.document.recompute()
+        datum = self._attach_datum(_plane_name(self.pad.Shape, self.AXIS_Z, PAD_LENGTH / 2))
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._grow_pad()
+
+        # Act
+        audit, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertAlmostEqual(datum.Placement.Base.z, (PAD_LENGTH + 5.0) / 2, places=6)
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
+
+    def test_Should_keep_a_whole_object_link_record_When_its_target_shape_cannot_be_read(self):
+        # Arrange
+        class _Target:
+            Name = "Target"
+
+            @property
+            def Shape(self):
+                raise RuntimeError("shape unreadable")
+
+        target = _Target()
+
+        class _Owner:
+            Name = "Owner"
+            PropertiesList = ["Support"]
+            Support = (target, [""])
+
+            def getTypeIdOfProperty(self, prop):
+                return "App::PropertyLinkSub"
+
+        document = type("_OneOwnerDocument", (), {"Objects": [_Owner()]})()
+
+        # Act
+        records = tnp_guard.snapshot_references(document)
+
+        # Assert
+        self.assertEqual([(r["owner"], r["prop"]) for r in records], [("Owner", "Support")])
+        self.assertIsNone(records[0]["target_witness"])
 
 
 class AxisShiftsTest(unittest.TestCase):
@@ -1504,6 +1562,7 @@ class FollowsSupportTest(unittest.TestCase):
     HISTORY = (7, "g1;SKT")
     GREW_UP_FIVE = ((0.0, 0.0), (0.0, 0.0), (0.0, 5.0))
     GREW_DOWN_FIVE = ((0.0, 0.0), (0.0, 0.0), (-5.0, 0.0))
+    SHRANK_FIVE = ((0.0, 0.0), (0.0, 0.0), (0.0, -5.0))
 
     def _entry(self, shift=(0.0, 0.0, 0.0), mapped=";a;", history=HISTORY):
         dx, dy, dz = shift
@@ -1540,6 +1599,16 @@ class FollowsSupportTest(unittest.TestCase):
 
         # Act
         result = tnp_guard._follows_support(before, after, self.GREW_DOWN_FIVE, 1e-7)
+
+        # Assert
+        self.assertTrue(result)
+
+    def test_Should_excuse_the_move_When_the_support_shrank(self):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=(0.0, 0.0, -5.0))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.SHRANK_FIVE, 1e-7)
 
         # Assert
         self.assertTrue(result)

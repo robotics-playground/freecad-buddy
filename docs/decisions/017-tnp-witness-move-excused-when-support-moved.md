@@ -9,8 +9,9 @@ Layer 1 does not grade a moved witness `REPOINTED` when all of these hold:
 - The support changed: the whole target shape's witness differs beyond the element tolerance
   from the baseline. The baseline is the snapshot, or the op-written reading when the record's
   value equals what the op wrote (the path `run_mutation` takes for an unchanged reference).
-- The element moved the way the support moved and no farther: per axis, each signed shift of the
-  element's two bounding-box faces lies between zero and the support's own face shifts.
+- The element moved no farther than the support, in the support's direction: per axis, each signed
+  shift of the element's two bounding-box faces lies in the range spanned by zero and both of the
+  support's face shifts.
 
 The excused entry still goes to Layer 2. Every other witness move stays `REPOINTED`.
 
@@ -31,7 +32,7 @@ witness shift larger than the support move stays `REPOINTED`
 (`test_a_missing_entry_does_not_suppress_a_repoint_on_the_same_record`).
 
 The bound is per axis and signed, so a witness shifted along an axis the support did not move on,
-or against the direction the support grew, stays `REPOINTED`. A single maximum over all axes would
+or outside the range the support's shifts span, stays `REPOINTED`. A single maximum over all axes would
 excuse a 5 mm shift in X beside a support that grew 5 mm in Z.
 
 ## Accepted residual
@@ -46,16 +47,27 @@ keeps the mapped name and the history source and moves inside that range is excu
 source is decoded from the mapped name (`ElementMap.cpp`), so the two are one identity signal,
 not two; the excuse rests on FreeCAD reporting the same mapped name.
 
-A support that moves by rotation can move an element farther on an axis than the support's
-bounding-box faces. That stays `REPOINTED`: a false positive on the safe side.
+The range joins both support faces, because a face must be able to follow the support's other
+face when a midplane pad grows. A tampered shift opposite to its own face but inside that range
+is therefore excused too.
+
+These cases stay `REPOINTED` although the element is the same (false positives on the safe side,
+measured in review round 3): a support that rotates or is reflected (`Pad.Reversed` toggled); an
+inward-tapered pad (`TaperAngle` -10, the top face shrinks while the support box does not move
+on x and y); a revolution whose `Angle` changes (the end face turns while the support z extent
+does not move); and a pocket floor that moves inside an unchanged support box. In each the
+element moves in a way the support bounding box does not show. A vertical edge also grades
+`REPOINTED`, from the mapped-name check: its hashed `#id` segment changes while the edge does
+not. That is outside this rule.
 
 ## Alternatives considered
 
 - **Exempt by owner, or by "same support and same mapped name".** Rejected: it disables the
   witness check, the only Layer-1 detector of a re-point that keeps the mapped name (see 014 for
   the same granularity mistake on the entry-count check).
-- **Whitelist `AttachmentSupport` only.** Rejected by epic decision 40 (`epic-13-decisions.md`): it needs a property-name list
-  and leaves the `Fillet.Base` false positive.
+- **Whitelist `AttachmentSupport` only.** Rejected by epic decision 40
+  (`epic-13-decisions.md`): it needs a property-name list and leaves the `Fillet.Base` false
+  positive.
 - **One maximum over all six bounding-box components, or per-axis magnitudes.** Replaced by the
   signed per-axis bound after review: they ignore direction.
 
