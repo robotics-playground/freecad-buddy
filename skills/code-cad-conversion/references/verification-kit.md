@@ -138,7 +138,7 @@ defaults once with `query_parameters` and keep them. Run each case in five steps
    `feature_set_parameters` `{"feature": "Params", "parameters": {"PLATE_T": 3.0, "COUNTERSINK": false}}`
    (a float or integer is a number, a bool is `true` or `false`, an enumeration is its member
    string). A variable that a `query_parameters` binding row `{object: "Params", path: <name>}`
-   derives is reset by the recompute with no error: set only variables with no such row. When
+   derives fails the call (`RECOMPUTE_ERROR`, `parameters.value_overwritten`, rolled back): set only variables with no such row. When
    `post_verify.passed` is false or `rolled_back` is true, the case did not apply: record it as
    failed and skip the measurement.
 2. Measure the overlap with the case script below: one read-only `common()` per part.

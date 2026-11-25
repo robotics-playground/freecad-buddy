@@ -502,7 +502,83 @@ class StringWriteTest(_PlacementFixture):
         self.assertNotIn("label", envelope["structured_content"])
 
 
+class _Stub:
+    def __init__(self, **attributes):
+        self.Name = "Stub"
+        self.__dict__.update(attributes)
+
+    def getPropertyStatus(self, _prop):
+        return ["Hidden"]
+
+
+class ReadBackRuleTest(_FeatureFixture):
+    def test_Should_accept_the_offset_When_an_attached_object_has_a_hidden_offset_status(self):
+        # Arrange
+        attached = _Stub(MapMode="FlatFace")
+
+        # Act
+        features._require_attached_offset(attached, "AttachmentOffset")
+
+        # Assert
+        self.assertEqual(attached.MapMode, "FlatFace")
+
+    def test_Should_refuse_the_offset_When_the_map_mode_is_deactivated(self):
+        # Arrange
+        loose = _Stub(MapMode="Deactivated")
+
+        # Act
+        def act():
+            features._require_attached_offset(loose, "AttachmentOffset")
+
+        # Assert
+        with self.assertRaises(features.ParameterRefusal):
+            act()
+
+    def test_Should_report_a_difference_When_an_integer_is_off_by_one_in_a_billion(self):
+        # Arrange
+        stored = _Stub(Count=2**31 - 1)
+
+        # Act
+        holds = features._holds_written(stored, "Count", 2**31)
+
+        # Assert
+        self.assertFalse(holds)
+
+    def test_Should_tell_two_small_readings_apart_When_they_differ_by_one_part_in_a_thousand(self):
+        # Arrange
+        before, after = 1e-7, 1.001e-7
+
+        # Act
+        same = features._comparable(before) == features._comparable(after)
+
+        # Assert
+        self.assertFalse(same)
+
+    def test_Should_read_nan_as_equal_to_itself_When_the_probe_compares_two_readings(self):
+        # Arrange
+        nan = float("nan")
+
+        # Act
+        first, second = features._comparable(nan), features._comparable(nan)
+
+        # Assert
+        self.assertEqual(first, second)
+
+
 class NumericWriteTest(_PlacementFixture):
+    def test_Should_roll_back_When_a_property_clamps_the_written_angle(self):
+        # Arrange
+        cylinder = self.document().addObject("Part::Cylinder", "Cyl")
+        self.document().recompute()
+
+        # Act
+        envelope = self.dispatch("Cyl", {"Angle": deg(400.0)})
+
+        # Assert
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR", envelope.get("detail"))
+        self.assertEqual(envelope["detail"]["code"], "parameters.value_overwritten")
+        self.assertAlmostEqual(cylinder.Angle.Value, 360.0)
+
     def test_Should_store_the_angle_When_a_cylinder_angle_is_written(self):
         # Arrange
         cylinder = self.document().addObject("Part::Cylinder", "Cyl")
@@ -535,6 +611,8 @@ class RollbackProofTest(_PlacementFixture):
         feature = self.document().addObject("Part::FeaturePython", "Py")
         feature.addProperty("App::PropertyFloat", "Ratio", "Meta")
         feature.addProperty("App::PropertyLength", "Size", "Meta")
+        feature.addProperty("App::PropertyFloat", "Big", "Meta")
+        feature.Big = 123456789.12345679
         _ResetsPlacement(feature)
         feature.Ratio = 0.1 + 0.2
         feature.Size = 0.1 + 0.2
@@ -544,7 +622,7 @@ class RollbackProofTest(_PlacementFixture):
         # Act
         with mock.patch.object(shim, "enable_undo", return_value=False):
             envelope = self.dispatch(
-                "Py", {"Ratio": 0.5, "Size": mm(0.5), "Placement": base(x=7.0)}
+                "Py", {"Ratio": 0.5, "Size": mm(0.5), "Big": 1.5, "Placement": base(x=7.0)}
             )
 
         # Assert
@@ -552,6 +630,8 @@ class RollbackProofTest(_PlacementFixture):
         block = envelope["structured_content"]["mutation"]
         self.assertEqual(block["rollback_proven"], "rolled_back_via_snapshot")
         self.assertAlmostEqual(self.document().getObject("Py").Ratio, 0.3)
+        self.assertAlmostEqual(self.document().getObject("Py").Size.Value, 0.3)
+        self.assertAlmostEqual(self.document().getObject("Py").Big, 123456789.12345679, places=6)
 
     def test_Should_restore_the_label_through_the_snapshot_When_abort_restores_nothing(self):
         # Arrange

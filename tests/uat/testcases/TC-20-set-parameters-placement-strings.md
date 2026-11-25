@@ -50,6 +50,8 @@ mcp feature_set_parameters { doc: <handle>, feature: "Body", parameters: { Place
 
 **Given** a new document `tc20_label` built by the same `script_exec` call as TC-20-01 (`Profile` is attached with `MapMode` `FlatFace`; `Body` stays at the origin) — verify: `mcp query_tree_summary { doc: <handle> }` lists `Body`, `Profile`, `Block` with no `!` marker  
 
+**And** the before image is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`, then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-20-02-before.png"}' | "$FCB_CUA" get_window_state`  
+
 **When** `Block` is renamed to a label that another object holds, and the attached sketch is moved  
 ```
 mcp feature_set_parameters { doc: <handle>, feature: "Block", parameters: { Label: "Profile" } }
@@ -60,7 +62,7 @@ mcp feature_set_parameters { doc: <handle>, feature: "Profile", parameters: { At
 **Then** the rename succeeds with a unique label — verify: the first call returns `OK` with `structured_content.label` equal to `{requested: "Profile", stored: "Profile001"}`; `script_exec` `result = doc.Block.Label` returns `Profile001`  
 **And** the placement write is refused before any change — verify: the second call returns `INVALID_INPUT`, `detail.message` contains `Profile.Placement is read-only` and `AttachmentOffset`; `script_exec` `result = doc.Profile.Placement.Base.z` returns `0.0`  
 **And** the offset write moves the attached sketch — verify: the third call returns `OK`; `script_exec` `result = doc.Profile.Placement.Base.z` returns `5.0`  
-**And** *(visual)* the sketch moved 5 mm and the model tree shows the new label — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-20-02-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and read the tree label of the pad (`Profile001`) and whether the sketch plane sits above the origin plane. The judgement is on the pixels alone  
+**And** *(visual)* the sketch moved 5 mm and the model tree shows the new label — verify: `mcp view_fit_viewport { doc: <handle> }`, then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-20-02-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state whether the sketch (the pad's profile) sits at a different height than before, and read the tree label of the pad (`Profile001`). The judgement is on the pixels alone  
 **And** undo restores both writes — verify: `mcp document_undo { doc: <handle> }` twice (the refused placement write recorded no step) returns `OK` each time; `script_exec` `result = [doc.Block.Label, doc.Profile.Placement.Base.z]` returns `["Block", 0.0]`  
 
 **Cleanup**: `mcp document_close { doc: <handle> }`

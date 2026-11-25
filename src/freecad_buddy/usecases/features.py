@@ -2269,7 +2269,10 @@ def _parameter_writes(feature: object, parameters: object) -> list[tuple[str, ob
             if prop == "Placement" and "AttachmentOffset" in feature.PropertiesList:
                 hint = "; its attachment sets it, so write AttachmentOffset instead"
             elif prop == "Placement" and getattr(feature, "_Body", None) is not None:
-                hint = "; a feature inside a Body follows the Body, so move the Body instead"
+                hint = (
+                    "; a feature inside a Body follows the Body, so move the Body, or the "
+                    "AttachmentOffset of its sketch"
+                )
             raise ValidationError(f"{feature.Name}.{prop} is read-only{hint}")
         writes.append((prop, _parameter_value(feature, prop, raw)))
     return writes
@@ -2410,13 +2413,16 @@ def _placement_value(raw: object, what: str, current: object = None) -> object:
 def _require_attached_offset(feature: object, prop: str) -> None:
     """Refuse an ``AttachmentOffset`` write on an object that is not attached.
 
-    :raises ParameterRefusal: ``parameters.not_attached`` when FreeCAD hides the property.
+    The test is ``MapMode``, not the property's ``Hidden`` status: FreeCAD leaves the offset hidden
+    on an object that was attached before its support had a shape, and that object still applies it.
+
+    :raises ParameterRefusal: ``parameters.not_attached`` when ``MapMode`` is Deactivated.
     """
-    if prop == "AttachmentOffset" and "Hidden" in feature.getPropertyStatus(prop):
+    if prop == "AttachmentOffset" and getattr(feature, "MapMode", None) == "Deactivated":
         raise ParameterRefusal(
             "parameters.not_attached",
-            f"{feature.Name} is not attached, so FreeCAD hides and ignores its AttachmentOffset "
-            "(AttachExtension.cpp); attach it first",
+            f"{feature.Name} is not attached, so FreeCAD ignores its AttachmentOffset "
+            "(MapMode Deactivated); attach it first",
         )
 
 
@@ -2427,34 +2433,44 @@ def _is_placement_or_string(feature: object, prop: str) -> bool:
 def _holds_written(feature: object, prop: str, value: object) -> bool:
     """Whether ``feature.prop`` holds the value a write stored.
 
-    A placement compares exactly, a number within a relative 1e-9 (a quantity compares by its
-    magnitude in FreeCAD's internal unit, which is what the write stored), and a string, boolean
-    or enumeration member by equality.
+    A placement compares exactly, a float within a relative 1e-9 (a quantity compares by its
+    magnitude in FreeCAD's internal unit, which is what the write stored), and an integer, string,
+    boolean or enumeration member by equality.
     """
     current = getattr(feature, prop)
     if hasattr(value, "isSame"):
         return current.isSame(value, 0.0)
-    if _is_number(value):
+    if isinstance(value, float):
         magnitude = current.Value if hasattr(current, "Value") else current
-        return math.isclose(float(magnitude), float(value), rel_tol=1e-9, abs_tol=1e-12)
+        return math.isclose(float(magnitude), value, rel_tol=1e-9, abs_tol=1e-12)
+    if isinstance(value, int) and not isinstance(value, bool):
+        magnitude = current.Value if hasattr(current, "Value") else current
+        return magnitude == value
     return current == value
 
 
 def _comparable(value: object) -> object:
     """Return ``value`` in a form two readings of an unchanged property compare equal.
 
-    A placement, a quantity and a float are read as rounded floats: a snapshot restore reads them
-    back from the saved file, which keeps 16 digits, so an exact comparison fails on a 17-digit
-    value (0.1 + 0.2 reopens as 0.3).
+    A placement, a quantity and a float are read to 15 significant digits: a snapshot restore reads
+    them back from the saved file, which keeps 16 digits, so an exact comparison fails on a
+    17-digit value (0.1 + 0.2 reopens as 0.3). Significant digits, not decimals, so a large value
+    is stable too and a small change stays visible.
     """
     if hasattr(value, "Rotation") and hasattr(value, "Base"):
         base, quaternion = value.Base, value.Rotation.Q
-        return tuple(round(float(c), 9) for c in (base.x, base.y, base.z, *quaternion))
+        return tuple(_stable_float(c) for c in (base.x, base.y, base.z, *quaternion))
     if hasattr(value, "Value") and hasattr(value, "Unit"):
-        return round(float(value.Value), 9)
+        return _stable_float(value.Value)
     if isinstance(value, float):
-        return round(value, 9)
+        return _stable_float(value)
     return value
+
+
+def _stable_float(number: float) -> float | str:
+    """Return ``number`` to 15 significant digits; ``"nan"`` for NaN, which never equals itself."""
+    number = float(number)
+    return "nan" if number != number else float(f"{number:.15g}")
 
 
 def _written_state(feature: str, parameters: object) -> Callable[[object], object]:
@@ -2625,7 +2641,14 @@ def feature_set_parameters(
                 raise transaction.RecomputeFailure(
                     "parameters.value_overwritten",
                     f"{feature}.{prop} reads {getattr(target, prop)!r} after the recompute, not "
-                    f"the requested {value!r}: an expression or the feature itself sets this value",
+                    f"the requested {value!r}: an expression, a limit of the property or the "
+                    "feature itself changed it"
+                    + (
+                        "; the object is attached, so write AttachmentOffset instead"
+                        if prop == "Placement"
+                        and str(getattr(target, "MapMode", "Deactivated")) != "Deactivated"
+                        else ""
+                    ),
                 )
 
     def report(document: object) -> dict:
