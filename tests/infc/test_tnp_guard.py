@@ -10,6 +10,7 @@ import glob
 import os
 import shutil
 import unittest
+from unittest import mock
 
 import FreeCAD as App
 import Part
@@ -2003,6 +2004,19 @@ class SplitPieceCounterTest(_BodyFixture):
         # Assert
         self.assertIn("REPOINTED", verdicts)
         self.assertNotEqual(audit["status"], "CLEAN")
+        self.assertEqual(envelope["status"], "SPEC_FAILED")
+
+    def test_Should_flag_repointed_When_only_the_lineage_shows_the_counter(self):
+        # Arrange
+        pass_through = 2
+        always_same_count = mock.patch.object(tnp_guard, "_same_element_count", return_value=True)
+
+        # Act
+        with always_same_count:
+            envelope, audit, verdicts = self._datum_verdicts_after_length_edit(pass_through)
+
+        # Assert
+        self.assertIn("REPOINTED", verdicts)
         self.assertEqual(envelope["status"], "SPEC_FAILED")
 
     def test_Should_flag_repointed_When_the_counter_is_hidden_behind_two_pass_through_features(

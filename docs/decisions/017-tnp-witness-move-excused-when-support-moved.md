@@ -21,7 +21,7 @@ Layer 1 does not grade a moved witness `REPOINTED` when all of these hold:
   once per target per walk; an unreadable count gives no excuse. Residual: a reorder that keeps
   every count (swapped pieces) is not seen by the count guard; the name-form checks below stay as
   a second defence.
-  The count guard is a backstop proven by a synthetic test only (tampered `target_counts`): no real
+  A bare `;:M` (index 1) stays refused although it is the first piece: the first red team showed `;:M` counters shift, so it remains the documented safe-side residual. The count guard is a backstop proven by a synthetic test only (tampered `target_counts`): no real
   edit was found that the name checks miss and the count guard catches. Real edits it refuses, such
   as a plate edge following a length change that adds pattern grooves, are safe-side `REPOINTED`.
 - The name carries no positional piece counter. FreeCAD 1.1 numbers the pieces of a split face or
