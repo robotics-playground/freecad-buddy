@@ -2296,6 +2296,23 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   blocker: no stock FreeCAD type reproduces it; low.
   unblock: a real document type that holds a member in Group and also links to it, or a small refactor that checks link properties besides Group.
 
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-10-set-expression.md`
+  summary: A mutation that leaves a shape with an infinite dimension commits, and the document then cannot be fingerprinted (`feature_set_expression` now rolls this back through `recompute_check`; other tools do not).
+  evidence: Items `Other.Height = 5 mm` then `Box.Height = 1 mm / (Other.Height - 5 mm)` pass the pre-call checks and commit; `fingerprint` raises on `PrincipalProperties`, the bracket reports `SPEC_FAILED` with the snapshot kept, and later calls on the document fail at setup. `post_verify` does not check for a non-finite property or shape. The same state follows any recompute that makes a dependent expression infinite (for example `feature_parameters_define` changing a value that an existing binding divides by).
+  blocker: the check belongs in `post_verify` or `fingerprint`, shared code that every tool uses.
+  unblock: an AD-5 decision on a non-finite check before commit.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-10-set-expression.md`
+  summary: No G2 fault case measures the `audit_references` rule that excuses a binding the op removed.
+  evidence: `ExpressionBindingTest` in `tests/infc/test_tnp_guard.py` covers the rule, but `benchmarks/g2/fault-injection/` has no case for "binding removed by the op" and "binding lost during the recompute", so `audit_references` is scored without them.
+  blocker: a new fault suite case and a re-score, not asked by this Story.
+  unblock: a G2 fault-suite story.
+
+- source_spec: `_bmad-output/implementation-artifacts/epic-13-status.md`
+  summary: Two external tests fail intermittently on the Windows host and pass on re-run: `tests/external/test_marshal_self_submit.py::test_submitting_to_a_loop_this_thread_must_pump_deadlocks` (failed once in 5 runs alone at 04574455, and in several full runs) and `tests/external/test_mcp_cache_proxy.py::test_should_answer_both_calls_when_two_parallel_calls_meet_a_lost_session` (verifiers 13-9/13-10/13-11 saw it fail on base too). Neither file is touched by Epic 13. A flaky test can hide a real failure in CI (the repo rule is that CI must not hide failures).
+  evidence: leader gate runs on the integration head after the 13-1..13-10 merges; verify-13-9.md N1; verify-13-11.md.
+  blocker: timing races outside Epic 13 scope; needs a root-cause look, not a retry.
+  unblock: a small Story that finds the race in each test and makes it deterministic.
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-18-loft-sweep.md`
   summary: `feature_sweep` does not detect a BSpline spine with a zero-velocity point and no tangent reversal.
   evidence: Review finding (unverified, would be medium): `_check_spine_tangents` refuses only a negative tangent dot product. A zero-velocity cusp without reversal may still hold the interpreter in `AdditivePipe`. A probe of such a curve (derivative length near zero at one sample, tangent continuous) settles it.

@@ -408,6 +408,25 @@ def property_enums() -> dict[str, dict[str, list[str]]]:
     return found
 
 
+def close_pending_transaction(name: str) -> None:
+    """Close the application-level transaction ``name`` that a commit or abort left open.
+
+    ``Document::openTransaction`` only names the application's active transaction; the document's
+    own undo transaction opens on the first change. ``Document::commitTransaction`` and
+    ``abortTransaction`` close the application one only when the document's own exists
+    (``App/Document.cpp``), so a bracket whose op wrote nothing leaves it open and the next change
+    by any caller joins it. Closing with ``abort`` is safe here: the document's own transaction is
+    already finished, so there is nothing left to discard. Only a transaction of that name is
+    closed: under a GUI command's guard ``openTransaction`` leaves the command's transaction in
+    place, and aborting that one would discard the user's work.
+    """
+    import FreeCAD
+
+    active = FreeCAD.getActiveTransaction()
+    if active is not None and active[0] == name:
+        FreeCAD.closeActiveTransaction(True)
+
+
 def enable_undo(doc: object) -> bool:
     """Turn on ``doc``'s undo stack when the build honours the switch; report whether it is on.
 

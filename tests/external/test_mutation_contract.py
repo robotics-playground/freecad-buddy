@@ -170,7 +170,7 @@ def test_split_subname_separates_the_mapped_and_indexed_halves(subname, mapped, 
 
 def test_audit_references_accepts_the_op_written_reference_reading():
     params = inspect.signature(tnp_guard.audit_references).parameters
-    assert list(params) == ["doc", "snapshot", "written", "deleted"]
+    assert list(params) == ["doc", "snapshot", "written", "deleted", "removed_bindings"]
     assert params["written"].default is None
     assert params["deleted"].default == frozenset()
 
@@ -179,7 +179,7 @@ def test_post_verify_threads_the_written_reading_into_the_audit():
     params = inspect.signature(transaction.post_verify).parameters
     assert "refs_written" in params
     source = inspect.getsource(transaction.post_verify)
-    assert "audit_references(document, refs_before, refs_written, deleted)" in source
+    assert "refs_written, deleted, removed_bindings=removed_bindings" in " ".join(source.split())
 
 
 def test_run_mutation_captures_the_written_references_before_recompute():

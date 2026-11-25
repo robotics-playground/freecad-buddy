@@ -1,0 +1,436 @@
+{
+ "_errors": [],
+ "_test_ok": true,
+ "after_remove_bindings": [
+  [
+   ".Constraints.extra_len",
+   "5 mm + 0 mm"
+  ]
+ ],
+ "feature_fillet": {
+  "envelope": {
+   "detail": null,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "feature": "Fillet",
+    "feature_state": {
+     "body": "Body",
+     "feature": "Fillet",
+     "is_tip": true,
+     "readable": true,
+     "schema": "fcb.feature-state/1",
+     "shape_summary": {
+      "area": 2181.115038,
+      "bbox": [
+       20.0,
+       30.0,
+       10.0
+      ],
+      "edge_count": 15,
+      "face_count": 7,
+      "is_valid": true,
+      "solid_count": 1,
+      "vertex_count": 10,
+      "volume": 5982.831853
+     }
+    },
+    "mutation": {
+     "changed": [
+      {
+       "area": 2181.115038,
+       "com": [
+        10.0,
+        15.041762,
+        4.986934
+       ],
+       "name": "Body",
+       "volume": 5982.831853
+      },
+      {
+       "area": 2181.115038,
+       "com": [
+        10.0,
+        15.041762,
+        4.986934
+       ],
+       "name": "Fillet",
+       "volume": 5982.831853
+      }
+     ],
+     "fingerprint_after": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_before": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "post_verify": {
+      "explanation": null,
+      "fully_constrained": null,
+      "is_valid": true,
+      "passed": true,
+      "recompute_clean": true,
+      "tnp_audit": {
+       "counts": {
+        "PASS": 1
+       },
+       "element_map_version": "15.70200.5",
+       "findings": [],
+       "status": "CLEAN"
+      }
+     },
+     "rollback_proven": null,
+     "rolled_back": false,
+     "schema": "fcb.mutation/2",
+     "touched": [
+      "Fillet",
+      "Body"
+     ]
+    }
+   },
+   "text": "Mutation committed; fingerprint 2aae56c14ca4."
+  },
+  "summary": {
+   "audit_status": "CLEAN",
+   "rolled_back": false,
+   "status": "OK",
+   "verdicts": []
+  }
+ },
+ "feature_pad": {
+  "envelope": {
+   "detail": null,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "feature": "Pad",
+    "feature_state": {
+     "body": "Body",
+     "feature": "Pad",
+     "is_tip": true,
+     "readable": true,
+     "schema": "fcb.feature-state/1",
+     "shape_summary": {
+      "area": 2200.0,
+      "bbox": [
+       20.0,
+       30.0,
+       10.0
+      ],
+      "edge_count": 12,
+      "face_count": 6,
+      "is_valid": true,
+      "solid_count": 1,
+      "vertex_count": 8,
+      "volume": 6000.0
+     }
+    },
+    "mutation": {
+     "changed": [
+      {
+       "area": 2200.0,
+       "com": [
+        10.0,
+        15.0,
+        5.0
+       ],
+       "name": "Body",
+       "volume": 6000.0
+      },
+      {
+       "area": 2200.0,
+       "com": [
+        10.0,
+        15.0,
+        5.0
+       ],
+       "name": "Pad",
+       "volume": 6000.0
+      }
+     ],
+     "fingerprint_after": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_before": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "post_verify": {
+      "explanation": null,
+      "fully_constrained": true,
+      "is_valid": true,
+      "passed": true,
+      "recompute_clean": true,
+      "tnp_audit": {
+       "counts": {},
+       "element_map_version": "15.70200.5",
+       "findings": [],
+       "status": "CLEAN"
+      }
+     },
+     "rollback_proven": null,
+     "rolled_back": false,
+     "schema": "fcb.mutation/2",
+     "touched": [
+      "Pad",
+      "Body"
+     ]
+    }
+   },
+   "text": "Mutation committed; fingerprint 01a78914d93e."
+  },
+  "summary": {
+   "audit_status": "CLEAN",
+   "rolled_back": false,
+   "status": "OK",
+   "verdicts": []
+  }
+ },
+ "feature_set_parameters": {
+  "envelope": {
+   "detail": {
+    "code": "mutation.spec_failed",
+    "message": "TNP audit flagged 1 reference(s): Fillet.Base REPOINTED"
+   },
+   "schema": "fcb.result-envelope/1",
+   "status": "SPEC_FAILED",
+   "structured_content": {
+    "feature": "Pad",
+    "feature_state": {
+     "body": "Body",
+     "feature": "Pad",
+     "is_tip": false,
+     "readable": true,
+     "schema": "fcb.feature-state/1",
+     "shape_summary": {
+      "area": 2200.0,
+      "bbox": [
+       20.0,
+       30.0,
+       10.0
+      ],
+      "edge_count": 12,
+      "face_count": 6,
+      "is_valid": true,
+      "solid_count": 1,
+      "vertex_count": 8,
+      "volume": 6000.0
+     }
+    },
+    "mutation": {
+     "changed": [],
+     "fingerprint_after": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_before": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "post_verify": {
+      "explanation": "TNP audit flagged 1 reference(s): Fillet.Base REPOINTED",
+      "fully_constrained": true,
+      "is_valid": true,
+      "passed": false,
+      "recompute_clean": true,
+      "tnp_audit": {
+       "counts": {
+        "PASS": 1,
+        "REPOINTED": 1
+       },
+       "element_map_version": "15.70200.5",
+       "findings": [
+        {
+         "detail": "Fillet.Base entry Edge4 resolves to a sub-shape whose witness moved: ('Edge', 0.0, 0.0, 10.0, 20.0, 0.0, 10.0) -> ('Edge', 0.0, 0.0, 12.0, 20.0, 0.0, 12.0)",
+         "layer": 1,
+         "mapped_before": "#16:1;:U;XTR;:H1322:7,E",
+         "owner": "Fillet",
+         "prop": "Base",
+         "state_after": "('Edge', 0.0, 0.0, 12.0, 20.0, 0.0, 12.0)",
+         "verdict": "REPOINTED"
+        }
+       ],
+       "status": "FLAGGED"
+      }
+     },
+     "rollback_proven": "rolled_back_verified",
+     "rolled_back": true,
+     "schema": "fcb.mutation/2",
+     "touched": [
+      "Pad",
+      "Body"
+     ]
+    }
+   },
+   "text": "Mutation rolled back (rolled_back_verified): TNP audit flagged 1 reference(s): Fillet.Base REPOINTED"
+  },
+  "summary": {
+   "audit_status": "FLAGGED",
+   "rolled_back": true,
+   "status": "SPEC_FAILED",
+   "verdicts": [
+    "Fillet.Base=REPOINTED"
+   ]
+  }
+ },
+ "remove_geometry_setup": {
+  "bindings": [
+   [
+    ".Constraints.extra_len",
+    "5 mm + 0 mm"
+   ]
+  ],
+  "dof": 0,
+  "valid": true
+ },
+ "sketch_add_constraint": {
+  "envelope": {
+   "detail": null,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "constraint_ids": [
+     9,
+     10,
+     11
+    ],
+    "mutation": {
+     "changed": [],
+     "fingerprint_after": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_before": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "post_verify": {
+      "explanation": null,
+      "fully_constrained": true,
+      "is_valid": true,
+      "passed": true,
+      "recompute_clean": true,
+      "tnp_audit": {
+       "counts": {
+        "PASS": 2
+       },
+       "element_map_version": "15.70200.5",
+       "findings": [],
+       "status": "CLEAN"
+      }
+     },
+     "rollback_proven": null,
+     "rolled_back": false,
+     "schema": "fcb.mutation/2",
+     "touched": [
+      "Loose"
+     ]
+    },
+    "sketch": "Loose",
+    "sketch_state": {
+     "conflicting": [],
+     "constraint_count": 11,
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 4,
+     "malformed": [],
+     "partially_redundant": [],
+     "readable": true,
+     "redundant": [],
+     "schema": "fcb.sketch-state/1",
+     "sketch": "Loose",
+     "solver_status_code": 0
+    }
+   },
+   "text": "Mutation committed; fingerprint c5b8d7fa1c3d."
+  },
+  "summary": {
+   "audit_status": "CLEAN",
+   "rolled_back": false,
+   "status": "OK",
+   "verdicts": []
+  }
+ },
+ "sketch_remove_geometry_bound": {
+  "envelope": {
+   "detail": {
+    "code": "mutation.spec_failed",
+    "message": "TNP audit flagged 1 reference(s): Loose.ExpressionEngine[.Constraints.extra_len] BROKEN"
+   },
+   "schema": "fcb.result-envelope/1",
+   "status": "SPEC_FAILED",
+   "structured_content": {
+    "mutation": {
+     "changed": [],
+     "fingerprint_after": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_before": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "post_verify": {
+      "explanation": "TNP audit flagged 1 reference(s): Loose.ExpressionEngine[.Constraints.extra_len] BROKEN",
+      "fully_constrained": true,
+      "is_valid": true,
+      "passed": false,
+      "recompute_clean": true,
+      "tnp_audit": {
+       "counts": {
+        "BROKEN": 1,
+        "PASS": 2
+       },
+       "element_map_version": "15.70200.5",
+       "findings": [
+        {
+         "detail": "Loose is no longer present in the document",
+         "layer": 1,
+         "mapped_before": null,
+         "owner": "Loose",
+         "prop": "ExpressionEngine[.Constraints.extra_len]",
+         "state_after": null,
+         "verdict": "BROKEN"
+        }
+       ],
+       "status": "FLAGGED"
+      }
+     },
+     "rollback_proven": "rolled_back_verified",
+     "rolled_back": true,
+     "schema": "fcb.mutation/2",
+     "touched": [
+      "Loose"
+     ]
+    },
+    "sketch": "Loose",
+    "sketch_state": {
+     "conflicting": [],
+     "constraint_count": 15,
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 5,
+     "malformed": [],
+     "partially_redundant": [],
+     "readable": true,
+     "redundant": [],
+     "schema": "fcb.sketch-state/1",
+     "sketch": "Loose",
+     "solver_status_code": 0
+    }
+   },
+   "text": "Mutation rolled back (rolled_back_verified): TNP audit flagged 1 reference(s): Loose.ExpressionEngine[.Constraints.extra_len] BROKEN"
+  },
+  "summary": {
+   "audit_status": "FLAGGED",
+   "rolled_back": true,
+   "status": "SPEC_FAILED",
+   "verdicts": [
+    "Loose.ExpressionEngine[.Constraints.extra_len]=BROKEN"
+   ]
+  }
+ }
+}

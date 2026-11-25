@@ -75,7 +75,7 @@ def _verify(token, **overrides):
 
 def test_every_mutation_tool_declares_the_narrowed_confirm_shape():
     schemas = _mutation_schemas()
-    assert len(schemas) == 23, f"expected 23 geometry-mutation tools, got {sorted(schemas)}"
+    assert len(schemas) == 24, f"expected 24 geometry-mutation tools, got {sorted(schemas)}"
     for name, schema in schemas.items():
         block = schema["properties"]["confirm"]
         assert set(block["properties"]) == {"preview_id", "elicitation_action"}, name

@@ -1,0 +1,2 @@
+ran=82 failures=1 errors=0
+RED infc.test_feature_expressions.ClosureTest.test_Should_report_the_recorded_step_When_a_no_change_call_runs_on_touched_objects :: AssertionError: 0 != 1

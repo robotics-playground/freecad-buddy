@@ -1,0 +1,3 @@
+ran=82 failures=2 errors=0
+RED infc.test_feature_expressions.OtherToolTest.test_Should_still_grade_the_binding_broken_When_another_tool_removes_its_constraint :: + SPEC_FAILED
+RED infc.test_tnp_guard.ExpressionBindingTest.test_Should_flag_broken_When_the_op_removed_a_binding_without_reporting_it :: + ['BROKEN']

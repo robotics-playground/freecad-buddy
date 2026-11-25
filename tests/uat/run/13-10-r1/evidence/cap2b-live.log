@@ -1,0 +1,54 @@
+tools 51 True
+[create] document_create status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[define] feature_parameters_define status=OK code=None undo_steps=1 rolled_back=False fp_after=4f53cda18c2b msg=
+[body] feature_body_create status=OK code=None undo_steps=None rolled_back=False fp_after=283569b3f782 msg=
+[sketch] sketch_create status=OK code=None undo_steps=None rolled_back=False fp_after=02d4b20e4178 msg=
+[geometry] sketch_add_geometry status=OK code=None undo_steps=None rolled_back=False fp_after=e565558b9f69 msg=
+[pad] feature_pad status=OK code=None undo_steps=None rolled_back=False fp_after=1baa94c5944f msg=
+[tree] query_tree_summary status=None code=None undo_steps=None rolled_back=None fp_after= msg=
+[probe_XY_Plane] query_object status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[datum] feature_datum status=OK code=None undo_steps=None rolled_back=False fp_after=19b021085fbe msg=
+[query0] query_parameters status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[mass0] query_mass_properties status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+PAUSE built
+[bind] feature_set_expression status=OK code=None undo_steps=1 rolled_back=False fp_after=17a701bced92 msg=
+[query1] query_parameters status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[mass1] query_mass_properties status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[place1] query_placement status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[edit] feature_parameters_define status=OK code=None undo_steps=1 rolled_back=False fp_after=b8016088d6e9 msg=
+[query2] query_parameters status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[mass2] query_mass_properties status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[place2] query_placement status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[sketch2] query_sketch_info status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[fit2] view_fit_viewport status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+PAUSE edited
+[undo_edit] document_undo status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[q_after_undo_edit] query_parameters status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[m_after_undo_edit] query_mass_properties status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[fit_after_undo_edit] view_fit_viewport status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+PAUSE undo_edit
+[undo_bind] document_undo status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[q_after_undo_bind] query_parameters status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[m_after_undo_bind] query_mass_properties status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[undo_datum] document_undo status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[undo_pad] document_undo status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[undo_geometry] document_undo status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[undo_sketch] document_undo status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[undo_body] document_undo status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[undo_define] document_undo status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[tree_end] query_tree_summary status=None code=None undo_steps=None rolled_back=None fp_after= msg=
+[noop] feature_set_expression status=INVALID_INPUT code=INVALID_INPUT undo_steps=None rolled_back=None fp_after= msg=unknown object in expressions[0].object: Profile
+[refuse_unit] feature_set_expression status=INVALID_INPUT code=INVALID_INPUT undo_steps=None rolled_back=None fp_after= msg=unknown object in expressions[0].object: Pad
+[refuse_inf] feature_set_expression status=INVALID_INPUT code=INVALID_INPUT undo_steps=None rolled_back=None fp_after= msg=unknown object in expressions[0].object: Pad
+[refuse_dead_path] feature_set_expression status=INVALID_INPUT code=INVALID_INPUT undo_steps=None rolled_back=None fp_after= msg=unknown object in expressions[0].object: Pad
+[refuse_placement] feature_set_expression status=INVALID_INPUT code=INVALID_INPUT undo_steps=None rolled_back=None fp_after= msg=unknown object in expressions[0].object: Datum
+[refuse_long] feature_set_expression status=INVALID_INPUT code=expression.invalid_text undo_steps=None rolled_back=None fp_after= msg=expressions[0].expression has 1999 characters; the limit is 400 because FreeCAD ends the process on a very long chained expression
+[cycle] feature_set_expression status=INVALID_INPUT code=INVALID_INPUT undo_steps=None rolled_back=None fp_after= msg=unknown object in expressions[0].object: Pad
+[query3] query_parameters status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+[mass3] query_mass_properties status=INVALID_INPUT code=INVALID_INPUT undo_steps=None rolled_back=None fp_after= msg=unknown object: Pad
+[undo_after_cycle] document_undo status=INVALID_INPUT code=INVALID_INPUT undo_steps=None rolled_back=None fp_after= msg=nothing to undo on CAP2_Expr_B: the undo stack is empty
+[undo_after_cycle_2] document_undo status=INVALID_INPUT code=INVALID_INPUT undo_steps=None rolled_back=None fp_after= msg=nothing to undo on CAP2_Expr_B: the undo stack is empty
+[fit_end] view_fit_viewport status=SPEC_FAILED code=view_fit.nothing_to_frame undo_steps=None rolled_back=None fp_after= msg=no visible object to frame; datum planes are infinite and are not measured
+PAUSE start
+[close] document_close status=OK code=None undo_steps=None rolled_back=None fp_after= msg=
+DONE

@@ -107,6 +107,7 @@ EXPECTED_FEATURE_TOOLS = {
     "feature_datum",
     "feature_set_parameters",
     "feature_parameters_define",
+    "feature_set_expression",
     "feature_body_create",
 }
 
