@@ -77,7 +77,7 @@ Reasoning → export:
 2. Links/joints: bodies → links; the assembly's prismatic finger joint → an SDF
    `<joint type="prismatic">` with an explicit `<pose relative_to="...">` and a
    normalized axis in the joint frame.
-3. Inertials: one `query_mass_properties` call with `objects` for every link → SI inertials; collision = simplified
+3. Inertials: one `query_mass_properties` call with `objects` for every link → volume and COM (no mass or inertia in the result: take mass from the material density) → SI inertials; collision = simplified
    primitives for stable contact, visual = the full mesh.
 4. `export_sdf` then `verify_export_sdf` → re-parse: schema-valid, frames resolve,
    axes normalized, inertials positive, meshes resolve. Done only then.

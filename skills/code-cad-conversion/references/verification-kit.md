@@ -5,7 +5,9 @@ volume against a value and cylindrical holes, `query_mass_properties` (`objects`
 one call) to read the volumes, `query_interference` for overlap between parts, `verify_recompute`
 for failing objects. `feature_set_parameters` sets and restores the VarSet values. Run a FreeCAD
 snippet with `script_exec` only for what no typed tool measures: overlap against a reference STEP,
-the reference's own volume, and a countersink probe. Every snippet is read-only. The re-export
+the reference's own volume, the expression coverage of a large model (`query_parameters` lists at
+most 500 bindings per call), contact between touching parts, and a countersink probe. Every snippet
+is read-only. The re-export
 script runs outside FreeCAD and writes one reference STEP per case, in the same world frame as the
 FreeCAD part.
 
@@ -133,7 +135,10 @@ defaults once with `query_parameters` and keep them. Run each case in five steps
    `post_verify`. Set a driver, not a value an expression derives.
    `feature_set_parameters` `{"feature": "Params", "parameters": {"PLATE_T": 3.0, "COUNTERSINK": false}}`
    (a float or integer is a number, a bool is `true` or `false`, an enumeration is its member
-   string).
+   string). A variable that a `query_parameters` binding row `{object: "Params", path: <name>}`
+   derives is reset by the recompute with no error: set only variables with no such row. When
+   `post_verify.passed` is false or `rolled_back` is true, the case did not apply: record it as
+   failed and skip the measurement.
 2. Measure the overlap with the case script below: one read-only `common()` per part.
 3. Measure the part with typed calls: `verify_recompute` once, and per part the `verify_shape`
    call of the equality check above.
@@ -143,7 +148,7 @@ defaults once with `query_parameters` and keep them. Run each case in five steps
 Restore after every case, also when a typed check fails, and before any `document_save`: a case
 that runs on top of the previous case's values compares against the wrong re-export. Run one
 case per `script_exec` call to stay under the 30 s budget: the script runs one `common()` per
-part, about 8 s per case for a 100-object, two-part model.
+part, about 8 s per case for a 100-object, two-part model, recompute included.
 
 Case script. It writes nothing:
 
@@ -172,11 +177,19 @@ branches of every `min()` / `max()`.
 
 ## Interference between parts
 
-`query_interference` `{"objects": ["board", "box_base"]}` takes immutable Names (a Body or a
-Part, not a feature inside it) and measures every pair; `{"pairs": [["board", "box_base"]]}`
-measures chosen pairs. Pass: `common_volume` at most 0.05 mm3 and `boolean_failed` false.
-`boolean_failed` true is unmeasured, not zero: run `verify_shape` on both parts. A call that
-returns `interference.too_complex` needs fewer, larger pairs.
+`query_interference` `{"objects": ["Cut", "Cut001"]}` takes immutable Names, not Labels (the
+generator sets Labels: read each Name with `query_tree_summary`). Name a Body or a Part, not a
+feature inside it, and keep the objects in one container. It measures every pair;
+`{"pairs": [["Cut", "Cut001"]]}` measures chosen pairs. Pass: `common_volume` at most 0.05 mm3
+and `boolean_failed` false. `boolean_failed` true is unmeasured, not zero. With it true and `min_distance` 0
+the parts touch, and the tool cannot tell contact from overlap: no typed tool measures that, so
+use the script below. Otherwise run `verify_shape` on both parts. For
+`interference.too_complex`, measure objects with fewer faces or send fewer pairs.
+
+```python
+a, b = (doc.getObject(n).Shape for n in ("Cut", "Cut001"))
+result = round(a.common(b).Volume, 3)    # pass: <= 0.05 mm3
+```
 
 ## Hole checks
 

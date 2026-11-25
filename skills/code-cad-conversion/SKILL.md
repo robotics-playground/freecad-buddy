@@ -29,8 +29,7 @@ All steps run through the **freecad-buddy MCP server** (`script_exec`,
 `document_*`, `query_*`, `verify_*`, `export_*`). If those tools are not in your
 session, open FreeCAD with the freecad-buddy add-on and connect your MCP client
 first. If `query_capabilities` reports `exec_enabled: false`, use the headless route in
-`freecad-scripting-idioms`: no typed tool builds Part primitives or the enumeration and
-expression-valued variables the generator writes.
+`freecad-scripting-idioms`: no typed tool builds Part primitives or creates an enumeration property.
 
 ## Decision Rules
 

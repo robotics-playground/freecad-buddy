@@ -37,7 +37,7 @@ report the operation as blocked.
 | Loft, sweep, helix, thickness | none | `doc.addObject` or `body.newObject` |
 | Groove (subtractive revolve), PartDesign primitives | none | `body.newObject("PartDesign::Groove")`, `body.newObject("PartDesign::AdditiveBox")` |
 | Sketch constraint outside the `sketch_add_constraint` types (for example `InternalAlignment`, `TangentViaPoint`) | none | `sketch.addConstraint` |
-| Write a string or link property value | none (`feature_set_parameters` refuses these) | `setattr` |
+| Write a string or link property of an object that is not a VarSet | none (`feature_set_parameters` refuses these; a VarSet string: `feature_parameters_define`) | `setattr` |
 | Ellipse or B-spline sketch geometry | none (`sketch_add_geometry` takes line, circle, arc, point) | `sketch.addGeometry` |
 | `App::Link` or clone | none | `doc.addObject("App::Link", ...)` |
 | Scan faces or edges without a hole or datum query | none | iterate `shape.Faces`, `shape.Edges` |

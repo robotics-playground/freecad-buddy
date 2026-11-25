@@ -8,7 +8,8 @@ numbers with the spec.
 
 Give exactly one of `objects` (2 to 20 names, every pair) or `pairs` (1 to 100 `[a, b]` pairs).
 Each object is measured on its own shape in its container's frame, so name a Body, not a feature
-inside it.
+inside it. Bodies in different containers (for example two `App::Part`) are measured in different
+frames: name the `App::Part` of each, or keep the objects in one container.
 
 Result `{pairs: [{a, b, common_volume, min_distance, boolean_failed}]}`.
 
@@ -20,7 +21,7 @@ Result `{pairs: [{a, b, common_volume, min_distance, boolean_failed}]}`.
 
 | Refusal | Cause | Fix |
 | --- | --- | --- |
-| `INVALID_INPUT` `interference.too_complex` | a pair whose faces multiplied exceed 150000, or the call ran past 40 s | send fewer, larger pairs per call; cost grows with face count |
+| `INVALID_INPUT` `interference.too_complex` | a pair whose faces multiplied exceed 150000, or the call ran past 40 s | a pair over the face limit: measure objects with fewer faces. A call over 40 s: send fewer pairs |
 
 When `boolean_failed` is true, run `verify_shape` on each shape (`is_valid_solid`,
 `expect_solid_count`) to find which shape is broken before you report a clearance.
@@ -43,7 +44,7 @@ Result `{wires, closed_wires, length, area, bbox}`. A plane that misses the part
 | Refusal | Cause | Fix |
 | --- | --- | --- |
 | `section.untrusted_shape` | an invalid or reversed shape, or one with no face | repair the part; check it with `verify_shape` |
-| `section.too_complex` | more than 3,000 faces, or BSpline or Bezier faces with about 800 poles or more in one face (a coil spring) | cut a simpler part, or measure by `query_mass_properties` |
-| `section.plane_on_face` | the plane lies on a planar face | change `offset` by 1e-6 mm or more |
+| `section.too_complex` | more than 3,000 faces, or BSpline or Bezier faces with about 800 poles or more in one face (a coil spring) | cut a simpler part, or report the section as unmeasured |
+| `section.plane_on_face` | the plane lies on a planar face | move `offset` 1e-6 mm or more into the part (a plane moved outward misses the part: `wires` 0, `area` 0) |
 
 Solids that overlap or touch inside one compound are not detected: `area` counts each solid.

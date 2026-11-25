@@ -74,7 +74,7 @@ Input: "Export this 2-link arm assembly to URDF."
 Reasoning → export:
 1. Map: base body → `base_link`, upper body → `link_1`; the assembly's revolute
    joint between them → a URDF `<joint type="revolute">`.
-2. Inertials: one `query_mass_properties` call with `objects` for every body → mass, COM, inertia tensor →
+2. Inertials: one `query_mass_properties` call with `objects` for every body → volume and COM (the tool returns no mass or inertia: take mass from the material density) →
    `<inertial>` in kg and metres (convert from FreeCAD mm/g-equivalents at the pinned
    boundary).
 3. Joint: `<origin>` from the assembly transform (`query_placement`) expressed in the

@@ -42,17 +42,17 @@ MCP client at it — otherwise the parametric model can't be built or verified.
   sketch to a variable with **`feature_set_expression`**
   `{"expressions": [{"object": "Pad", "path": "Length", "expression": "Params.plate_len"}]}`
   (a sketch constraint path is `.Constraints.<name>`; `null` clears a binding).
-  Read the result back with **`query_parameters`**: a VarSet edit changes no shape,
-  so `mutation.changed` stays empty and cannot prove it. Each tool is one
-  transaction; `undo_steps` 0 means the call changed nothing and recorded no step, so
-  `document_undo` would revert an earlier step.
+  Read the result back with **`query_parameters`**: a VarSet with no bound feature
+  changes no shape, so `mutation.changed` is empty and cannot prove the write. Each
+  write tool is one transaction; `undo_steps` 0 means the call recorded no undo step
+  (it changed nothing), so `document_undo` would revert an earlier step.
 - Never name a variable after a **unit symbol** (`W`, `T`, `A`, `V`, `N`, `C`, `K`,
   `J`, `H`, `F`, `S`, `m`, `g`, `s`), because the expression parser reads it as the
   unit: `feature_parameters_define` refuses it with `parameters.unit_symbol_name`.
 - Meet these refusals by their code: `parameters.bound_by_expression` (a variable an
   expression drives: clear that binding first), `expression.cycle` (two bindings
   depend on each other; the call rolled back), `expression.unit_mismatch` (an angle
-  on a length). Enumeration variables and spreadsheet cells have no typed writer:
+  on a length). Creating an enumeration property and writing spreadsheet cells have no typed tool:
   `freecad-scripting-idioms` `references/gap-list.md` names the `script_exec` route.
 - Use a **master (skeleton) sketch** for the part's controlling geometry — key
   planes, axes, hole-circle radii, overall envelope — and attach features to it,

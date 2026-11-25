@@ -50,8 +50,7 @@ it — otherwise none of these checks can run.
   report reference integrity and freedom from regression as unverified.
 - On a **failed mutation** (`post_verify.passed` false): with `rolled_back` true
   and `rollback_proven` set, the change is not in the model — fix the cause and send
-  the call again. Otherwise the model state is unproven: stop and report
-  (`references/reading-mutation-results.md`).
+  the call again. Otherwise the model state is unproven: stop and report.
 - A clean recompute is **necessary but not sufficient**: `verify_recompute`
   passing means the script ran, not that the geometry is right. Always follow it
   with spec-driven measurement, because "a pocket exists" is not "the right pocket,
@@ -61,14 +60,14 @@ it — otherwise none of these checks can run.
   `query_placement` for distances and offsets — because an unchecked dimension is
   an unverified claim, and the point of verifying is to falsify a wrong part.
 - Measure **overlap and gap between parts** with `query_interference`
-  `{"objects": ["Housing", "Lid"]}` (every pair; name each Body, not a feature).
+  `{"objects": ["Housing", "Lid"]}` (every pair; name Bodies of one container, not features).
   `common_volume` is the overlap and `min_distance` the gap. `boolean_failed` true
   means *unmeasured*, never zero. Limits and refusals such as
   `interference.too_complex`: `references/measuring-clearance-and-sections.md`.
 - Measure a **cut through a part** with `query_section`
   `{"object": "Body", "plane": {"normal": "z", "offset": {"value": 12.5, "unit": "mm"}}}`.
   A null `area` is *unmeasured*, never zero. On `section.plane_on_face`, move `offset`
-  by 1e-6 mm or more.
+  1e-6 mm or more into the part.
 - Run a baseline inspection at each milestone before the spec checks:
   `query_tree_summary` (`focus` on the body) for names and `!<status>` errors,
   `query_mass_properties` `{"objects": ["Body", "Lid"]}` for a scale sanity check of
@@ -83,8 +82,7 @@ it — otherwise none of these checks can run.
   `mutation.changed`, because a change that "worked" may have silently altered an
   unrelated feature: an *earlier* feature in `changed` is the regression. A null
   `fingerprint_*` leaves `changed` empty, so re-measure. Never use file size or a
-  diff of the saved document as a geometry comparison
-  (`references/reading-mutation-results.md`).
+  diff of the saved document as a geometry comparison.
 - An export counts as done **only** when its paired `verify_export_step` (or
   `_stl`/`_3mf`) re-imports and matches, because "the file was written" is not
   proof the geometry survived the round-trip. Independent-oracle disagreement is a
@@ -109,8 +107,9 @@ it — otherwise none of these checks can run.
   geometry missed, but it can never rescue a part geometry already failed.
 - When a mating part is **inserted, slid, or tilted into place**, check clearance
   along that path, not only at the final position: set the mating part's pose for
-  each step of the travel and run `query_interference` for the pair at each pose,
-  because a wall that clears the installed part can still block it on the way in.
+  each step (a placement write is a gap: `freecad-scripting-idioms`), run
+  `query_interference` for the pair, then restore the pose, because a wall that
+  clears the installed part can still block it on the way in.
 - Re-check an earlier clearance after **every edit near it**: widening a gap on one
   side moves material toward something else, so rerun `query_interference` for the
   neighbours, not only for the feature you changed.
@@ -123,7 +122,7 @@ it — otherwise none of these checks can run.
 Input: a copilot builds a 60×40×5 plate; spec says two Ø5.5 holes 40 mm apart.
 
 Verification read:
-1. Per feature (sketch, pad, hole): read each result only — `sketch_state.dof` 0,
+1. Per feature (sketch, pad, hole): read each result only — `sketch_state.fully_constrained` true, `dof` 0,
    `post_verify.passed` true, `tnp_audit.status` `CLEAN`, `changed` lists the new
    feature and the body. No `verify_*` call, no screenshot.
 2. Milestone (plate finished). Baseline: `query_tree_summary` on the body
