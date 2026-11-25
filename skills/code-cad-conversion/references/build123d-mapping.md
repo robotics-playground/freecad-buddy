@@ -38,9 +38,9 @@ Booleans come from `feature_part_boolean` (below).
 
 | Source | FreeCAD |
 | --- | --- |
-| `body = a + b + c`, `body += x` | `feature_part_boolean` `fuse` (`Part::MultiFuse` for several tools, `Refine` true) |
+| `body = a + b + c`, `body += x` | `feature_part_boolean` `fuse` (`Part::MultiFuse` for several tools, `Refine` true; at most 20 tools: chain further fuses) |
 | `body -= x` | `feature_part_boolean` `cut` (`Part::Cut`; several tools: their fuse `<name>_tools` is the `Tool`) |
-| `a & b`, `intersect` | `feature_part_boolean` `common` (`Part::MultiCommon` for several tools: the intersection of the base and every tool) |
+| `a & b`, `intersect` | `feature_part_boolean` `common` (`Part::MultiCommon` for several tools: the intersection of the base and every tool; at most 20 tools: chain further commons) |
 | loop of `body -= hole` | one `feature_part_boolean` `cut` with all holes as `tools` (at most 20; chain further cuts), named `<part>_stepN` |
 
 ## Placement
@@ -50,7 +50,7 @@ Booleans come from `feature_part_boolean` (below).
 | `Pos(x, y, z) * shape` | `Placement.Base.x/y/z` expressions |
 | `Rot(0, 0, deg)` with fixed deg | fixed `App.Rotation` on the primitive |
 | `Rot` with a parameter angle | `Placement.Rotation.Angle` expression (axis fixed) |
-| `Location((tx, ty, 0), (0, 0, deg)) * part` | frame `(tx, ty, deg)`: every primitive gets a `Placement.Rotation.Angle` expression `deg` (start from a non-zero rotation about z to fix the axis) and base `tx + x*cos(deg) - y*sin(deg)`, `ty + x*sin(deg) + y*cos(deg)`; or one `App::Link` (`LinkTransform = True`) / `App::Part` with that placement |
+| `Location((tx, ty, 0), (0, 0, deg)) * part` | frame `(tx, ty, deg)`: every primitive gets a `Placement.Rotation.Angle` expression `deg` and base `tx + x*cos(deg) - y*sin(deg)`, `ty + x*sin(deg) + y*cos(deg)`; or one `App::Link` (`LinkTransform = True`) / `App::Part` with that placement |
 | `loc.inverse() * shape` | link with the inverse placement |
 | assembly of parts | `App::Link` to each part, `LinkTransform = True`, placement by expressions |
 | purchased part (STEP) | load once into a hidden `Part::Feature`; place with `App::Link`; only the placement is a parameter |
