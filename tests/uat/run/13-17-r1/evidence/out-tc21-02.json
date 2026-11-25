@@ -1,0 +1,630 @@
+[
+ {
+  "tool": "document_list",
+  "args": {},
+  "seconds": 0.176,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "documents": []
+   },
+   "text": "0 open document(s)."
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"documents\":[]},\"text\":\"0 open document(s).\"}"
+  ]
+ },
+ {
+  "tool": "document_create",
+  "args": {
+   "label": "tc21_empty"
+  },
+  "seconds": 0.246,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:nUqdbfTCGaYUi7-mSWMOGA",
+    "name": "tc21_empty",
+    "label": "tc21_empty"
+   },
+   "text": "doc: fcb-doc:nUqdbfTCGaYUi7-mSWMOGA\nlabel: tc21_empty\nname: tc21_empty"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:nUqdbfTCGaYUi7-mSWMOGA\",\"name\":\"tc21_empty\",\"label\":\"tc21_empty\"},\"text\":\"doc: fcb-doc:nUqdbfTCGaYUi7-mSWMOGA\\nlabel: tc21_empty\\nname: tc21_empty\"}"
+  ]
+ },
+ {
+  "tool": "feature_part_primitive",
+  "args": {
+   "kind": "box",
+   "name": "A",
+   "length": {
+    "value": 10,
+    "unit": "mm"
+   },
+   "width": {
+    "value": 10,
+    "unit": "mm"
+   },
+   "height": {
+    "value": 10,
+    "unit": "mm"
+   },
+   "doc": "fcb-doc:nUqdbfTCGaYUi7-mSWMOGA"
+  },
+  "seconds": 0.19,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "eb218ddd3a918d00f0ed73ae837af36f25cc32a41c59200b8047b3ed02e67d6b",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "A",
+       "volume": 1000.0,
+       "area": 600.0,
+       "com": [
+        5.0,
+        5.0,
+        5.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "A"
+     ]
+    },
+    "feature": "A",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "A",
+     "readable": true,
+     "body": "",
+     "is_tip": false,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 6,
+      "edge_count": 12,
+      "vertex_count": 8,
+      "is_valid": true,
+      "volume": 1000.0,
+      "area": 600.0,
+      "bbox": [
+       10.0,
+       10.0,
+       10.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint eb218ddd3a91.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"eb218ddd3a918d00f0ed73ae837af36f25cc32a41c59200b8047b3ed02e67d6b\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"A\",\"volume\":1000.0,\"area\":600.0,\"com\":[5.0,5.0,5.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":null,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"A\"]},\"feature\":\"A\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"A\",\"readable\":true,\"body\":\"\",\"is_tip\":false,\"shape_summary\":{\"solid_count\":1,\"face_count\":6,\"edge_count\":12,\"vertex_count\":8,\"is_valid\":true,\"volume\":1000.0,\"area\":600.0,\"bbox\":[10.0,10.0,10.0]}}},\"text\":\"Mutation committed; fingerprint eb218ddd3a91.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.41,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "feature_part_primitive",
+  "args": {
+   "kind": "box",
+   "name": "Far",
+   "length": {
+    "value": 10,
+    "unit": "mm"
+   },
+   "width": {
+    "value": 10,
+    "unit": "mm"
+   },
+   "height": {
+    "value": 10,
+    "unit": "mm"
+   },
+   "placement": {
+    "base": {
+     "x": {
+      "value": 100,
+      "unit": "mm"
+     }
+    }
+   },
+   "doc": "fcb-doc:nUqdbfTCGaYUi7-mSWMOGA"
+  },
+  "seconds": 0.094,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "eb218ddd3a918d00f0ed73ae837af36f25cc32a41c59200b8047b3ed02e67d6b",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "4bfbcf09376f8562eea2c118695cd1fca7200e0e1adccdaff17ad2ae1f69f913",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Far",
+       "volume": 1000.0,
+       "area": 600.0,
+       "com": [
+        105.0,
+        5.0,
+        5.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Far"
+     ]
+    },
+    "feature": "Far",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Far",
+     "readable": true,
+     "body": "",
+     "is_tip": false,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 6,
+      "edge_count": 12,
+      "vertex_count": 8,
+      "is_valid": true,
+      "volume": 1000.0,
+      "area": 600.0,
+      "bbox": [
+       10.0,
+       10.0,
+       10.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint 4bfbcf09376f.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"eb218ddd3a918d00f0ed73ae837af36f25cc32a41c59200b8047b3ed02e67d6b\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"4bfbcf09376f8562eea2c118695cd1fca7200e0e1adccdaff17ad2ae1f69f913\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Far\",\"volume\":1000.0,\"area\":600.0,\"com\":[105.0,5.0,5.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":null,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Far\"]},\"feature\":\"Far\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"Far\",\"readable\":true,\"body\":\"\",\"is_tip\":false,\"shape_summary\":{\"solid_count\":1,\"face_count\":6,\"edge_count\":12,\"vertex_count\":8,\"is_valid\":true,\"volume\":1000.0,\"area\":600.0,\"bbox\":[10.0,10.0,10.0]}}},\"text\":\"Mutation committed; fingerprint 4bfbcf09376f.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "check": "given status",
+  "observed": [
+   "OK",
+   "OK"
+  ],
+  "expected": [
+   "OK",
+   "OK"
+  ]
+ },
+ {
+  "tool": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:nUqdbfTCGaYUi7-mSWMOGA"
+  },
+  "seconds": 0.071,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "fitted": true,
+    "document": "tc21_empty",
+    "camera_recorded": true
+   },
+   "text": "fitted the live viewport to 'tc21_empty'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"fitted\":true,\"document\":\"tc21_empty\",\"camera_recorded\":true},\"text\":\"fitted the live viewport to 'tc21_empty'\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "shot": "tc-21-02-before",
+  "screenshot_file_path": "/repo/tests/uat/run/13-17-r1/evidence/tc-21-02-before.png",
+  "element_count": 661
+ },
+ {
+  "tool": "feature_part_boolean",
+  "args": {
+   "operation": "common",
+   "base": "A",
+   "tools": [
+    "Far"
+   ],
+   "name": "Nothing",
+   "doc": "fcb-doc:nUqdbfTCGaYUi7-mSWMOGA"
+  },
+  "seconds": 0.123,
+  "isError": true,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "RECOMPUTE_ERROR",
+   "detail": {
+    "code": "part_boolean.empty_result",
+    "message": "the common Nothing of A, Far left no solid"
+   },
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4bfbcf09376f8562eea2c118695cd1fca7200e0e1adccdaff17ad2ae1f69f913",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907",
+      "serializer": "exportBinary"
+     },
+     "changed": [],
+     "post_verify": {
+      "recompute_clean": false,
+      "is_valid": "not_measured",
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "UNSUPPORTED",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": false,
+      "explanation": "the common Nothing of A, Far left no solid"
+     },
+     "rolled_back": true,
+     "rollback_proven": "rolled_back_verified",
+     "touched": [
+      "Nothing"
+     ]
+    },
+    "feature": "Nothing",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Nothing",
+     "readable": false
+    }
+   },
+   "text": "Mutation rolled back (rolled_back_verified): the common Nothing of A, Far left no solid"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"RECOMPUTE_ERROR\",\"detail\":{\"code\":\"part_boolean.empty_result\",\"message\":\"the common Nothing of A, Far left no solid\"},\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"4bfbcf09376f8562eea2c118695cd1fca7200e0e1adccdaff17ad2ae1f69f913\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\",\"serializer\":\"exportBinary\"},\"changed\":[],\"post_verify\":{\"recompute_clean\":false,\"is_valid\":\"not_measured\",\"fully_constrained\":null,\"tnp_audit\":{\"status\":\"UNSUPPORTED\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":false,\"explanation\":\"the common Nothing of A, Far left no solid\"},\"rolled_back\":true,\"rollback_proven\":\"rolled_back_verified\",\"touched\":[\"Nothing\"]},\"feature\":\"Nothing\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"Nothing\",\"readable\":false}},\"text\":\"Mutation rolled back (rolled_back_verified): the common Nothing of A, Far left no solid\"}"
+  ]
+ },
+ {
+  "check": "refusal",
+  "observed": [
+   "RECOMPUTE_ERROR",
+   "part_boolean.empty_result",
+   true,
+   "rolled_back_verified"
+  ],
+  "expected": [
+   "RECOMPUTE_ERROR",
+   "part_boolean.empty_result",
+   true,
+   "not null"
+  ]
+ },
+ {
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:nUqdbfTCGaYUi7-mSWMOGA"
+  },
+  "seconds": 0.066,
+  "isError": false,
+  "structuredContent": {},
+  "text": [
+   "OK: 2 objects, 2 shown.\nframing: fits, ratio 0.95, computed\nv [BOX] A\nv [BOX] Far"
+  ]
+ },
+ {
+  "check": "tree names",
+  "observed": "null",
+  "expected": null
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "code": "result = [doc.getObject('Nothing'), doc.A.Visibility, doc.Far.Visibility]",
+   "doc": "fcb-doc:nUqdbfTCGaYUi7-mSWMOGA"
+  },
+  "seconds": 0.064,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:nUqdbfTCGaYUi7-mSWMOGA",
+    "stdout": "",
+    "value_repr": "[None, True, True]",
+    "fingerprint_before": "4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907",
+    "fingerprint_after": "4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:nUqdbfTCGaYUi7-mSWMOGA\nfingerprint_after: 4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\nfingerprint_before: 4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: [None, True, True]\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:nUqdbfTCGaYUi7-mSWMOGA\",\"stdout\":\"\",\"value_repr\":\"[None, True, True]\",\"fingerprint_before\":\"4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\",\"fingerprint_after\":\"4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:nUqdbfTCGaYUi7-mSWMOGA\\nfingerprint_after: 4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\\nfingerprint_before: 4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: [None, True, True]\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "check": "nothing left",
+  "observed": [
+   null,
+   true,
+   true
+  ],
+  "expected": [
+   null,
+   true,
+   true
+  ]
+ },
+ {
+  "shot": "tc-21-02-after",
+  "screenshot_file_path": "/repo/tests/uat/run/13-17-r1/evidence/tc-21-02-after.png",
+  "element_count": 661
+ },
+ {
+  "tool": "feature_part_primitive",
+  "args": {
+   "kind": "sphere",
+   "name": "Ball",
+   "radius": {
+    "value": 4,
+    "unit": "mm"
+   },
+   "doc": "fcb-doc:nUqdbfTCGaYUi7-mSWMOGA"
+  },
+  "seconds": 0.115,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "d50203280a3b8e9de98c146f4ab4d8b6de3713071ed82eb1a7848680d74de50d",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Ball",
+       "volume": 268.08,
+       "area": 201.06,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Ball"
+     ]
+    },
+    "feature": "Ball",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Ball",
+     "readable": true,
+     "body": "",
+     "is_tip": false,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 1,
+      "edge_count": 3,
+      "vertex_count": 2,
+      "is_valid": true,
+      "volume": 268.08,
+      "area": 201.06,
+      "bbox": [
+       7.99,
+       8.0,
+       8.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint d50203280a3b.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 1.06,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"d50203280a3b8e9de98c146f4ab4d8b6de3713071ed82eb1a7848680d74de50d\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Ball\",\"volume\":268.08,\"area\":201.06,\"com\":[0.0,0.0,0.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":null,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Ball\"]},\"feature\":\"Ball\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"Ball\",\"readable\":true,\"body\":\"\",\"is_tip\":false,\"shape_summary\":{\"solid_count\":1,\"face_count\":1,\"edge_count\":3,\"vertex_count\":2,\"is_valid\":true,\"volume\":268.08,\"area\":201.06,\"bbox\":[7.99,8.0,8.0]}}},\"text\":\"Mutation committed; fingerprint d50203280a3b.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":1.06,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:nUqdbfTCGaYUi7-mSWMOGA"
+  },
+  "seconds": 0.084,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:nUqdbfTCGaYUi7-mSWMOGA",
+    "name": "tc21_empty",
+    "undone": "buddy: part sphere Ball",
+    "fingerprint_before": "d50203280a3b8e9de98c146f4ab4d8b6de3713071ed82eb1a7848680d74de50d",
+    "fingerprint_after": "4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907",
+    "matches_pre_op": null,
+    "restored_objects": [
+     "A",
+     "Far"
+    ],
+    "undo_count": 2,
+    "errors": []
+   },
+   "text": "Undid 'buddy: part sphere Ball' on tc21_empty: no pre-op digest supplied to compare against (d50203280a3b -> 4e770f2904d4).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:nUqdbfTCGaYUi7-mSWMOGA\",\"name\":\"tc21_empty\",\"undone\":\"buddy: part sphere Ball\",\"fingerprint_before\":\"d50203280a3b8e9de98c146f4ab4d8b6de3713071ed82eb1a7848680d74de50d\",\"fingerprint_after\":\"4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\",\"matches_pre_op\":null,\"restored_objects\":[\"A\",\"Far\"],\"undo_count\":2,\"errors\":[]},\"text\":\"Undid 'buddy: part sphere Ball' on tc21_empty: no pre-op digest supplied to compare against (d50203280a3b -> 4e770f2904d4).\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "code": "result = [doc.getObject('Ball'), doc.getObject('A') is not None]",
+   "doc": "fcb-doc:nUqdbfTCGaYUi7-mSWMOGA"
+  },
+  "seconds": 0.071,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:nUqdbfTCGaYUi7-mSWMOGA",
+    "stdout": "",
+    "value_repr": "[None, True]",
+    "fingerprint_before": "4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907",
+    "fingerprint_after": "4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:nUqdbfTCGaYUi7-mSWMOGA\nfingerprint_after: 4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\nfingerprint_before: 4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: [None, True]\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:nUqdbfTCGaYUi7-mSWMOGA\",\"stdout\":\"\",\"value_repr\":\"[None, True]\",\"fingerprint_before\":\"4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\",\"fingerprint_after\":\"4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:nUqdbfTCGaYUi7-mSWMOGA\\nfingerprint_after: 4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\\nfingerprint_before: 4e770f2904d441c9373272e1c846a710e50e47bf6b1763a0b7350ebe36616907\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: [None, True]\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "check": "next call + undo",
+  "observed": [
+   "OK",
+   "OK",
+   [
+    null,
+    true
+   ]
+  ],
+  "expected": [
+   "OK",
+   "OK",
+   [
+    null,
+    true
+   ]
+  ]
+ }
+]

@@ -138,6 +138,8 @@ repository. Do not trim those scenarios.
 | `feature_datum` | TC-04 | 08 |
 | `feature_body_create` | TC-04 | 03, 05, 08 |
 | `feature_set_parameters` | TC-04 | 02, 03, 05, 06, 08, 09, 20 |
+| `feature_part_primitive` | TC-21 | — |
+| `feature_part_boolean` | TC-21 | — |
 
 ### `preview_` (1) and the operator tool
 

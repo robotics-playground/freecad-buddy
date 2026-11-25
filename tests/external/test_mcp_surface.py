@@ -109,6 +109,8 @@ EXPECTED_FEATURE_TOOLS = {
     "feature_parameters_define",
     "feature_set_expression",
     "feature_body_create",
+    "feature_part_primitive",
+    "feature_part_boolean",
 }
 
 
