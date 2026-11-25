@@ -239,6 +239,22 @@ class PartPrimitiveTest(_PartFixture):
                 # Act and Assert
                 self.assert_refusal(lambda o=overrides: self.primitive(**o), code)
 
+    def test_Should_refuse_with_the_range_code_When_a_rotation_angle_is_huge(self):
+        # Arrange
+        placement = {"rotation": {"axis": [0, 0, 1], "angle": {"value": 1e20, "unit": "deg"}}}
+
+        before = self.fingerprint()
+
+        # Act
+        with self.assertRaises(features.ParameterRefusal) as caught:
+            self.primitive(placement=placement)
+
+        # Assert
+        self.assertEqual(caught.exception.code, "parameters.out_of_range")
+        self.assertIn("rotation.angle", str(caught.exception))
+        self.assertEqual(self.fingerprint(), before)
+        self.assertEqual(_snapshot_leftovers(), [])
+
     def test_Should_refuse_with_a_plain_error_When_a_value_is_malformed(self):
         # Arrange
         cases = {
@@ -737,6 +753,62 @@ class PartBooleanRefusalTest(_PartFixture):
                 )
                 self.assertIn("Rev", message)
                 self.assertIn("reversed", message)
+
+    def stale_dependency_chain(self):
+        """Input "A" reads Up-to-date while its upstream "Mid" is Touched."""
+        document = self.document()
+        box = document.addObject("Part::Box", "Box0")
+        reverse = document.addObject("Part::Reverse", "Rev")
+        reverse.Source = box
+        mid = document.addObject("Part::Reverse", "Mid")
+        mid.Source = box
+        document.addObject("Part::Reverse", "A").Source = mid
+        self.add_box("B", x=5.0)
+        document.recompute()
+        mid.Source = reverse
+        return document.getObject("A"), mid
+
+    def test_Should_refuse_an_input_with_a_touched_dependency_When_the_input_itself_is_current(
+        self,
+    ):
+        # Arrange
+        input_object, mid = self.stale_dependency_chain()
+
+        # Act
+        message = self.assert_refusal(
+            lambda: self.boolean(operation="cut", base="A"), "part_boolean.untrusted_shape"
+        )
+
+        # Assert
+        self.assertNotIn("Touched", input_object.State)
+        self.assertIn("Touched", mid.State)
+        self.assertIn("Mid", message)
+        self.assertIn("a dependency of A", message)
+        self.assertIn("recompute the document", message)
+
+    def test_Should_refuse_a_tool_with_a_touched_dependency_When_the_base_is_current(self):
+        # Arrange
+        self.add_box("Base")
+        self.stale_dependency_chain()
+
+        # Act and Assert
+        self.assert_refusal(
+            lambda: self.boolean(operation="cut", base="Base", tools=["A"]),
+            "part_boolean.untrusted_shape",
+        )
+
+    def test_Should_accept_an_input_with_current_dependencies_When_a_cut_runs(self):
+        # Arrange
+        _, mid = self.stale_dependency_chain()
+        mid.Source = self.document().getObject("Box0")
+        self.document().recompute()
+
+        # Act
+        envelope = self.boolean(operation="cut", base="A")
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertAlmostEqual(self.volume("Result"), 500.0, places=3)
 
     def test_Should_refuse_a_self_intersecting_input_When_a_common_runs(self):
         # Arrange

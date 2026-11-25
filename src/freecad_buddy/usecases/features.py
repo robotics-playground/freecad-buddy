@@ -2331,6 +2331,9 @@ _ROTATION_KEYS = frozenset({"axis", "angle"})
 # hold up to the same size (probed on FreeCAD 1.1.4 with an 8x16x5 Pad Body and a Part::Box at
 # powers of ten from 1e6). 1e9 mm is a thousand kilometres, nine orders inside that limit.
 _MAX_PLACEMENT_BASE_MM = 1e9
+# Above this the float remainder of an angle modulo 360 loses the rotation (1e20 deg stores as
+# 280 deg), so the placement would silently differ from the request.
+_MAX_PLACEMENT_ANGLE_DEG = 1e6
 
 
 def _only_keys(raw: dict, allowed: Collection[str], what: str) -> None:
@@ -2377,6 +2380,20 @@ def _base_component(raw: object, what: str) -> float:
             f"{what} must be within +-{_MAX_PLACEMENT_BASE_MM:g} mm, got {millimetres:g} mm",
         )
     return millimetres
+
+
+def _rotation_angle(raw: object, what: str) -> float:
+    """Return a placement rotation angle in degrees, refused beyond ``_MAX_PLACEMENT_ANGLE_DEG``.
+
+    :raises ParameterRefusal: ``parameters.out_of_range`` for a larger magnitude.
+    """
+    degrees = _angle_degrees(raw, what)
+    if abs(degrees) > _MAX_PLACEMENT_ANGLE_DEG:
+        raise ParameterRefusal(
+            "parameters.out_of_range",
+            f"{what} must be within +-{_MAX_PLACEMENT_ANGLE_DEG:g} deg, got {degrees:g} deg",
+        )
+    return degrees
 
 
 def _placement_value(raw: object, what: str, current: object = None) -> object:
@@ -2430,7 +2447,7 @@ def _placement_value(raw: object, what: str, current: object = None) -> object:
             else tuple(rotation.Axis)
         )
         angle = (
-            _angle_degrees(rotation_raw["angle"], f"{what}.rotation.angle")
+            _rotation_angle(rotation_raw["angle"], f"{what}.rotation.angle")
             if "angle" in rotation_raw
             else math.degrees(rotation.Angle)
         )
@@ -4249,13 +4266,19 @@ def _check_part_boolean_inputs(base_obj: object, tool_objs: list[object]) -> Non
                 "Body itself is allowed, a Body feature is not)",
             )
     for obj in objects:
-        stale = _FAILED_STATES & set(obj.State)
-        if stale:
-            raise PartToolRefusal(
-                "part_boolean.untrusted_shape",
-                f"{obj.Name} is {sorted(stale)} and its shape may be out of date; recompute the "
-                "document first",
-            )
+        # An input reads Up-to-date while an object it is built from is Touched, so its own
+        # State proves nothing: the whole dependency closure is read.
+        for upstream in (obj, *obj.OutListRecursive):
+            stale = _FAILED_STATES & set(upstream.State)
+            if stale:
+                subject = (
+                    obj.Name if upstream is obj else f"{upstream.Name} (a dependency of {obj.Name})"
+                )
+                raise PartToolRefusal(
+                    "part_boolean.untrusted_shape",
+                    f"{subject} is {sorted(stale)}, so the shape of {obj.Name} may be out of date; "
+                    "recompute the document first",
+                )
     shapes = [getattr(obj, "Shape", None) for obj in objects]
     faces = sum(len(shape.Faces) for shape in shapes if shape is not None)
     solids = [len(shape.Solids) if shape is not None else 0 for shape in shapes]

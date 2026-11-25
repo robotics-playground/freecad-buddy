@@ -162,6 +162,7 @@ Each has a recommendation; answer only the ones you want to change.
 
 - Review round 2: the boolean refuses an input in a `Touched`, `Invalid` or `Error` state (`part_boolean.untrusted_shape`, its shape may be out of date); a failed boolean object in any of those states ends `part_boolean.invalid_result`; the 3.4e38 size bound applies to sphere and torus only (the kinds whose constraint FreeCAD clamps). The overlap-inside-one-compound gap stays deferred and now carries the >600 s probe.
 - Review round 3 request (leader): the solid-pair count also adds, inside each input, the solid pairs whose bounding boxes overlap (a tool compound of mutually crossing solids ran longer than 600 s). Same limit 1,000. Measured: pass 0.031 s on 990 disjoint cylinders (count 0), 0.006 s on 100 + 100 crossing (stopped above the limit); a plate cut by 30 + 30 crossing in one compound (960 pairs) 21.9 s. The deferred overlap check remains for volume correctness only.
+- Red team, decision 53: the boolean reads the `State` of the input and of every object in its `OutListRecursive` closure (an input reads Up-to-date while an upstream object is `Touched`); the placement parser refuses a rotation angle above 1e6 degrees with `parameters.out_of_range`. `mustExecute()` is not exposed to Python on a `DocumentObject` in FreeCAD 1.1.4, so the check reads `State` only. KEEP: no silent recompute of other objects.
 
 ## Review Triage Log
 
@@ -179,3 +180,13 @@ Each has a recommendation; answer only the ones you want to change.
 | 2 | Failed boolean left Touched reported as empty result | medium | patch | real failing Part::Box test |
 | 2 | Size bound comment and scope wrong, crossing-family docstring, weak message and ordering tests, TC-21 undo count and TC-21-04 gaps, doc wording | low | patch | round 2 commit |
 | 2 | Lower size bound, plain error for Label clash, acceptance test in refusal class, spec Implementation Notes wording, boundary test just under 3.4e38 | low | reject | round 1 reasons; Implementation Notes are history |
+
+### Red-team round (decision 53)
+
+| Finding | Verdict | Route | Evidence |
+| --- | --- | --- | --- |
+| RT-1 Touched dependency measured on an old shape | high | patch | dependency-closure check; tests with `Part::Reverse` chain, mutant (closure removed) fails 2 tests |
+| RT-4 Rotation angle 1e20 deg stored as 280 deg | low | patch | `_rotation_angle`, `parameters.out_of_range`; tests on primitive and `feature_set_parameters`, mutant fails 2 tests |
+| RT-5 Description omits stale-input refusal | low | patch | tool description and section 3.7.5 |
+| RT-2 Near-tangent curved crossings run past the budget | high | defer | same class as decision 52; deferred entry and section 3.7.5 state the limit |
+| RT-3 Disjoint slanted slots refused on bounding boxes | medium | defer | safe-side false refusal; deferred entry and section 3.7.5 |

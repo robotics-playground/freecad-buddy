@@ -322,6 +322,31 @@ class PlacementBoundTest(_PlacementFixture):
         self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
         self.assertEqual(self.document().getObject("Body").Placement.Base.x, 1e9)
 
+    def test_Should_refuse_before_the_bracket_When_a_rotation_angle_is_above_the_bound(self):
+        # Arrange
+        self.padded_body()
+        before = tuple(self.document().getObject("Body").Placement.Base)
+
+        # Act
+        envelope = self.dispatch("Body", {"Placement": rotation((0, 0, 1), 1e20)})
+
+        # Assert
+        self.assertEqual(envelope["status"], "INVALID_INPUT", envelope.get("detail"))
+        self.assertEqual(envelope["detail"]["code"], "parameters.out_of_range")
+        self.assertIn("Body.Placement.rotation.angle", envelope["detail"]["message"])
+        self.assertEqual(tuple(self.document().getObject("Body").Placement.Base), before)
+        self.assertEqual(_snapshot_leftovers(), [])
+
+    def test_Should_accept_a_rotation_angle_When_it_sits_on_the_bound(self):
+        # Arrange
+        raw = rotation((0, 0, 1), 1e6)
+
+        # Act
+        target = features._placement_value(raw, "Obj.Placement")
+
+        # Assert
+        self.assertAlmostEqual(math.degrees(target.Rotation.Angle) % 360.0, 280.0, places=3)
+
     def test_Should_refuse_before_the_bracket_When_a_component_is_above_the_bound(self):
         # Arrange
         self.padded_body()
