@@ -2345,3 +2345,33 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: Lid on a row of unit boxes: 13.6 s at 100 boxes and 108 s at 200 boxes at face product 7,200 (red team RT-5). A section plus fuse proof skipped `distToShape` for touching pairs (1.4 s for 200 boxes) but read distance 0 across small real gaps at an edge, a vertex or a curved surface (verify-13-fu-r2 D1), so it was removed.
   blocker: no measured cost bound for `distToShape` with many contact solutions; decision 45 documents long GIL-holding calls as a limit.
   unblock: a bound that keeps the true distance, or the worker isolation decision (AD-27, decision 45) that lets a timed call stop.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-15-tnp-expected-reattachment.md`
+  summary: A curved element (a cylinder or fillet face) that rides its moved support may still grade `REPOINTED` in the GUI, because `Shape.BoundBox` can use the display triangulation and a remesh shifts the box by the mesh deflection, more than the 1e-7 element tolerance.
+  evidence: review r1 (verification-gap lens) of Story 13-15 cites `TopoShape.cpp:1126-1148` (`BRepBndLib::Add`); related to the entry on the GUI display mesh and `tnp_guard.py` witness above. Every Story 13-15 test uses a planar face or a straight edge.
+  blocker: not measured; headless shapes carry no triangulation, so only the GUI container can show it.
+  unblock: in the container, attach a datum to a curved face, change `Pad.Length` through `feature_set_parameters`, and read the `tnp_audit` block; if flagged, scale the excuse tolerance with the mesh deflection.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-15-tnp-expected-reattachment.md`
+  summary: The `RefRecord` block and the capture sentence in `verification-design.md` §3.1 do not match the code: the entry lacks `missing` and `history`, `target` and `element_map_version` are optional, the witness is named `WitnessHash` although it is a shape type plus bounding box (the code forbids a hash), and the text still says "placement or element hash".
+  evidence: `verification-design.md:222-229` against `tnp_guard.py` `RefEntry` and `RefRecord`; found by review r1 (blind lens) of Story 13-15. Story 13-15 only added `target_witness` to the block.
+  blocker: a design edit outside Story 13-15 scope (the spec allows only the Layer 1 text and the new field).
+  unblock: one documentation pass over §3.1 against `tnp_guard.py`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-15-tnp-expected-reattachment.md`
+  summary: A datum on a Pad face still grades `REPOINTED` (audit FLAGGED, mutation rolls back) when the same element changes shape inside an unchanged support box: an inward-tapered pad (`TaperAngle` -10) on a `Pad.Length` edit, a `Revolution.Angle` edit with a datum on the end face, a `Pad.Reversed` toggle, and a pocket floor that moves inside an unchanged box.
+  evidence: review round 3 of Story 13-15, FreeCAD 1.1.4 probes (blind and edge lenses): inward taper top face shifts (+0.88, -0.88) on x and y while the support box shifts (0, 0); revolve 90 to 120 end face shifts z (+2.01, +0.67) with the support z extent unchanged; `Reversed` support z (-10, -10) against element z (-20, -20). Same verdict before the Story; recorded as safe-side residuals in decision 017.
+  blocker: the bounding-box witness cannot show these moves, and a looser rule (element inside the new support box) would excuse a tampered witness.
+  unblock: a leader or user decision to accept the residual, or a witness richer than the bounding box (for example a point on the element in the support local frame).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-15-tnp-expected-reattachment.md`
+  summary: A datum on a vertical pad edge grades `REPOINTED` after a `Pad.Length` edit because the mapped name changes in its hashed `#id` segment (`#11:2;:G;XTR;:H11a5:7,E` to `#1e:6;:G;XTR;:H11a5:7,E`) while the edge and its history source are unchanged.
+  evidence: review round 3 of Story 13-15 (edge lens probe); `_grade_entry` compares `before["mapped"] != after["mapped"]` as strings.
+  blocker: resolving `#id` segments needs the document `StringHasher`, which this guard does not read.
+  unblock: compare the mapped names with the hashed segments resolved, or compare the history source and a stable suffix instead.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-15-tnp-expected-reattachment.md`
+  summary: When an op recomputes inside the mutation bracket (`feature_fillet`, `feature_chamfer`, `features.py:1668`), `refs_written` (`transaction.py:732`) is read after that recompute, so `intended` (`tnp_guard.py:1050`) grades a pending edit's re-point `CLEAN`. Pre-existing, outside Story 13-15.
+  evidence: third red team of Story 13-15, probe `scratchpad/redteam-13-15c/probes/w1_inner_recompute.py` (`redteam-13-15-r3.md`, RT3-1).
+  blocker: the written baseline must be captured before the op's own recompute; that changes `transaction.py` and the AD-5 written-baseline rule, and re-scores the G2 validator hash.
+  unblock: a Story on the written-baseline capture.
+

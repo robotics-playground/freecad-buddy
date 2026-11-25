@@ -226,8 +226,11 @@ RefRecord = {
   "owner": str, "prop": str, "target": str,
   "entries": [ {"mapped": str, "indexed": str, "witness": WitnessHash} ],
   "element_map_version": str,
+  "target_witness": WitnessHash | None,  # whole target shape: its support's position
 }
 ```
+
+`target_witness` is the witness (shape type plus bounding box) of the whole `target` shape. It records where the support object stood, so Layer 1 can tell an element that moved with its support from one that moved alone.
 
 ### 3.2 Audit layers
 
@@ -236,7 +239,7 @@ Run after mutate → recompute, in order:
 - **Layer 0 — error sweep (cheap, hard-fail class).** `[(o.Name, o.getStatusString()) for o in doc.Objects if not o.isValid()]`. Catches missing external geometry (Sketcher `Missing` flag → recompute error), unresolvable attachments (`AttachEngineException`), broken expressions.
 - **Layer 1 — mapped-name diff (the guard proper).** For each snapshotted entry:
   - subname now begins with `?` (`hasMissingElement`) or `getElement(mapped, silent=True)` returns null → **BROKEN**;
-  - reference resolves but mapped name changed, or witness differs, while the reference was not the mutation's intended target → **REPOINTED** (silent re-point);
+  - reference resolves but mapped name changed, or witness differs, while the reference was not the mutation's intended target → **REPOINTED** (silent re-point). A witness move alone is excused when FreeCAD itself calls it the same element — equal mapped name and equal history source on both sides, neither unreadable — and the target shape (the support) changed, and the element moved no farther than the support, in its direction (per axis, each signed shift of the element's two bounding-box faces lies in the range spanned by zero and both of the support's face shifts). Such an entry goes on to Layer 2. The main defence is the element count: an excuse needs the support to hold as many elements of the referenced type (`countElement`) before and after the op, because every positional name form renumbers only when the piece count changes; an unreadable count is not excused, and a reorder that keeps every count is the residual. A name that carries a positional piece counter is never excused: `;:M`, `;:MG`, `;:G`/`;:U` followed by an index or a hash id, `;D<hex>`, the pattern instance index `;_<n>` and `;:H,` (FreeCAD numbers split pieces by position, `ElementNamingUtils.h:67-70`, `TopoShapeExpansion.cpp:1768-1784`, `ElementMap.cpp:753`), and a bare `;:G`/`;:U` whose shape holds an indexed sibling after the same text; `;:G0` and a bare name without siblings stay eligible. The check also reads the whole lineage (`Part.Feature.getElementHistory(recursive=True)`): FreeCAD hashes older name parts (`ElementMap.cpp:668`), so a counter can sit two features behind the visible name; an unreadable lineage is not excused. A changed mapped name, a missing history, an unchanged support, or a NaN witness is never excused. An element that moves farther than its whole support stays **REPOINTED** (accepted residual). The opposite residual is also accepted: a tampered witness that keeps the mapped name and history source and moves inside the range the support's two face shifts span is excused. The history source is decoded from the mapped name, so it adds no separate protection;
   - a LinkSubList lost entries vs snapshot → **DROPPED** (the `FeatureDressUp.getContinuousEdges` silent-drop trap — count comparison is mandatory, `Error` status alone misses it);
   - otherwise **PASS**.
 - **Layer 2 — history cross-check (only where Layer 1 is ambiguous).** `TopoShape.getElementHistory(mapped)` — the current element must descend from the same source tag/element as pre-mutation. Divergent history on an unchanged reference = REPOINTED even when witnesses coincide.
