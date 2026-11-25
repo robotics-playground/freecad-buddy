@@ -250,6 +250,37 @@ def _quantity_schema(units: list[str]) -> dict:
 
 _LENGTH_QUANTITY_SCHEMA = _quantity_schema(["mm"])
 _ANGLE_QUANTITY_SCHEMA = _quantity_schema(["deg"])
+_PLACEMENT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "base": {
+            "type": "object",
+            "properties": {
+                "x": _LENGTH_QUANTITY_SCHEMA,
+                "y": _LENGTH_QUANTITY_SCHEMA,
+                "z": _LENGTH_QUANTITY_SCHEMA,
+            },
+            "additionalProperties": False,
+        },
+        "rotation": {
+            "type": "object",
+            "properties": {
+                "axis": {
+                    "type": "array",
+                    "items": {"type": "number"},
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "description": "rotation axis [x, y, z], not all zero; normalised",
+                },
+                "angle": _ANGLE_QUANTITY_SCHEMA,
+            },
+            "additionalProperties": False,
+        },
+    },
+    "additionalProperties": False,
+    "description": "{base: {x, y, z}, rotation: {axis, angle}}; an omitted key keeps the default "
+    "of a new object (base at the origin, no rotation)",
+}
 # For fields whose dimension is chosen at call time: a constraint datum's, from the target
 # constraint's type, and a pattern's offset, from the pattern kind.
 _QUANTITY_SCHEMA = _quantity_schema(["mm", "deg"])
@@ -895,6 +926,75 @@ def _feature_specs():
             "only placements or strings already held opens no transaction (undo_steps 0). A call "
             "whose parameters hold only Visibility (true/false) is display state and needs no "
             "confirm in any posture.",
+        ),
+        _feature_method(
+            "feature_part_primitive",
+            features.feature_part_primitive,
+            _feature_schema(
+                {
+                    "kind": {"enum": ["box", "cylinder", "cone", "sphere", "torus"]},
+                    "name": _FEATURE_NAME_SCHEMA,
+                    "length": dict(_LENGTH_QUANTITY_SCHEMA, description="box only"),
+                    "width": dict(_LENGTH_QUANTITY_SCHEMA, description="box only"),
+                    "height": dict(_LENGTH_QUANTITY_SCHEMA, description="box, cylinder, cone"),
+                    "radius": dict(_LENGTH_QUANTITY_SCHEMA, description="cylinder, sphere"),
+                    "radius1": dict(
+                        _LENGTH_QUANTITY_SCHEMA,
+                        description="cone: base radius (0 for a point); torus: ring radius",
+                    ),
+                    "radius2": dict(
+                        _LENGTH_QUANTITY_SCHEMA,
+                        description="cone: top radius (0 for a point); torus: tube radius, "
+                        "below radius1",
+                    ),
+                    "placement": _PLACEMENT_SCHEMA,
+                },
+                ["kind", "name"],
+                (
+                    "kind",
+                    {
+                        "box": ["length", "width", "height"],
+                        "cylinder": ["radius", "height"],
+                        "cone": ["radius1", "radius2", "height"],
+                        "sphere": ["radius"],
+                        "torus": ["radius1", "radius2"],
+                    },
+                ),
+            ),
+            "Create one Part solid (box, cylinder, cone, sphere or torus) at document level, "
+            "outside any Body. Each kind takes only its own fields. Refused with detail.code "
+            "part_primitive.fields or part_primitive.dimension (a size at or below 0; a cone with "
+            "both radii 0; a torus with radius2 not below radius1).",
+        ),
+        _feature_method(
+            "feature_part_boolean",
+            features.feature_part_boolean,
+            _feature_schema(
+                {
+                    "operation": {"enum": ["cut", "fuse", "common"]},
+                    "base": {"type": "string", "description": "top-level object Name"},
+                    "tools": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 1,
+                        "maxItems": 20,
+                        "description": "top-level object Names; cut with several tools cuts "
+                        "their fuse (an extra object <name>_tools); common is the intersection "
+                        "of the base and every tool",
+                    },
+                    "name": _FEATURE_NAME_SCHEMA,
+                    "refine": {"type": "boolean", "default": True},
+                },
+                ["operation", "base", "tools", "name"],
+            ),
+            "Cut, fuse or common of top-level solids (Part::Cut, Fuse, Common, or the Multi "
+            "types), not PartDesign features. The inputs and any intermediate fuse are hidden. "
+            "Refused before any write with detail.code part_boolean.not_top_level (a Body "
+            "feature or an App::Part member), part_boolean.untrusted_shape (reversed, invalid, "
+            "non-solid input: FreeCAD gives wrong numbers) or part_boolean.too_complex (above "
+            "3,000 faces or 1,000 solid pairs). An empty or invalid result fails as "
+            "RECOMPUTE_ERROR part_boolean.empty_result or part_boolean.invalid_result and rolls "
+            "back.",
         ),
         _feature_method(
             "feature_parameters_define",

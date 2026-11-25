@@ -23,7 +23,7 @@ from collections.abc import Collection
 from typing import Callable
 
 from freecad_buddy.contracts import ResultEnvelope
-from freecad_buddy.usecases import confirm, shim, transaction, verify
+from freecad_buddy.usecases import confirm, shape_trust, shim, transaction, verify
 from freecad_buddy.usecases.documents import (
     CodedValidationError,
     DocumentRegistry,
@@ -3866,4 +3866,334 @@ def document_object_delete(
         report,
         _object_state,
         deleted,
+    )
+
+
+# --------------------------------------------------------------------------------------------
+# Part primitives and Part booleans
+# --------------------------------------------------------------------------------------------
+
+
+class PartToolRefusal(CodedValidationError):
+    """A refused ``feature_part_primitive`` or ``feature_part_boolean`` request (AD-17 code)."""
+
+
+# kind -> (FreeCAD type, ((wire field, FreeCAD property), ...)). Fields and properties checked
+# against PrimitiveFeature.cpp and FeaturePartBox.cpp.
+_PART_PRIMITIVES = {
+    "box": ("Part::Box", (("length", "Length"), ("width", "Width"), ("height", "Height"))),
+    "cylinder": ("Part::Cylinder", (("radius", "Radius"), ("height", "Height"))),
+    "cone": (
+        "Part::Cone",
+        (("radius1", "Radius1"), ("radius2", "Radius2"), ("height", "Height")),
+    ),
+    "sphere": ("Part::Sphere", (("radius", "Radius"),)),
+    "torus": ("Part::Torus", (("radius1", "Radius1"), ("radius2", "Radius2"))),
+}
+# A cone may end in a point, so its radii may be zero (both zero is refused); every other
+# dimension must be positive.
+_ZERO_ALLOWED_FIELDS = {"cone": frozenset({"radius1", "radius2"})}
+
+
+def _part_primitive_values(kind: object, given: dict) -> dict[str, float]:
+    """Return the checked millimetre value of each field ``kind`` needs.
+
+    :raises ValidationError: ``kind`` is unknown, or a field is not a finite mm quantity.
+    :raises PartToolRefusal: ``part_primitive.fields`` (a field the kind does not take, or one it
+        needs is missing) or ``part_primitive.dimension`` (a bound FreeCAD cannot build).
+    """
+    if kind not in _PART_PRIMITIVES:
+        raise ValidationError(f"kind must be one of {sorted(_PART_PRIMITIVES)}, got {kind!r}")
+    wanted = [field for field, _ in _PART_PRIMITIVES[kind][1]]
+    supplied = sorted(field for field, value in given.items() if value is not None)
+    extra = [field for field in supplied if field not in wanted]
+    missing = [field for field in wanted if field not in supplied]
+    if extra or missing:
+        raise PartToolRefusal(
+            "part_primitive.fields",
+            f"a {kind} takes {wanted}; unexpected {extra}, missing {missing}",
+        )
+    values = {field: _length_mm(given[field], field) for field in wanted}
+    zero_allowed = _ZERO_ALLOWED_FIELDS.get(kind, frozenset())
+    for field, value in values.items():
+        if value < 0 or (value == 0 and field not in zero_allowed):
+            raise PartToolRefusal(
+                "part_primitive.dimension",
+                f"{field} must be {'0 or more' if field in zero_allowed else 'above 0'} mm, "
+                f"got {value:g}",
+            )
+    if kind == "cone" and values["radius1"] == 0 == values["radius2"]:
+        raise PartToolRefusal(
+            "part_primitive.dimension", "a cone needs at least one radius above 0 mm"
+        )
+    if kind == "torus" and values["radius2"] >= values["radius1"]:
+        raise PartToolRefusal(
+            "part_primitive.dimension",
+            "a torus needs radius2 below radius1 (tube inside the ring), got radius1 "
+            f"{values['radius1']:g} and radius2 {values['radius2']:g}",
+        )
+    return values
+
+
+def feature_part_primitive(
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    kind: str | None = None,
+    name: str | None = None,
+    length: dict | None = None,
+    width: dict | None = None,
+    height: dict | None = None,
+    radius: dict | None = None,
+    radius1: dict | None = None,
+    radius2: dict | None = None,
+    placement: dict | None = None,
+    confirm: dict | None = None,
+    audit_sink: object = None,
+) -> ResultEnvelope:
+    """Create one ``Part::`` solid (box, cylinder, cone, sphere or torus) at document level.
+
+    The object is never added to a Body. A partial primitive (``Angle*``) keeps FreeCAD's full
+    turn. ``placement`` is ``{base: {x, y, z}, rotation: {axis, angle}}`` (see
+    ``_placement_value``); an omitted key keeps the default of a new object.
+
+    :raises ValidationError: unknown kind, a bad quantity or unit, a bad placement, or a name that
+        is unusable or taken.
+    :raises PartToolRefusal: ``part_primitive.fields`` or ``part_primitive.dimension``.
+    """
+    given = {
+        "length": length,
+        "width": width,
+        "height": height,
+        "radius": radius,
+        "radius1": radius1,
+        "radius2": radius2,
+    }
+
+    def precheck(document: object) -> None:
+        _name_available(document, name)
+        _part_primitive_values(kind, given)
+        if placement is not None:
+            _placement_value(placement, "placement")
+
+    def op(document: object) -> list[str]:
+        type_id, fields = _PART_PRIMITIVES[kind]
+        values = _part_primitive_values(kind, given)
+        obj = document.addObject(type_id, name)
+        for field, prop in fields:
+            setattr(obj, prop, values[field])
+        if placement is not None:
+            obj.Placement = _placement_value(placement, "placement")
+        return [obj.Name]
+
+    params = {
+        "doc": doc,
+        "kind": kind,
+        "name": name,
+        **given,
+        "placement": placement,
+        "confirm": confirm,
+    }
+    return _feature_mutation(
+        registry,
+        doc,
+        name,
+        f"part {kind} {name}",
+        "feature_part_primitive",
+        params,
+        op,
+        audit_sink,
+        precheck,
+    )
+
+
+_PART_BOOLEAN_OPERATIONS = ("cut", "fuse", "common")
+_PART_BOOLEAN_MAX_TOOLS = 20
+# Measured on FreeCAD 1.1.4 (whole call: recompute with refine, post_verify, two fingerprints and
+# the snapshot): a box cut by 1,000 disjoint cylinders (3,006 faces) took 8.9 s; the same with
+# 2,000 (6,006 faces) 34 s. Face count alone does not bound the cost: the common of two families
+# of crossing cylinders took 13.4 s at 180 faces (900 solid pairs) and 37.7 s at 216 faces
+# (1,296 pairs). The worst measured case under both limits is about 22 s (an interleaved box cut
+# at 3,072 faces), under the 120 s feature timeout. The bridge cannot interrupt a long OCC call,
+# so the limits apply to the input.
+_PART_BOOLEAN_MAX_FACES = 3000
+_PART_BOOLEAN_MAX_SOLID_PAIRS = 1000
+
+
+def _untrusted_reason(shape: object) -> str:
+    """Say why the boolean kernel cannot be trusted on ``shape``."""
+    if shape is None or shape.isNull():
+        return "it carries no shape"
+    try:
+        volumes = list(shape_trust.solid_volumes(shape))
+        if not volumes:
+            return "it holds no solid"
+        if None in volumes:
+            return f"it is a {shape.ShapeType}, not made only of solids"
+        if any(not math.isfinite(volume) or volume <= 0 for volume in volumes):
+            return "a solid has a volume of 0 or less (reversed or degenerate)"
+        return "it is not a valid shape"
+    except Exception as exc:  # noqa: BLE001 - a shape that cannot be inspected is untrusted
+        return f"it cannot be inspected ({exc})"
+
+
+def _part_boolean_inputs(
+    document: object, base: object, tools: object
+) -> tuple[object, list[object]]:
+    """Return ``(base, tools)`` as objects after the input rules of ``feature_part_boolean``.
+
+    :raises ValidationError: an unknown input.
+    :raises PartToolRefusal: ``part_boolean.invalid_input`` (tools not a list of 1 to 20 Names, or
+        a repeated input), ``part_boolean.not_top_level``, ``part_boolean.untrusted_shape`` or
+        ``part_boolean.too_complex``.
+    """
+    if not isinstance(tools, list) or not 1 <= len(tools) <= _PART_BOOLEAN_MAX_TOOLS:
+        raise PartToolRefusal(
+            "part_boolean.invalid_input",
+            f"tools must be a list of 1 to {_PART_BOOLEAN_MAX_TOOLS} object Names",
+        )
+    base_obj = _resolve_object(document, base, "base")
+    tool_objs = [_resolve_object(document, item, "tools") for item in tools]
+    objects = [base_obj, *tool_objs]
+    if len({obj.Name for obj in objects}) != len(objects):
+        raise PartToolRefusal(
+            "part_boolean.invalid_input", "base and tools must be distinct objects"
+        )
+    for obj in objects:
+        parent = obj.getParentGeoFeatureGroup()
+        if parent is not None:
+            raise PartToolRefusal(
+                "part_boolean.not_top_level",
+                f"{obj.Name} sits inside {parent.Name}; a boolean takes top-level objects (a "
+                "Body itself is allowed, a Body feature is not)",
+            )
+    for obj in objects:
+        shape = getattr(obj, "Shape", None)
+        if shape is None or not shape_trust.is_measurable_solid(shape):
+            raise PartToolRefusal(
+                "part_boolean.untrusted_shape",
+                f"{obj.Name} cannot be used in a boolean: {_untrusted_reason(shape)}; FreeCAD "
+                "returns wrong volumes or an empty result for such a shape",
+            )
+    faces = sum(len(obj.Shape.Faces) for obj in objects)
+    pairs = len(base_obj.Shape.Solids) * sum(len(obj.Shape.Solids) for obj in tool_objs)
+    if faces > _PART_BOOLEAN_MAX_FACES or pairs > _PART_BOOLEAN_MAX_SOLID_PAIRS:
+        raise PartToolRefusal(
+            "part_boolean.too_complex",
+            f"the inputs hold {faces} faces (limit {_PART_BOOLEAN_MAX_FACES}) and {pairs} "
+            f"base-solid by tool-solid pairs (limit {_PART_BOOLEAN_MAX_SOLID_PAIRS}); the "
+            "kernel call would hold the bridge for minutes. Use fewer or simpler inputs",
+        )
+    return base_obj, tool_objs
+
+
+def _part_boolean_result_check(name: str, operation: str) -> Callable[[object], None]:
+    """Return a recompute check that the boolean result is a valid shape with a solid in it.
+
+    FreeCAD reports an empty result as up to date: a common of disjoint or touching solids and a
+    cut that removes everything give a ``Compound`` with no solid, and ``post_verify`` passes it.
+    """
+
+    def check(document: object) -> None:
+        shape = getattr(document.getObject(name), "Shape", None)
+        if shape is None or shape.isNull() or not shape.Solids:
+            raise transaction.RecomputeFailure(
+                "part_boolean.empty_result", f"the {operation} {name} left no solid"
+            )
+        if not shape.isValid():
+            raise transaction.RecomputeFailure(
+                "part_boolean.invalid_result", f"the {operation} {name} built an invalid shape"
+            )
+        volumes = [float(solid.Volume) for solid in shape.Solids]
+        if any(not math.isfinite(volume) or volume <= 0 for volume in volumes):
+            raise transaction.RecomputeFailure(
+                "part_boolean.empty_result",
+                f"the {operation} {name} left no solid of positive volume",
+            )
+
+    return check
+
+
+def feature_part_boolean(
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    operation: str | None = None,
+    base: str | None = None,
+    tools: list[str] | None = None,
+    name: str | None = None,
+    refine: bool = True,
+    confirm: dict | None = None,
+    audit_sink: object = None,
+) -> ResultEnvelope:
+    """Cut, fuse or common of top-level solids, as ``Part::Cut``, ``Fuse`` or ``Common`` objects.
+
+    One tool uses the two-input type. Several tools use ``Part::MultiFuse`` or ``MultiCommon``; a
+    cut by several tools cuts their fuse, an extra ``Part::MultiFuse`` named ``<name>_tools``.
+    ``Refine`` is set explicitly on every object made. The inputs and the intermediate fuse are
+    hidden, as the GUI does (``ViewProviderBoolean``), so a headless call reads the same.
+
+    :raises ValidationError: unknown operation, input or name, or ``refine`` is not a boolean.
+    :raises PartToolRefusal: ``part_boolean.invalid_input``, ``part_boolean.not_top_level``,
+        ``part_boolean.untrusted_shape`` or ``part_boolean.too_complex``.
+    """
+    several = isinstance(tools, list) and len(tools) > 1
+
+    def precheck(document: object) -> None:
+        if operation not in _PART_BOOLEAN_OPERATIONS:
+            raise ValidationError(
+                f"operation must be one of {list(_PART_BOOLEAN_OPERATIONS)}, got {operation!r}"
+            )
+        _require_bool(refine, "refine")
+        _name_available(document, name)
+        if operation == "cut" and several:
+            _name_available(document, f"{name}_tools")
+        _part_boolean_inputs(document, base, tools)
+
+    def op(document: object) -> list[str]:
+        base_obj, tool_objs = _part_boolean_inputs(document, base, tools)
+        intermediate = []
+        if operation == "cut":
+            tool_obj = tool_objs[0]
+            if several:
+                tool_obj = document.addObject("Part::MultiFuse", f"{name}_tools")
+                tool_obj.Shapes = tool_objs
+                intermediate.append(tool_obj)
+            result = document.addObject("Part::Cut", name)
+            result.Base = base_obj
+            result.Tool = tool_obj
+        elif not several:
+            type_id = "Part::Fuse" if operation == "fuse" else "Part::Common"
+            result = document.addObject(type_id, name)
+            result.Base = base_obj
+            result.Tool = tool_objs[0]
+        else:
+            type_id = "Part::MultiFuse" if operation == "fuse" else "Part::MultiCommon"
+            result = document.addObject(type_id, name)
+            result.Shapes = [base_obj, *tool_objs]
+        for obj in [*intermediate, result]:
+            obj.Refine = refine
+        for obj in [base_obj, *tool_objs, *intermediate]:
+            obj.Visibility = False
+        return [result.Name, *(obj.Name for obj in intermediate)]
+
+    params = {
+        "doc": doc,
+        "operation": operation,
+        "base": base,
+        "tools": tools,
+        "name": name,
+        "refine": refine,
+        "confirm": confirm,
+    }
+    return _feature_mutation(
+        registry,
+        doc,
+        name,
+        f"part {operation} {name}",
+        "feature_part_boolean",
+        params,
+        op,
+        audit_sink,
+        precheck,
+        state_probe=_object_state,
+        recompute_check=_part_boolean_result_check(name, str(operation)),
     )
