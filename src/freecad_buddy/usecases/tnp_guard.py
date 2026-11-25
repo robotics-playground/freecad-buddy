@@ -197,9 +197,15 @@ def _mapped_name(shape: object, indexed: str) -> str | None:
 
 
 def _witness(element: object) -> Witness | None:
-    """Return ``element``'s type-plus-bounding-box witness, or ``None`` when unreadable."""
+    """Return ``element``'s type-plus-bounding-box witness, or ``None`` when unreadable.
+
+    The box comes from the exact geometry (``optimalBoundingBox(False, False)``: no triangulation,
+    no shape tolerance). ``BoundBox`` reads the display mesh once a view has tessellated the shape,
+    and the mesh nodes sit off a curved face's extreme (2.0 became 2.0009 on a r3 cylinder after
+    ``tessellate(0.5)``), so the same face would read as moved in the GUI and not headless.
+    """
     try:
-        bbox = element.BoundBox
+        bbox = element.optimalBoundingBox(False, False)
         return (
             str(element.ShapeType),
             float(bbox.XMin),

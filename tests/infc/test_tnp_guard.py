@@ -1991,6 +1991,25 @@ class SplitPieceCounterTest(_BodyFixture):
         self.assertEqual(envelope["status"], "SPEC_FAILED")
 
 
+class WitnessMeshTest(unittest.TestCase):
+    """The witness reads the exact geometry, never the display mesh a view may have built."""
+
+    def test_Should_read_the_exact_extreme_When_the_curved_face_was_tessellated(self):
+        # Arrange
+        cylinder = Part.makeCylinder(3.0, 15.0, App.Vector(10.0, 5.0, 0.0))
+        face = cylinder.Faces[0]
+        exact_witness = tnp_guard._witness(face)
+        face.tessellate(0.5)
+
+        # Act
+        witness = tnp_guard._witness(face)
+
+        # Assert
+        self.assertGreater(face.BoundBox.YMin, 2.0 + 1e-4, "tessellation must shift BoundBox")
+        self.assertEqual(witness, exact_witness)
+        self.assertAlmostEqual(witness[2], 2.0, places=9)
+
+
 class PositionalCounterTest(unittest.TestCase):
     def test_Should_detect_the_counter_When_the_name_carries_a_FreeCAD_split_marker(self):
         # Arrange

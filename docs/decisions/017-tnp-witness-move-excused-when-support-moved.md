@@ -110,4 +110,7 @@ Decision 014; `verification-design.md` §3.2 Layer 1; spec
   `BROKEN`; only the entries that keep their element identity pass.
 - `snapshot_references` reads `ElementMap` once per target per walk, and only when an entry has a bare
   `;:G`/`;:U` name (200 references on one heavy support: 0.022 s before, 0.034 s with the lineage read).
+- The witness box comes from `optimalBoundingBox(False, False)` (exact geometry). `BoundBox` reads the
+  display mesh after a view tessellates the shape, which moved a curved face's extreme by 0.016 mm
+  in the GUI (UAT TC-18-04b) and graded a ride-along `REPOINTED` there but not headless.
 - An entry with no readable history or no mapped name keeps today's verdict: no history, no excuse.
