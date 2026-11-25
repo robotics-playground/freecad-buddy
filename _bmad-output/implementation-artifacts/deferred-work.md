@@ -2152,6 +2152,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: Blind Hunter and Edge Case lens of Story 13-6; skills are outside the 13-6 files.
   blocker: skills text belongs to the skill-update Stories, not to the tool change.
   unblock: the Epic 13 Story that updates skills after the typed tools land (the gap list owner), or a skills-only Story.
+  resolution: resolved by Story 13-12: `gap-list.md` and `verification-kit.md` name `query_mass_properties` `objects` (1 to 50 names), and `urdf-export` and `sdf-export` call it once for every body or link.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-6-query-mass-properties-objects.md`
   summary: `tool-contracts.md` T-2 still lists a `solids` field and gives no exception for the `object` path with no shape; code follows decision 8 and the approved plan.
@@ -2200,6 +2201,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: Review finding (Blind Hunter): the gap list says no typed tool covers sections; `query_section` now does, and `slice` gives false misses (probe in the spec).
   blocker: skill routing to the new measure tools is Story 13-12 (plan: "Skill routing to the new measure, parameter and delete tools").
   unblock: Story 13-12 replaces the row with `query_section` and drops the `slice` advice.
+  resolution: resolved by Story 13-12: `gap-list.md` drops the section row and the `shape.slice` advice, and lists `query_section` as covered; `verification-thinking` routes sections to it with the `section.plane_on_face` fix.
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
   summary: `query_section` and `query_interference` do not detect solids that touch or overlap inside one `Compound`: the section area counts each solid and touching solids merge into shared wire groups.
   evidence: Probe: two stacked 10x10x5 boxes cut on the shared face read area 200; two boxes side by side cut at mid height give one closed and one open wire. Same class as the 13-7 entry on overlapping solids.
@@ -2271,6 +2273,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `feature_parameters_define` now adds the property; `feature_set_expression` is Story 13-10.
   blocker: Story 13-12 owns the skill routing text.
   unblock: Story 13-12.
+  resolution: resolved by Story 13-12: `parametric-patterns` routes VarSet variables to `feature_parameters_define`, bindings to `feature_set_expression` and reads to `query_parameters`; `gap-list.md` drops the VarSet row.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-11-object-delete.md`
   summary: `document_object_delete` does not scan objects in other open documents that link to a deleted object.
@@ -2289,6 +2292,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `document_object_delete` now ships.
   blocker: Story 13-12 owns the skill routing text.
   unblock: Story 13-12.
+  resolution: resolved by Story 13-12: `gap-list.md` drops the delete row and lists `document_object_delete` as covered; `freecad-scripting-idioms` no longer advises `body.removeObject` in a script.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-11-object-delete.md`
   summary: The `document_object_delete` container exemption compares names only (`features.py:2414`): a GroupExtension holder that also links to one of its Group members through a `PropertyLink` is treated as a pure container, so the delete returns OK and clears that link.

@@ -1,12 +1,13 @@
 # Verification kit
 
-Measure the converted part with the typed tools: `verify_shape` for validity, solid count and
-volume against a value, `query_mass_properties` (one `object` per call) to read the volume,
-`verify_recompute` for failing objects. Run a FreeCAD snippet with `script_exec` only for what no
-typed tool measures: overlap against a reference STEP, the reference's own volume, and the VarSet
-set and restore. Each snippet is read-only except the parameter-limit test, whose restore script
-puts every value back. The re-export script runs outside
-FreeCAD and writes one reference STEP per case, in the same world frame as the FreeCAD part.
+Measure the converted part with the typed tools: `verify_shape` for validity, solid count,
+volume against a value and cylindrical holes, `query_mass_properties` (`objects`: every part in
+one call) to read the volumes, `query_interference` for overlap between parts, `verify_recompute`
+for failing objects. `feature_set_parameters` sets and restores the VarSet values. Run a FreeCAD
+snippet with `script_exec` only for what no typed tool measures: overlap against a reference STEP,
+the reference's own volume, and a countersink probe. Every snippet is read-only. The re-export
+script runs outside FreeCAD and writes one reference STEP per case, in the same world frame as the
+FreeCAD part.
 
 ## Re-export the source per case
 
@@ -125,54 +126,44 @@ result = unbound                          # pass: []
 
 ## Parameter-limit test with restore
 
-Compare each FreeCAD case with its own re-export, not only with the default STEP. Run each case
-in four steps: a script sets the values, recomputes and measures the overlap; typed calls measure
-the changed part; a restore script puts the defaults back; then the next case starts. Restore
-after every case, also when a typed check fails, and before any `document_save`: a case that
-runs on top of the previous case's values compares against the wrong re-export. The case script
-recomputes the model and runs one `common()` per part: about 8 s per case for a 100-object,
-two-part model. Run one case per `script_exec` call to stay under the 30 s budget.
+Compare each FreeCAD case with its own re-export, not only with the default STEP. Read the
+defaults once with `query_parameters` and keep them. Run each case in five steps:
 
-Case script. It restores the values itself when it raises. Keep the returned `old`: those are
-the defaults.
+1. Set the case values with `feature_set_parameters`; the call recomputes the model and returns
+   `post_verify`. Set a driver, not a value an expression derives.
+   `feature_set_parameters` `{"feature": "Params", "parameters": {"PLATE_T": 3.0, "COUNTERSINK": false}}`
+   (a float or integer is a number, a bool is `true` or `false`, an enumeration is its member
+   string).
+2. Measure the overlap with the case script below: one read-only `common()` per part.
+3. Measure the part with typed calls: `verify_recompute` once, and per part the `verify_shape`
+   call of the equality check above.
+4. Restore the defaults with `feature_set_parameters` and the values from `query_parameters`.
+5. Start the next case.
+
+Restore after every case, also when a typed check fails, and before any `document_save`: a case
+that runs on top of the previous case's values compares against the wrong re-export. Run one
+case per `script_exec` call to stay under the 30 s budget: the script runs one `common()` per
+part, about 8 s per case for a 100-object, two-part model.
+
+Case script. It writes nothing:
 
 ```python
 import Part
 REFS = r"D:/path/to/refs"
 PARTS = ("bracket",)
-tag, values = "T3", {"PLATE_T": 3.0}                        # one case per call
-V = doc.getObject("Params")
-old = {k: getattr(V, k) for k in values}
-try:
-    for k, v in values.items():
-        setattr(V, k, v)
-    doc.recompute()
-    parts = []
-    for name in PARTS:
-        obj = doc.getObjectsByLabel(name)[0]
-        ref = Part.read(f"{REFS}/{name}_{tag}.step")
-        parts.append({"name": obj.Name, "ref_vol": ref.Volume,
-                      "overlap_pct": round(100 * obj.Shape.common(ref).Volume / ref.Volume, 4)})
-    result = {"case": tag, "old": old, "parts": parts}
-except Exception:
-    for k, v in old.items():
-        setattr(V, k, v)
-    doc.recompute()
-    raise
-```
-
-Then `verify_recompute` once, and per part the `verify_shape` call of the equality check above
-with that part's `name` and `ref_vol`. Restore script, with the returned `old`:
-
-```python
-V = doc.getObject("Params")
-for k, v in {"PLATE_T": 5.0}.items():                       # the `old` of this case
-    setattr(V, k, v)
-doc.recompute()
+tag = "T3"                                                  # the case just set
+parts = []
+for name in PARTS:
+    obj = doc.getObjectsByLabel(name)[0]
+    ref = Part.read(f"{REFS}/{name}_{tag}.step")
+    parts.append({"name": obj.Name, "ref_vol": ref.Volume,
+                  "overlap_pct": round(100 * obj.Shape.common(ref).Volume / ref.Volume, 4)})
+result = {"case": tag, "parts": parts}
 ```
 
 After the last restore, run the part-equality snippet against the `default` references: a frame
 or rotation that did not come back keeps its volume, so only the overlap proves the restore.
+`query_parameters` must list the default values again.
 
 Pass: every case has `verify_recompute` and `verify_shape` passing and `overlap_pct` 100.0000;
 after the restore, the default equality passes again. Pick values at both ends of
@@ -181,15 +172,27 @@ branches of every `min()` / `max()`.
 
 ## Interference between parts
 
-```python
-a, b = (doc.getObjectsByLabel(n)[0].Shape for n in ("board", "box_base"))
-result = round(a.common(b).Volume, 3)    # pass: <= 0.05 mm3
+`query_interference` `{"objects": ["board", "box_base"]}` takes immutable Names (a Body or a
+Part, not a feature inside it) and measures every pair; `{"pairs": [["board", "box_base"]]}`
+measures chosen pairs. Pass: `common_volume` at most 0.05 mm3 and `boolean_failed` false.
+`boolean_failed` true is unmeasured, not zero: run `verify_shape` on both parts. A call that
+returns `interference.too_complex` needs fewer, larger pairs.
+
+## Hole checks
+
+One `verify_shape` call covers cylindrical holes (`select` filters by `diameter` or `axis`; the
+diameter is a number in mm):
+
+```json
+[{"fn": "count_cylindrical_holes", "expect": 4, "select": {"diameter": 5.5}},
+ {"fn": "hole_diameter", "expect": 5.5, "select": {"axis": [0, 0, 1]}},
+ {"fn": "hole_through", "expect": true, "select": {"axis": [0, 0, 1]}}]
 ```
 
-## Hole probe
-
-A hole of diameter `D` and depth `H` at `(x, y, z0)`: a disk of diameter `D - 0.1` must not
-touch material, a disk of `D + 0.1` must.
+`hole_position` with `expect` `[x, y]` needs a `select` that picks one hole. Pass: all checks
+pass. A countersink cone is not a cylindrical hole; probe it. A hole of diameter `D` and depth
+`H` at `(x, y, z0)`: a disk of diameter `D - 0.1` must not touch material, a disk of `D + 0.1`
+must.
 
 ```python
 def probe(shape, x, y, z, d):

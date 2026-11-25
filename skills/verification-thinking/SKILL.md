@@ -49,9 +49,9 @@ it — otherwise none of these checks can run.
   No tool audits references or compares before and after outside a mutation, so
   report reference integrity and freedom from regression as unverified.
 - On a **failed mutation** (`post_verify.passed` false): with `rolled_back` true
-  and `rollback_proven` set, the change is not in the model — read `explanation`,
-  fix the cause, send the call again. With `rolled_back` false or
-  `rollback_proven` null, the model state is unproven: stop and report.
+  and `rollback_proven` set, the change is not in the model — fix the cause and send
+  the call again. Otherwise the model state is unproven: stop and report
+  (`references/reading-mutation-results.md`).
 - A clean recompute is **necessary but not sufficient**: `verify_recompute`
   passing means the script ran, not that the geometry is right. Always follow it
   with spec-driven measurement, because "a pocket exists" is not "the right pocket,
@@ -60,9 +60,19 @@ it — otherwise none of these checks can run.
   callout) states — with `query_mass_properties` for bbox/volume and
   `query_placement` for distances and offsets — because an unchecked dimension is
   an unverified claim, and the point of verifying is to falsify a wrong part.
+- Measure **overlap and gap between parts** with `query_interference`
+  `{"objects": ["Housing", "Lid"]}` (every pair; name each Body, not a feature).
+  `common_volume` is the overlap and `min_distance` the gap. `boolean_failed` true
+  means *unmeasured*, never zero. Limits and refusals such as
+  `interference.too_complex`: `references/measuring-clearance-and-sections.md`.
+- Measure a **cut through a part** with `query_section`
+  `{"object": "Body", "plane": {"normal": "z", "offset": {"value": 12.5, "unit": "mm"}}}`.
+  A null `area` is *unmeasured*, never zero. On `section.plane_on_face`, move `offset`
+  by 1e-6 mm or more.
 - Run a baseline inspection at each milestone before the spec checks:
   `query_tree_summary` (`focus` on the body) for names and `!<status>` errors,
-  `query_mass_properties` for a scale sanity check. An order-of-magnitude or
+  `query_mass_properties` `{"objects": ["Body", "Lid"]}` for a scale sanity check of
+  every body at once. An order-of-magnitude or
   centering error passes narrow checks but shows up in the baseline.
 - Check an interface that should be flush or centered with `query_placement`
   deltas between the two references; if it's off, fix the source feature or datum
@@ -70,23 +80,19 @@ it — otherwise none of these checks can run.
   of truth and the export is derived.
 - On a **modification**, compare `mutation.fingerprint_before.digest` with
   `fingerprint_after.digest` (equal means no geometry changed) and read
-  `mutation.changed`, the objects whose mass properties differ, because a change
-  that "worked" may have silently altered an unrelated feature. In a PartDesign
-  body each feature's `Shape` is cumulative, so an edit also lists every later
-  feature and the body; an *earlier* feature in `changed` is the regression. A
-  null `fingerprint_*` leaves `changed` empty: the regression check is unverified,
-  so re-measure. Never use file size or a diff of the saved document as a
-  geometry comparison — those change for reasons unrelated to shape.
+  `mutation.changed`, because a change that "worked" may have silently altered an
+  unrelated feature: an *earlier* feature in `changed` is the regression. A null
+  `fingerprint_*` leaves `changed` empty, so re-measure. Never use file size or a
+  diff of the saved document as a geometry comparison
+  (`references/reading-mutation-results.md`).
 - An export counts as done **only** when its paired `verify_export_step` (or
   `_stl`/`_3mf`) re-imports and matches, because "the file was written" is not
   proof the geometry survived the round-trip. Independent-oracle disagreement is a
   fail, never an average.
-- After any mutation, read `post_verify.tnp_audit.status` (the post-recompute
-  reference audit): `CLEAN`; `FLAGGED` (a `BROKEN`, `REPOINTED`, `DROPPED`, or
-  `UNSUPPORTED` finding); or `UNSUPPORTED` (the audit could not run).
-  `RE_BASELINED` is informational and can appear under `CLEAN`. `UNSUPPORTED` is
-  *not clean*, yet `passed` stays true on it, so read the status separately — a
-  silently re-pointed reference is a corrupted model that still recomputes.
+- After any mutation, read `post_verify.tnp_audit.status` separately: only `CLEAN`
+  is clean. `FLAGGED` and `UNSUPPORTED` are not, and `passed` stays true on
+  `UNSUPPORTED` — a silently re-pointed reference is a corrupted model that still
+  recomputes.
 - Take a screenshot with `query_screenshot` for every milestone, **even when
   every deterministic check passed**, because deterministic
   checks only catch what the spec encoded; a mirrored part or a feature on the
@@ -102,25 +108,24 @@ it — otherwise none of these checks can run.
   acting agent). The judge is conjunctive — it can flag a wrong-looking part that
   geometry missed, but it can never rescue a part geometry already failed.
 - When a mating part is **inserted, slid, or tilted into place**, check clearance
-  along that path, not only at the final position: sweep the mating part through
-  the travel in steps and measure overlap and minimum gap at each step, because a
-  wall that clears the installed part can still block it on the way in.
+  along that path, not only at the final position: set the mating part's pose for
+  each step of the travel and run `query_interference` for the pair at each pose,
+  because a wall that clears the installed part can still block it on the way in.
 - Re-check an earlier clearance after **every edit near it**: widening a gap on one
-  side moves material toward something else, so rerun the clearance and path checks
-  for the neighbours, not only for the feature you changed.
+  side moves material toward something else, so rerun `query_interference` for the
+  neighbours, not only for the feature you changed.
 - Report only checks that actually ran. Never claim structural safety, tolerance
-  compliance, or manufacturability unless that analysis was explicitly performed —
-  geometric plausibility is the ceiling of what these checks prove.
+  compliance, or manufacturability without that analysis — geometric plausibility
+  is the ceiling of what these checks prove.
 
 ## Worked Examples
 
 Input: a copilot builds a 60×40×5 plate; spec says two Ø5.5 holes 40 mm apart.
 
 Verification read:
-1. Per feature (sketch, pad, hole): read each result only — `sketch_state`
-   `fully_constrained` true and `dof` 0, `post_verify.passed` true,
-   `tnp_audit.status` `CLEAN`, `changed` lists the new feature and the body. No
-   `verify_*` call, no screenshot.
+1. Per feature (sketch, pad, hole): read each result only — `sketch_state.dof` 0,
+   `post_verify.passed` true, `tnp_audit.status` `CLEAN`, `changed` lists the new
+   feature and the body. No `verify_*` call, no screenshot.
 2. Milestone (plate finished). Baseline: `query_tree_summary` on the body
    (named, `*tip` last, no `!` line); `query_mass_properties` → bbox ≈ 60×40×5.
 3. One `verify_shape` with every spec check in `checks`: `is_valid_solid`,
@@ -136,8 +141,7 @@ the flange pad, the slot pocket and the body — cumulative shapes, as expected 
 and `fingerprint_before.digest` / `fingerprint_after.digest` differ. The plate pad and
 the hole pocket are absent; if the hole pocket were listed, that is a silent
 regression to investigate, not a success. The edit closes a milestone, so one
-`verify_shape` re-measures the flange height, then one `query_screenshot`. A
-clean recompute alone would have hidden the regression.
+`verify_shape` re-measures the flange height, then one `query_screenshot`.
 
 ## Anti-Patterns
 
@@ -168,4 +172,4 @@ clean recompute alone would have hidden the regression.
   `UNSUPPORTED` is not a pass.
 - **Checking only the installed position.** Symptom: a part that "fits" cannot be
   assembled. Why: the interference check ran at the end pose only. Fix: sweep the
-  assembly path and report overlap and minimum gap per step.
+  assembly path and report `common_volume` and `min_distance` per step.
