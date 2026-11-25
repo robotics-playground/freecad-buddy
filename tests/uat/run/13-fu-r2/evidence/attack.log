@@ -1,0 +1,81 @@
+code under test: D:\Work/Personal/Sources/freecad-buddy-wt-13-fu/src\freecad_buddy\usecases\queries.py
+rt1 nested sphere r10: status=OK common_volume=None min_distance=1.6990694870391636e-08 boolean_failed=True time=0.01s fp_equal=True | expect failed true
+rt1 nested sphere r100: status=OK common_volume=None min_distance=8.495334744997274e-09 boolean_failed=True time=0.01s fp_equal=True | expect failed true
+touch face: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect 0 / 0 / false
+touch edge: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect 0 / 0 / false
+touch vertex: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect 0 / 0 / false
+touch sphere on box point: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect 0 / 0 / false
+touch cylinder line on box: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect 0 / 0 / false
+touch sphere-sphere point: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.00s fp_equal=True | expect 0 / 0 / false
+box inside box shared face: status=OK common_volume=124.99999999999997 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect 125 / 0 / false
+box inside box shared 3 faces: status=OK common_volume=124.99999999999997 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect 125
+gap face 1.5e-07: status=OK common_volume=0.0 min_distance=1.4999999997655777e-07 boolean_failed=False time=0.01s fp_equal=True | expect dist 1.5e-07
+gap edge 1.5e-07: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect dist 2.12e-07
+gap vertex 1.5e-07: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect dist 2.6e-07
+gap sphere-sphere 1.5e-07: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.00s fp_equal=True | expect dist 1.5e-07
+gap sphere-box 1.5e-07: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect dist 1.5e-07
+gap face 2e-07: status=OK common_volume=0.0 min_distance=2.0000000056086265e-07 boolean_failed=False time=0.01s fp_equal=True | expect dist 2e-07
+gap edge 2e-07: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect dist 2.83e-07
+gap vertex 2e-07: status=OK common_volume=0.0 min_distance=3.4641016248521805e-07 boolean_failed=False time=0.00s fp_equal=True | expect dist 3.46e-07
+gap sphere-sphere 2e-07: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.00s fp_equal=True | expect dist 2e-07
+gap sphere-box 2e-07: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect dist 2e-07
+gap face 1e-06: status=OK common_volume=0.0 min_distance=9.999999992515995e-07 boolean_failed=False time=0.01s fp_equal=True | expect dist 1e-06
+gap edge 1e-06: status=OK common_volume=0.0 min_distance=1.414213561314697e-06 boolean_failed=False time=0.00s fp_equal=True | expect dist 1.41e-06
+gap vertex 1e-06: status=OK common_volume=0.0 min_distance=1.7320508062726097e-06 boolean_failed=False time=0.00s fp_equal=True | expect dist 1.73e-06
+gap sphere-sphere 1e-06: status=OK common_volume=0.0 min_distance=9.999999992515995e-07 boolean_failed=False time=0.00s fp_equal=True | expect dist 1e-06
+gap sphere-box 1e-06: status=OK common_volume=0.0 min_distance=9.999999992515995e-07 boolean_failed=False time=0.00s fp_equal=True | expect dist 1e-06
+tol1e-2 gap face 0.001: status=OK common_volume=0.0 min_distance=0.0009999999999994458 boolean_failed=False time=0.01s fp_equal=True | expect dist 0.001
+tol1e-2 gap edge 0.001: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect dist 0.00141
+tol1e-2 gap vertex 0.001: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect dist 0.00173
+tol1e-2 gap sphere-sphere 0.001: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.00s fp_equal=True | expect dist 0.001
+tol1e-2 gap sphere-box 0.001: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect dist 0.001
+tol1e-2 gap face 0.005: status=OK common_volume=0.0 min_distance=0.005000000000000782 boolean_failed=False time=0.01s fp_equal=True | expect dist 0.005
+tol1e-2 gap edge 0.005: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect dist 0.00707
+tol1e-2 gap vertex 0.005: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect dist 0.00866
+tol1e-2 gap sphere-sphere 0.005: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.00s fp_equal=True | expect dist 0.005
+tol1e-2 gap sphere-box 0.005: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s fp_equal=True | expect dist 0.005
+thin shell nested (doc limit): status=OK common_volume=None min_distance=1.6990694870391636e-08 boolean_failed=True time=0.01s fp_equal=True | expect failed true, else documented limit
+rt5 lid x100: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.56s fp_equal=True | expect 0 / 0 / false, < 40 s
+rt5 lid x200: status=OK common_volume=0.0 min_distance=0.0 boolean_failed=False time=1.44s fp_equal=True | expect 0 / 0 / false, < 40 s
+FreeCAD 1.1.4, Libs: 1.1.4R20260928 (Git shallow)
+(C) 2001-2026 FreeCAD contributors
+FreeCAD is free and open-source software licensed under the terms of LGPL2+ license.
+Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									Recompute......
+						(50 %)							(100 %)									
