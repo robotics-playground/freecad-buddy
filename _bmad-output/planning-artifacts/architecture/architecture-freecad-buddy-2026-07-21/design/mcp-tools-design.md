@@ -181,6 +181,8 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `feature_pad` | 2 | Pad a sketch profile | yes |
 | `feature_pocket` | 2 | Pocket from a sketch profile | yes |
 | `feature_revolve` | 2 | Revolution from profile + axis | yes |
+| `feature_loft` | 2 | Additive or subtractive loft through a profile sketch and section sketches (§3.7.3) | yes |
+| `feature_sweep` | 2 | Additive or subtractive sweep of a profile sketch along a spine (§3.7.3) | yes |
 | `feature_hole` | 2 | PartDesign Hole (thread metadata is hint-only for verification) | yes |
 | `feature_fillet` | 2 | Fillet selected edges (selector objects) | yes |
 | `feature_chamfer` | 2 | Chamfer selected edges | yes |
@@ -214,15 +216,15 @@ Specified vs shipped. "Shipped" = returned by `hosts/tool_catalog.py:tool_specs(
 | `export_` | 3 | — | — | — | 3 | 3 |
 | `verify_` | 7 | — | 1 | — | 8 | 6 (`verify_fingerprint`, `verify_references` planned) |
 | `sketch_` | — | — | 8 | — | 8 | 8 |
-| `feature_` | — | — | 13 | — | 13 | 13 |
+| `feature_` | — | — | 15 | — | 15 | 15 |
 | `preview_` | — | — | 1 | — | 1 | 1 |
 | `view_` | — | — | — | — | 1 | 1 |
-| **AI-visible total** (typed tools) | | | | | **54** | **51** |
+| **AI-visible total** (typed tools) | | | | | **56** | **53** |
 | `script_exec` (escape route, outside `tool_specs()`) | 1 | — | — | — | 1 | 1 |
 
 **G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus `script_exec` (registered by default, gated by §5, kept outside `tool_specs()` so the G0.2 count is unchanged) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule), except that a `text_blocks` tool (`query_tree_summary`) ships no `outputSchema`.
 
-The three planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **51**; with `SCRIPT_EXEC_SPEC` that is 52 registered specs.
+The three planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **53**; with `SCRIPT_EXEC_SPEC` that is 54 registered specs.
 
 Not in this table, by design: the `internal=True` RPC-only methods (`export_self_read_stl`, `export_self_read_3mf`). They carry the `export_` prefix and exist because the mesh oracles live outside FreeCAD (AD-9/AD-12), but they are never MCP tools and never reach the AI surface (spine Conventions, "Internal RPC methods").
 
@@ -572,6 +574,8 @@ Refusals that every `feature_*` tool returns as `INVALID_INPUT` before the brack
 
 - `feature_pad` / `feature_pocket`: `second_length` together with `midplane: true`; `up_to: "TwoLengths"` (or its `"?TwoLengths"` spelling), which FreeCAD 1.1 keeps only as a tombstone member — the message names `second_length` as the replacement.
 - `feature_set_parameters`: a value outside the property's type family — a `Quantity` or number for a quantity property, a number for a unitless float property, an integer for an integer property, a boolean for `App::PropertyBool`, a member string for `App::PropertyEnumeration`. Any other property type (for example `Part::PropertyPartShape`) is refused. The message names `<feature>.<prop>` and its type.
+- `feature_loft`: `sections` empty, repeating a sketch or holding the `profile` (`loft.invalid_sections`); a section with a different wire count from the profile, which FreeCAD raises at recompute (`loft.wire_count_mismatch`); `closed: true` with fewer than 2 `sections`, which FreeCAD resets without a message, `FeatureLoft.cpp:209` (`loft.closed_needs_sections`); a sketch with no wire; a non-boolean flag; `subtractive: true` in a Body with no solid (`loft.nothing_to_subtract`).
+- `feature_sweep`: a `spine` that is the `profile`, a Body, a selector that does not resolve to an Edge, or a whole object that is not an edge, a wire or a compound of those (`sweep.invalid_spine`, also for a selector that does not resolve); a `mode` other than `standard` or `frenet` (`sweep.invalid_mode`); a string `spine` that is not a sketch; `subtractive: true` in a Body with no solid (`sweep.nothing_to_subtract`); a non-boolean flag.
 - `feature_fillet` / `feature_chamfer`: a `base` that is not the Body's `Tip`; the message names the Tip. The dress-up builds from its base alone, so a base below the Tip would drop every later feature. FreeCAD's GUI allows this; the bridge refuses it.
 
 ### 3.7.1 `feature_parameters_define`
@@ -694,6 +698,47 @@ A dependency cycle is refused by FreeCAD at `setExpression` (`cyclic reference`,
 TNP guard: a binding is a reference record `ExpressionEngine[<path>]`. A new binding is not in the snapshot and a replaced one grades `PASS`. A cleared one is absent from the live reading; it grades `PASS` only when this op reported removing it (`removed_bindings`, the `(owner, record)` pairs the op filled while it wrote), the op's post-op reading lacks it too and its owner still exists (the written-value rule of decision 014), never because the owner was touched. A binding that disappears during the recompute, a binding another tool removes (`sketch_remove_geometry` on a constraint that carries one still grades `BROKEN`, as before), an owner removed from the document, and a call that passes no written reading all grade as before.
 
 The bracket also closes the application-level transaction after every commit and abort (`shim.close_pending_transaction`). `Document::openTransaction` only names the application's active transaction and the document's own opens on the first change, so an op that wrote nothing left it open and the next change by any caller joined it (`document_undo` then refused).
+
+### 3.7.4 `feature_loft` and `feature_sweep`
+
+```json
+{ "feature_loft": { "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "body": { "type": "string", "description": "target PartDesign Body Name" },
+    "profile": { "type": "string", "description": "first section: sketch Name" },
+    "sections": { "type": "array", "items": { "type": "string" }, "minItems": 1, "description": "further section sketch Names, in loft order; each has the same number of wires as the profile" },
+    "ruled": { "type": "boolean", "default": false },
+    "closed": { "type": "boolean", "default": false, "description": "join the last section back to the profile; needs 2 or more sections" },
+    "subtractive": { "type": "boolean", "default": false },
+    "name": { "type": "string" },
+    "confirm": { "$ref": "#/$defs/Confirm" }
+  }, "required": ["doc", "body", "profile", "sections", "name"] } },
+  "feature_sweep": { "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "body": { "type": "string", "description": "target PartDesign Body Name" },
+    "profile": { "type": "string", "description": "sketch Name" },
+    "spine": { "oneOf": [ { "type": "string", "description": "spine sketch Name" }, { "$ref": "#/$defs/Selector", "description": "one Edge (mapped_name), or a whole edge or wire object (mapped_name omitted)" } ] },
+    "mode": { "enum": ["standard", "frenet"], "default": "standard" },
+    "subtractive": { "type": "boolean", "default": false },
+    "name": { "type": "string" },
+    "confirm": { "$ref": "#/$defs/Confirm" }
+  }, "required": ["doc", "body", "profile", "spine", "name"] } } }
+```
+
+Both tools create one feature inside one AD-5 bracket and return `feature`, `feature_state` and the common `mutation` block, like `feature_pad`. `subtractive` selects the type: `PartDesign::AdditiveLoft` or `SubtractiveLoft`; `PartDesign::AdditivePipe` or `SubtractivePipe`. The loft writes `Profile`, `Sections` (each `(sketch, [""])`), `Ruled` and `Closed`; the sweep writes `Profile`, `Spine` (`(object, [""])` for a sketch name or a whole object, `(object, [Edge])` for an edge) and `Mode`.
+
+`mode` names map to the members of the `Mode` enumeration that `FeaturePipe.cpp:60` declares (`Standard`, `Fixed`, `Frenet`, `Auxiliary`, `Binormal`); the member is read from the live enumeration, never by index. `Fixed`, `Auxiliary` and `Binormal` are not offered: `Auxiliary` needs a second spine and `Binormal` a vector.
+
+Every sketch the call names must be fully constrained: AD-5 post-verify step 3 runs `verify_sketch` on all sketches, so a spine or section sketch with free degrees of freedom fails the call with `SPEC_FAILED` and rollback, unless its shape is already degenerate, which the result check below reports first as `RECOMPUTE_ERROR`. A recompute that gives no solid (an open profile, an open section) gives `RECOMPUTE_ERROR` with a proven rollback.
+
+FreeCAD reports several degenerate results as up to date, so the tools check the new feature's own shape after the recompute and fail the call with `RECOMPUTE_ERROR`, `detail.code` `loft.invalid_result` or `sweep.invalid_result`, and a proven rollback when: the shape is null or `isValid()` is false; it holds other than one solid; or it adds (additive) or removes (subtractive) no volume, which covers a spine in the profile plane (volume 0), a spine that climbs and falls back along itself, and a subtractive cut that misses the Body. When every input edge is analytic and the result has at most 300 faces, the Boolean-operation check (`Shape.check(True)`) also runs, because it finds self-intersections that `isValid()` misses (a profile wider than the bend of its spine); `GeomAbs_` continuity notes are ignored. In FreeCAD 1.1.4 every closed loft tried (sections stacked, or around a ring, smooth or ruled) built an invalid or self-intersecting solid, so `closed: true` is usually refused as `loft.invalid_result`. It does not run otherwise (any BSpline-like input edge, or in the Body's earlier shape), because it holds the interpreter lock for a time that follows the geometry, not the face count (a 1,002-face loft 18.6 s; a 3-face sweep along a 25-turn helix of 770 poles did not finish in 50 s), so a self-intersecting result built from BSpline inputs is not detected. A subtractive call in a Body with no solid is `INVALID_INPUT` `loft.nothing_to_subtract` or `sweep.nothing_to_subtract`, before the bracket. After a committed call the profile, section and spine sketches are hidden, as the GUI does (a Part object used as a spine is left as it was); one `document_undo` shows them again.
+
+Two refusals protect the bridge, because the OCC builds hold the interpreter lock and the 120 s marshal timeout cannot stop them. Both are `INVALID_INPUT` with a `detail.code`, before the bracket:
+
+- `loft.too_complex` and `sweep.too_complex`. A loft section has a size: its edges, a BSpline edge counting its poles. ThruSections time grows with the square of the larger section of each pair of neighbours, so loft cost is the sum over consecutive sections (the profile first; the last back to the first when `closed`) of the larger size squared; the limit is 1,000,000, and the number of sections is limited on its own to 500. Sweep cost is the profile's units times the spine's units, a profile edge counting its poles (1 for any other curve) and a spine edge counting 1 plus its poles divided by ten, rounded down; the limit is 3,000. Measured on FreeCAD 1.1.4 (a development host). Loft recompute, smooth: circle to 1,000-gon 9.3 s and to 1,400-gon 20 s (a circle to an n-gon is the slowest layout); two 1,000-gons 5.7 s, two 1,400-gons 11 s, two 2,000-gons 24 s; 40 sections of 200 edges 4.6 s; 500 sections of 16 edges 0.64 s; 100 circles 0.09 s, 500 circles 1.6 s, 1,500 circles 19 s. Whole loft call at the limit: circle to 1,000-gon 10.7 s, two 1,000-gons 8.0 s, 24 sections of 200 edges 5.2 s. Sweep recompute: 100 profile edges along 100 spine lines 5.8 s, 200 along 200 69 s, a circle along 5,000 lines 4.2 s (10,000 lines took 32 s through the tool), 250 edges along a 25-turn helix of 392 poles 18 s, a 200-pole BSpline profile along a 20-turn helix 1.3 s. Whole sweep call at the limit: a circle along 3,000 lines 4.1 s, 30 edges along 100 lines 2.5 s, 8 along 375 lines 2.3 s, 35 along a 25-turn helix of 770 poles (2,730) 1.1 s. The earlier edge-count model accepted two 3,999-gons, which took 111 s. Face count and edge count alone predict cost poorly, which is why a BSpline counts its poles and loft cost is quadratic.
+- `sweep.degenerate_spine`. A BSpline spine that doubles back on itself has a point of zero velocity, and an `AdditivePipe` over one held the interpreter for more than 280 s (8 points through `x = 0.5 i cos(0.3 i)`, probed on 1.1.4; a spine of straight edges that reverse at a corner did not hang). Only BSpline-like spine edges are sampled (a line or an analytic curve cannot reverse), at 400 parameters each, or eight per pole when that is more (a long helix turns a quarter turn between two of 400 samples after about 100 turns, and a 120-turn `Part::Helix` builds valid in 0.85 s), for at most 100 such edges and 100,000 samples in all (more is `sweep.too_complex`), and the cost check runs first; two consecutive tangents with a negative dot product, or a sample with no tangent, refuse the call. A BSpline edge that turns more than 90 degrees between two samples is refused for the same reason. A zero-velocity point without a reversal is not detected. The reversing BSpline reads dot = -1.0; a helix, a sine curve, a hairpin, a circle and a 100-segment polyline stay above 0.98.
+
+`preview_dry_run` accepts both tools: `preview_op_table` derives the table from the `feature_` spec list.
 
 ### 3.8 `preview_dry_run` (AD-10)
 

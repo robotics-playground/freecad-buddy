@@ -2317,3 +2317,6 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: leader gate runs on the integration head after the 13-1..13-10 merges; verify-13-9.md N1; verify-13-11.md.
   blocker: timing races outside Epic 13 scope; needs a root-cause look, not a retry.
   unblock: a small Story that finds the race in each test and makes it deterministic.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-18-loft-sweep.md`
+  summary: `feature_sweep` does not detect a BSpline spine with a zero-velocity point and no tangent reversal.
+  evidence: Review finding (unverified, would be medium): `_check_spine_tangents` refuses only a negative tangent dot product. A zero-velocity cusp without reversal may still hold the interpreter in `AdditivePipe`. A probe of such a curve (derivative length near zero at one sample, tangent continuous) settles it.
