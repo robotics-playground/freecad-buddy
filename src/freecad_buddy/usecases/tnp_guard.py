@@ -3,7 +3,8 @@
 ``snapshot_references(doc)`` records one ``RefRecord`` per subelement link across the four
 reference-holding subsystems (Sketcher external geometry, attachment/datums, PartDesign
 profile/base, expression-engine dependencies), capturing the owner's ``ElementMapVersion``, each
-entry's subname, its resolved mapped shadow, a geometric witness and its element ancestry.
+entry's subname, its resolved mapped shadow, a geometric witness and its element ancestry, plus a
+witness of the whole target shape (the support) for the record.
 ``audit_references(doc, snapshot, written, removed_bindings)`` runs the Layer-0 validity sweep over
 ``isValid()``/``getStatusString()``, then the Layer-1 per-entry diff (resolution, mapped name,
 witness, entry count, ``ElementMapVersion`` re-baseline) and the Layer-2 ancestry cross-check over
@@ -196,32 +197,38 @@ def _element_tolerance(element: object) -> float:
         return _WITNESS_EPSILON
 
 
-def _max_delta(before: Witness | None, after: Witness | None) -> float | None:
-    """Return the largest bounding-box component difference, or ``None`` when it is not comparable.
+# Per-axis travel of a witness: (x, y, z), each the larger of the two bounding-box faces' shift.
+AxisTravel = tuple[float, float, float]
 
-    Not comparable: a side that could not be read, a changed ``ShapeType``, or a non-finite
-    component (NaN, infinity). Callers read ``None`` as "no bound", never as "no movement".
+
+def _axis_travel(before: Witness | None, after: Witness | None) -> AxisTravel | None:
+    """Return how far a witness moved along each axis, or ``None`` when it is not comparable.
+
+    An axis travel is the larger of its minimum-face and maximum-face shifts, so a face that grows
+    from one side and a face that slides both read as the distance their extent moved. Not
+    comparable: a side that could not be read, a changed ``ShapeType``, or a non-finite component
+    (NaN, infinity). Callers read ``None`` as "no bound", never as "no movement".
     """
     if before is None or after is None or before[0] != after[0]:
         return None
     deltas = [abs(a - b) for a, b in zip(before[1:], after[1:])]
     if not all(math.isfinite(delta) for delta in deltas):
         return None
-    return max(deltas)
+    return (max(deltas[0], deltas[3]), max(deltas[1], deltas[4]), max(deltas[2], deltas[5]))
 
 
 def _follows_support(
-    before: RefEntry, after: RefEntry, support_travel: float | None, tolerance: float
+    before: RefEntry, after: RefEntry, support_travel: AxisTravel | None, tolerance: float
 ) -> bool:
     """Whether a moved witness is the same element carried along by its support object.
 
     FreeCAD itself must call it the same element — an equal mapped name and an equal history
     source on both sides, neither unreadable — and the support object must really have changed.
-    The element may then have moved no farther than the support did. An element that moved farther
-    than its whole support is not carried by it, which keeps a tampered witness on a record whose
-    support also changed graded ``REPOINTED``.
+    The element may then have moved no farther than the support did on each axis. Bounding the
+    axes separately keeps a tampered witness that shifts along an axis the support did not move on
+    graded ``REPOINTED``, and so does an element that moved farther than its whole support.
     """
-    element_travel = _max_delta(before["witness"], after["witness"])
+    element_travel = _axis_travel(before["witness"], after["witness"])
     if element_travel is None or support_travel is None:
         return False
     same_element = (
@@ -231,7 +238,9 @@ def _follows_support(
         and before["history"] == after["history"]
     )
     return (
-        same_element and support_travel > tolerance and element_travel <= support_travel + tolerance
+        same_element
+        and max(support_travel) > tolerance
+        and all(e <= s + tolerance for e, s in zip(element_travel, support_travel))
     )
 
 
@@ -293,8 +302,15 @@ def _capture_entry(target: object, subname: str) -> RefEntry:
 
 
 def _support_witness(target: object) -> Witness | None:
-    """Return the witness of ``target``'s whole shape, or ``None`` when it carries none."""
-    shape = _shape_of(target)
+    """Return the witness of ``target``'s whole shape, or ``None`` when it carries none.
+
+    A whole-object link never read its target's shape before, so a shape that cannot be read here
+    must cost only the excuse, never the reference record.
+    """
+    try:
+        shape = _shape_of(target)
+    except Exception:  # noqa: BLE001 - an unreadable shape leaves the support unwitnessed
+        return None
     return None if shape is None else _witness(shape)
 
 
@@ -360,8 +376,9 @@ def snapshot_references(doc: object) -> list[RefRecord]:
     ``getTypeIdOfProperty`` names a subelement-link or expression-engine property. Each record
     carries the owner ``Name``, the property name, the target object ``Name``, one entry per
     subname (split into its mapped/indexed halves and resolved against the target's shape for
-    its mapped shadow, geometric witness and element ancestry) and the owner's
-    ``ElementMapVersion``. A property that cannot be read is skipped, never raised.
+    its mapped shadow, geometric witness and element ancestry), a witness of the whole target
+    shape (``target_witness``) and the owner's ``ElementMapVersion``. A property that cannot be
+    read is skipped, never raised.
     """
     records: list[RefRecord] = []
     support_witnesses: dict[str | None, Witness | None] = {}
@@ -478,9 +495,10 @@ def audit_references(
     a vanished owner is ``BROKEN``, a changed target object is ``REPOINTED``, an
     ``ElementMapVersion`` bump adds a ``RE_BASELINED`` annotation, a lost entry is ``DROPPED``,
     and per entry a non-resolving element is ``BROKEN`` while a changed mapped name or a moved
-    witness is ``REPOINTED``. Layer 2 cross-checks the ancestry of the entries Layer 1 left
-    ambiguous, reporting ``REPOINTED`` on a divergent ``(sourceTag, sourceName)`` and abstaining
-    where no history is available.
+    witness is ``REPOINTED`` (a witness move is excused when the same element rode a support that
+    moved at least as far on every axis). Layer 2 cross-checks the ancestry of the entries Layer 1
+    left ambiguous, reporting ``REPOINTED`` on a divergent ``(sourceTag, sourceName)`` and
+    abstaining where no history is available.
 
     ``status`` is ``UNSUPPORTED`` when ``shim.element_map_available()`` is false (no reference
     reports ``PASS`` in that case), ``FLAGGED`` when any finding carries a verdict other than
@@ -726,7 +744,7 @@ def _grade_entry(
     record: RefRecord,
     before: RefEntry,
     after: RefEntry,
-    support_travel: float | None,
+    support_travel: AxisTravel | None,
 ) -> RefFinding:
     """Layer 1: grade one entry, escalating to Layer 2 only where Layer 1 is ambiguous.
 
@@ -735,7 +753,8 @@ def _grade_entry(
     ``REPOINTED``; a witness moved beyond the element's own tolerance is ``REPOINTED`` unless
     ``_follows_support`` excuses it. An entry surviving all four resolves and matches on name and
     either matches on witness or moved with its support — the design's definition of ambiguous —
-    so Layer 2 grades it. ``support_travel`` is how far the record's whole target shape moved.
+    so Layer 2 grades it. ``support_travel`` is how far the record's whole target shape moved on
+    each axis.
     """
     name = _entry_name(before)
     if not name:
@@ -793,7 +812,7 @@ def _grade_entries(
                 record, None, "PASS", 1, f"{record['owner']}.{record['prop']} names no element"
             )
         ]
-    support_travel = _max_delta(baseline["target_witness"], live["target_witness"])
+    support_travel = _axis_travel(baseline["target_witness"], live["target_witness"])
     return [_grade_entry(doc, record, b, a, support_travel) for b, a in zip(before, after)]
 
 

@@ -2332,3 +2332,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `verify-13-18.md` "Round 2" R2-R1; design `mcp-tools-design.md` §3.7.4.
   blocker: no bounded-cost self-intersection check for BSpline results is known.
   unblock: a measured check with a time bound, or the AD-27 bridge-recovery decision (worker isolation would allow a timed check).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-15-tnp-expected-reattachment.md`
+  summary: A curved element (a cylinder or fillet face) that rides its moved support may still grade `REPOINTED` in the GUI, because `Shape.BoundBox` can use the display triangulation and a remesh shifts the box by the mesh deflection, more than the 1e-7 element tolerance.
+  evidence: review r1 (verification-gap lens) of Story 13-15 cites `TopoShape.cpp:1126-1148` (`BRepBndLib::Add`); related to the entry on the GUI display mesh and `tnp_guard.py` witness above. Every Story 13-15 test uses a planar face or a straight edge.
+  blocker: not measured; headless shapes carry no triangulation, so only the GUI container can show it.
+  unblock: in the container, attach a datum to a curved face, change `Pad.Length` through `feature_set_parameters`, and read the `tnp_audit` block; if flagged, scale the excuse tolerance with the mesh deflection.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-15-tnp-expected-reattachment.md`
+  summary: The `RefRecord` block and the capture sentence in `verification-design.md` §3.1 do not match the code: the entry lacks `missing` and `history`, `target` and `element_map_version` are optional, the witness is named `WitnessHash` although it is a shape type plus bounding box (the code forbids a hash), and the text still says "placement or element hash".
+  evidence: `verification-design.md:222-229` against `tnp_guard.py` `RefEntry` and `RefRecord`; found by review r1 (blind lens) of Story 13-15. Story 13-15 only added `target_witness` to the block.
+  blocker: a design edit outside Story 13-15 scope (the spec allows only the Layer 1 text and the new field).
+  unblock: one documentation pass over §3.1 against `tnp_guard.py`.

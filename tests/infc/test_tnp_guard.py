@@ -1115,19 +1115,21 @@ class SupportFollowTest(_BodyFixture):
         return next(r for r in snapshot if r["owner"] == "DatumPlane")
 
     def _constrain_square(self):
-        """Pin the sketch square so its width is a driving dimension (constraint index 9)."""
+        """Pin the sketch square so its width is a driving dimension; return its index."""
         for constraint in (
             Sketcher.Constraint("Horizontal", 0),
             Sketcher.Constraint("Vertical", 1),
             Sketcher.Constraint("Horizontal", 2),
             Sketcher.Constraint("Vertical", 3),
             Sketcher.Constraint("Coincident", 0, 1, -1, 1),
-            Sketcher.Constraint("DistanceX", 0, 1, 0, 2, SQUARE),
-            Sketcher.Constraint("DistanceY", 1, 1, 1, 2, SQUARE),
         ):
             self.sketch.addConstraint(constraint)
+        width_index = self.sketch.addConstraint(
+            Sketcher.Constraint("DistanceX", 0, 1, 0, 2, SQUARE)
+        )
+        self.sketch.addConstraint(Sketcher.Constraint("DistanceY", 1, 1, 1, 2, SQUARE))
         self.document.recompute()
-        return 9
+        return width_index
 
     def _grow_pad(self):
         self.pad.Length = PAD_LENGTH + 5.0
@@ -1135,7 +1137,7 @@ class SupportFollowTest(_BodyFixture):
 
     def test_Should_pass_the_datum_When_pad_length_moves_the_face_it_is_attached_to(self):
         # Arrange
-        self._attach_datum_to_top_face()
+        datum = self._attach_datum_to_top_face()
         snapshot = tnp_guard.snapshot_references(self.document)
         self._grow_pad()
 
@@ -1143,6 +1145,7 @@ class SupportFollowTest(_BodyFixture):
         audit, findings = self._datum_findings(snapshot)
 
         # Assert
+        self.assertAlmostEqual(datum.Placement.Base.z, PAD_LENGTH + 5.0, places=6)
         self.assertEqual(audit["status"], "CLEAN")
         self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
         self.assertIn("descends from the same source element", findings[0]["detail"])
@@ -1150,8 +1153,9 @@ class SupportFollowTest(_BodyFixture):
     def test_Should_pass_the_datum_When_a_sketch_width_change_moves_the_face(self):
         # Arrange
         width_index = self._constrain_square()
-        self._attach_datum(_plane_name(self.pad.Shape, self.AXIS_X, SQUARE))
+        datum = self._attach_datum(_plane_name(self.pad.Shape, self.AXIS_X, SQUARE))
         snapshot = tnp_guard.snapshot_references(self.document)
+        datum_x_before = datum.Placement.Base.x
         self.sketch.setDatum(width_index, App.Units.Quantity(f"{SQUARE + 10.0} mm"))
         self.document.recompute()
 
@@ -1160,8 +1164,9 @@ class SupportFollowTest(_BodyFixture):
 
         # Assert
         self.assertGreater(self.pad.Shape.BoundBox.XMax, SQUARE + 1.0, "the face must have moved")
+        self.assertAlmostEqual(datum.Placement.Base.x, datum_x_before + 10.0, places=6)
         self.assertEqual(audit["status"], "CLEAN")
-        self.assertEqual([f["verdict"] for f in findings], ["PASS"])
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
 
     def test_Should_pass_an_external_geometry_edge_When_pad_length_moves_it(self):
         # Arrange
@@ -1213,7 +1218,7 @@ class SupportFollowTest(_BodyFixture):
         self,
     ):
         # Arrange
-        self._add_fillet()
+        fillet = self._add_fillet()
         snapshot = tnp_guard.snapshot_references(self.document)
         self._grow_pad()
 
@@ -1222,6 +1227,7 @@ class SupportFollowTest(_BodyFixture):
         findings = self._findings(audit, "Fillet", "Base")
 
         # Assert
+        self.assertFalse(fillet.isValid(), "FreeCAD itself marks the renumbered fillet invalid")
         moved = [f for f in findings if "Edge4" in f["detail"]]
         self.assertEqual([(f["verdict"], f["layer"]) for f in moved], [("PASS", 2)])
         broken = [f for f in findings if f["verdict"] == "BROKEN"]
@@ -1296,7 +1302,7 @@ class SupportFollowTest(_BodyFixture):
         _, findings = self._datum_findings(snapshot)
 
         # Assert
-        self.assertEqual([f["verdict"] for f in findings], ["REPOINTED"])
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
 
     def test_Should_flag_repointed_When_the_support_witness_is_not_a_number(self):
         # Arrange
@@ -1305,14 +1311,29 @@ class SupportFollowTest(_BodyFixture):
         record = self._datum_record(snapshot)
         support = record["target_witness"]
         record["target_witness"] = (support[0], float("nan")) + support[2:]
-        witness = record["entries"][0]["witness"]
-        record["entries"][0]["witness"] = (witness[0],) + tuple(v - 5.0 for v in witness[1:])
+        self._grow_pad()
 
         # Act
         _, findings = self._datum_findings(snapshot)
 
         # Assert
-        self.assertEqual([f["verdict"] for f in findings], ["REPOINTED"])
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+
+    def test_Should_pass_the_datum_When_the_written_reading_is_taken_before_recompute(self):
+        # Arrange
+        datum = self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.pad.Length = PAD_LENGTH + 5.0
+        written = tnp_guard.snapshot_references(self.document)
+        self.document.recompute()
+
+        # Act
+        audit = self._audit(snapshot, written)
+        findings = self._findings(audit, datum.Name, "AttachmentSupport")
+
+        # Assert
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
 
     def test_Should_record_the_whole_support_shape_witness_When_snapshotting_a_link(self):
         # Arrange
@@ -1327,35 +1348,35 @@ class SupportFollowTest(_BodyFixture):
         self.assertEqual(record["target_witness"][6], PAD_LENGTH)
 
 
-class MaxDeltaTest(unittest.TestCase):
+class AxisTravelTest(unittest.TestCase):
     BOX = ("Solid", 0.0, 0.0, 0.0, 20.0, 20.0, 10.0)
 
-    def test_Should_return_zero_When_both_witnesses_are_equal(self):
+    def test_Should_return_zero_on_every_axis_When_both_witnesses_are_equal(self):
         # Arrange
         before = after = self.BOX
 
         # Act
-        result = tnp_guard._max_delta(before, after)
+        result = tnp_guard._axis_travel(before, after)
 
         # Assert
-        self.assertEqual(result, 0.0)
+        self.assertEqual(result, (0.0, 0.0, 0.0))
 
-    def test_Should_return_the_largest_component_difference_When_a_witness_moved(self):
+    def test_Should_return_the_larger_face_shift_per_axis_When_a_witness_moved(self):
         # Arrange
-        after = ("Solid", 0.0, 0.0, 0.0, 20.0, 20.0, 15.0)
+        after = ("Solid", 0.0, 0.0, 2.0, 20.0, 20.0, 15.0)
 
         # Act
-        result = tnp_guard._max_delta(self.BOX, after)
+        result = tnp_guard._axis_travel(self.BOX, after)
 
         # Assert
-        self.assertEqual(result, 5.0)
+        self.assertEqual(result, (0.0, 0.0, 5.0))
 
     def test_Should_return_none_When_a_side_is_unreadable(self):
         # Arrange
         before, after = self.BOX, None
 
         # Act
-        result = tnp_guard._max_delta(before, after)
+        result = tnp_guard._axis_travel(before, after)
 
         # Assert
         self.assertIsNone(result)
@@ -1365,7 +1386,7 @@ class MaxDeltaTest(unittest.TestCase):
         after = ("Compound",) + self.BOX[1:]
 
         # Act
-        result = tnp_guard._max_delta(self.BOX, after)
+        result = tnp_guard._axis_travel(self.BOX, after)
 
         # Assert
         self.assertIsNone(result)
@@ -1377,8 +1398,8 @@ class MaxDeltaTest(unittest.TestCase):
 
         # Act
         results = [
-            tnp_guard._max_delta(self.BOX, not_a_number),
-            tnp_guard._max_delta(self.BOX, infinite),
+            tnp_guard._axis_travel(self.BOX, not_a_number),
+            tnp_guard._axis_travel(self.BOX, infinite),
         ]
 
         # Assert
@@ -1388,9 +1409,19 @@ class MaxDeltaTest(unittest.TestCase):
 class FollowsSupportTest(unittest.TestCase):
     WITNESS = ("Face", 0.0, 0.0, 10.0, 20.0, 20.0, 10.0)
     HISTORY = (7, "g1;SKT")
+    UP_FIVE = (0.0, 0.0, 5.0)
 
-    def _entry(self, shift=0.0, mapped=";a;", history=HISTORY):
-        witness = (self.WITNESS[0],) + tuple(v + shift for v in self.WITNESS[1:])
+    def _entry(self, shift=(0.0, 0.0, 0.0), mapped=";a;", history=HISTORY):
+        dx, dy, dz = shift
+        witness = (
+            self.WITNESS[0],
+            self.WITNESS[1] + dx,
+            self.WITNESS[2] + dy,
+            self.WITNESS[3] + dz,
+            self.WITNESS[4] + dx,
+            self.WITNESS[5] + dy,
+            self.WITNESS[6] + dz,
+        )
         return {
             "mapped": mapped,
             "indexed": "Face6",
@@ -1401,27 +1432,27 @@ class FollowsSupportTest(unittest.TestCase):
 
     def test_Should_excuse_the_move_When_the_same_element_moved_no_farther_than_its_support(self):
         # Arrange
-        before, after = self._entry(), self._entry(shift=5.0)
+        before, after = self._entry(), self._entry(shift=self.UP_FIVE)
 
         # Act
-        result = tnp_guard._follows_support(before, after, 5.0, 1e-7)
+        result = tnp_guard._follows_support(before, after, self.UP_FIVE, 1e-7)
 
         # Assert
         self.assertTrue(result)
 
     def test_Should_not_excuse_the_move_When_the_support_did_not_change(self):
         # Arrange
-        before, after = self._entry(), self._entry(shift=0.5)
+        before, after = self._entry(), self._entry(shift=(0.0, 0.0, 0.5))
 
         # Act
-        result = tnp_guard._follows_support(before, after, 0.0, 1.0)
+        result = tnp_guard._follows_support(before, after, (0.0, 0.0, 0.0), 1.0)
 
         # Assert
         self.assertFalse(result)
 
     def test_Should_not_excuse_the_move_When_the_support_travel_is_unknown(self):
         # Arrange
-        before, after = self._entry(), self._entry(shift=5.0)
+        before, after = self._entry(), self._entry(shift=self.UP_FIVE)
 
         # Act
         result = tnp_guard._follows_support(before, after, None, 1e-7)
@@ -1431,10 +1462,55 @@ class FollowsSupportTest(unittest.TestCase):
 
     def test_Should_not_excuse_the_move_When_the_element_moved_beyond_the_support(self):
         # Arrange
-        before, after = self._entry(), self._entry(shift=6.0)
+        before, after = self._entry(), self._entry(shift=(0.0, 0.0, 6.0))
 
         # Act
-        result = tnp_guard._follows_support(before, after, 5.0, 1e-7)
+        result = tnp_guard._follows_support(before, after, self.UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_it_runs_along_an_axis_the_support_did_not_move_on(
+        self,
+    ):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=(5.0, 0.0, 0.0))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_neither_side_has_a_history(self):
+        # Arrange
+        before = self._entry(history=None)
+        after = self._entry(shift=self.UP_FIVE, history=None)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_neither_side_has_a_mapped_name(self):
+        # Arrange
+        before = self._entry(mapped=None)
+        after = self._entry(shift=self.UP_FIVE, mapped=None)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_the_history_source_differs(self):
+        # Arrange
+        before = self._entry()
+        after = self._entry(shift=self.UP_FIVE, history=(8, "other"))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.UP_FIVE, 1e-7)
 
         # Assert
         self.assertFalse(result)

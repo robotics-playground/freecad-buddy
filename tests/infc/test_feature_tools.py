@@ -2076,6 +2076,39 @@ class SetParametersTest(_FeatureFixture):
 
         self.assert_volume(envelope, 8.0 * 16.0 * 8.0)
 
+    def test_Should_commit_with_a_clean_tnp_audit_When_the_length_edit_moves_an_attached_datum(
+        self,
+    ):
+        # Arrange
+        body = self._padded_body()
+        document = self.document()
+        block_shape = document.getObject("Block").Shape
+        top_face = next(
+            f"Face{index}"
+            for index, face in enumerate(block_shape.Faces, start=1)
+            if abs(face.BoundBox.ZMin - 5.0) < 1e-6 and abs(face.BoundBox.ZMax - 5.0) < 1e-6
+        )
+        datum = document.addObject("PartDesign::Plane", "TopDatum")
+        body.addObject(datum)
+        datum.AttachmentSupport = [(document.getObject("Block"), (top_face,))]
+        datum.MapMode = "FlatFace"
+        document.recompute()
+
+        # Act
+        envelope = features.feature_set_parameters(
+            self.registry,
+            doc=self.handle,
+            feature="Block",
+            parameters={"Length": mm(8.0)},
+        )
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        block = envelope["structured_content"]["mutation"]
+        self.assertFalse(block["rolled_back"])
+        self.assertEqual(block["post_verify"]["tnp_audit"]["status"], "CLEAN")
+        self.assertAlmostEqual(document.getObject("TopDatum").Placement.Base.z, 8.0, places=6)
+
     def test_editing_an_enumerated_property_checks_the_live_enum(self):
         self._padded_body()
 

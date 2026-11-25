@@ -2,7 +2,7 @@
 title: 'TNP audit accepts expected re-attachment moves'
 type: 'bugfix'
 created: '2026-11-24'
-status: 'in-review'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: '538db0be3f566ebb9082d5e60ee4dc91d3ca5a0d'
@@ -71,7 +71,7 @@ User answers, 2026-11-25 (epic decision 40):
 ## Implementation Notes
 
 - `RefRecord.target_witness` holds the whole target shape's witness, read once per target per `snapshot_references` walk.
-- `_max_delta` returns the largest bounding-box component difference, or `None` for an unreadable side, a type change or a non-finite component. `_follows_support` reads `None` as "not excused".
+- `_axis_travel` returns the per-axis travel, or `None` for an unreadable side, a type change or a non-finite component. `_follows_support` reads `None` as "not excused".
 - `_grade_entries` takes the baseline and live records so it can compute the support travel once per record.
 - The G2 scorer refreshed `validator_sha` for `audit_references` in `benchmarks/_registry/validators.yaml`; sensitivity 1.0, false alarm 0.0, n=3 are unchanged.
 
@@ -79,9 +79,28 @@ User answers, 2026-11-25 (epic decision 40):
 
 ## Review Triage Log
 
+Round 1 (three lenses, opus). Verdict, route, evidence.
+
+| # | Finding | Verdict | Route | Evidence |
+| --- | --- | --- | --- | --- |
+| 1 | Support bound ignores direction (blind, edge) | medium | patch | Element 5 in X beside support 5 in Z passed `max <= max`. Per-axis bound added; `test_Should_not_excuse_the_move_When_it_runs_along_an_axis_the_support_did_not_move_on`. |
+| 2 | No test on the `written` baseline branch (blind, edge, gap) | medium | patch | Production `run_mutation` passes `written`. Added `test_Should_pass_the_datum_When_the_written_reading_is_taken_before_recompute` and a `feature_set_parameters` test. |
+| 3 | NaN support test never moves the support (blind, gap) | low | patch | Test now grows the pad before planting NaN. |
+| 4 | History-equality mutant survives; no both-None history or mapped test (blind, gap) | medium | patch | Layer assertion added; `FollowsSupportTest` cases for no history, no mapped name, different source. |
+| 5 | Layer 2 adds no detection for an excused entry (blind) | false | rejected | The spec Always clause requires Layer 2 to run on an excused entry. It is a guard against a future change to the excuse rule, not a duplicate detector. |
+| 6 | Curved element tolerance under GUI mesh deflection (blind) | maybe-false | defer | Not measurable headless. Entry in `deferred-work.md` names what settles it. |
+| 7 | Fillet test expects FLAGGED without showing a real break (blind) | low | patch | Test now asserts `fillet.isValid()` is false: FreeCAD itself marks the fillet invalid (Layer 0). |
+| 8 | `validator_sha` refreshed with no scoring run (blind) | false | rejected | `score_g2_infc.py` ran under freecadcmd and wrote the block: audit_references planted 3, controls 6, sensitivity 1.0, false alarm 0.0, same as the committed `last_run`. |
+| 9 | Design `RefRecord` block drift (blind) | low | defer | Pre-existing drift; the spec allows only the new field. Entry in `deferred-work.md`. |
+| 10 | Docstrings not updated (blind) | low | patch | Module, `snapshot_references`, `audit_references` and `_grade_entry` docstrings updated. |
+| 11 | Sketch width test fragile and weak (blind) | low | patch | Index from `addConstraint`; layer asserted; datum placement asserted. |
+| 12 | Decision 017 lacks alternatives and links (blind) | low | patch | Sections added. |
+| 13 | Unreadable target shape drops the whole record (edge) | low | patch | `_support_witness` returns `None` on an exception, as `_witness` does. |
+| 14 | Support `ShapeType` change keeps `REPOINTED` (edge) | low | rejected | Safe direction; the excuse needs a readable, same-type support. A type change is not a reachable edit of a Pad. |
+
 ## Design Notes
 
-Why the support-movement bound (not only "support changed"): measured on the prototype, "support changed" alone passed `test_a_missing_entry_does_not_suppress_a_repoint_on_the_same_record` (witness +500 beside a real pad shrink). Bound check: `max |element delta| <= max |support delta|`, over the 6 bounding-box components, same `ShapeType`, NaN reads as not bounded.
+Why the support-movement bound (not only "support changed"): measured on the prototype, "support changed" alone passed `test_a_missing_entry_does_not_suppress_a_repoint_on_the_same_record` (witness +500 beside a real pad shrink). Bound check: per axis, `element travel <= support travel`, where an axis travel is the larger of the two bounding-box face shifts; same `ShapeType`; a non-finite value reads as not bounded.
 
 ## Verification
 
