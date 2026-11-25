@@ -35,12 +35,25 @@ MCP client at it — otherwise the parametric model can't be built or verified.
   spreadsheet fallback — and reference them by expression from features and
   constraints, because a single source of truth means an edit happens once and
   propagates, instead of the same number living in five features that drift apart.
-- Write VarSet variables and expressions with **`script_exec`**: no typed tool adds
-  a property or calls `setExpression`. Run `addProperty` and `setExpression` inside
-  a transaction that aborts on error, then recompute and verify.
+- Create the VarSet and its variables with **`feature_parameters_define`**
+  `{"varset": "Params", "parameters": [{"name": "plate_len", "type": "length", "value": {"value": 60, "unit": "mm"}}]}`
+  (types: length, angle, float, integer, bool, string; the VarSet is created when
+  missing). A name that already holds the value is `unchanged`. Bind a feature or
+  sketch to a variable with **`feature_set_expression`**
+  `{"expressions": [{"object": "Pad", "path": "Length", "expression": "Params.plate_len"}]}`
+  (a sketch constraint path is `.Constraints.<name>`; `null` clears a binding).
+  Read the result back with **`query_parameters`**: a VarSet with no bound feature
+  changes no shape, so `mutation.changed` is empty and cannot prove the write. Each
+  write tool is one transaction; `undo_steps` 0 means the call recorded no undo step
+  (it changed nothing), so `document_undo` would revert an earlier step.
 - Never name a variable after a **unit symbol** (`W`, `T`, `A`, `V`, `N`, `C`, `K`,
   `J`, `H`, `F`, `S`, `m`, `g`, `s`), because the expression parser reads it as the
-  unit and `setExpression` fails with `Failed to parse expression`.
+  unit: `feature_parameters_define` refuses it with `parameters.unit_symbol_name`.
+- Meet these refusals by their code: `parameters.bound_by_expression` (a variable an
+  expression drives: clear that binding first), `expression.cycle` (two bindings
+  depend on each other; the call rolled back), `expression.unit_mismatch` (an angle
+  on a length). Creating an enumeration property and writing spreadsheet cells have no typed tool:
+  the gap list of `freecad-scripting-idioms` names the `script_exec` route.
 - Use a **master (skeleton) sketch** for the part's controlling geometry — key
   planes, axes, hole-circle radii, overall envelope — and attach features to it,
   because the skeleton carries the design intent and a change to it moves everything
@@ -78,17 +91,17 @@ Input: "Make this bolt-pattern plate editable so a user can change size and hole
 count."
 
 Reasoning → parametric build:
-1. Driving dimensions in one variable set: `plate_len`, `plate_wid`, `hole_dia`,
-   `hole_count`, `edge_margin`.
+1. Driving dimensions in one variable set with `feature_parameters_define`:
+   `plate_len`, `plate_wid`, `hole_dia`, `hole_count`, `edge_margin`.
 2. Master sketch: the plate envelope and a construction bolt-circle/grid driven by
-   those variables; hole positions are expressions (`edge_margin` in from each
-   corner), not literals.
+   those variables through `feature_set_expression`; hole positions are expressions
+   (`edge_margin` in from each corner), not literals.
 3. Features in order: base pad → hole pattern (count driven by `hole_count`) →
    fillets last. Holes anchored to the skeleton, not the pad's faces.
-4. Test the edit: change `plate_len` with `feature_set_parameters`; its result
-   shows `post_verify.passed` true and `tnp_audit.status` `CLEAN`; then
-   `verify_shape` → the holes stay
-   margin-in and symmetric.
+4. Test the edit: change `plate_len` with `feature_parameters_define` (it updates an
+   existing name). Its result lists `plate_len` under `updated`, with
+   `post_verify.passed` true and `tnp_audit.status` `CLEAN`; `query_parameters` shows
+   the new value; then `verify_shape` → the holes stay margin-in and symmetric.
 If the holes had been dimensioned from a face instead of the skeleton, resizing the
 plate would have broken them.
 

@@ -1,0 +1,18 @@
+{
+ "tool": "document_create",
+ "args": {
+  "label": "Del1311r2"
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "doc": "fcb-doc:Zl_TO-5lU4gEUbmbyKQU0Q",
+   "name": "Del1311r2",
+   "label": "Del1311r2"
+  },
+  "text": "doc: fcb-doc:Zl_TO-5lU4gEUbmbyKQU0Q\nlabel: Del1311r2\nname: Del1311r2"
+ }
+}

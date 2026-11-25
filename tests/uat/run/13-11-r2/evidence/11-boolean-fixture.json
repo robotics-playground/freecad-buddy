@@ -1,0 +1,26 @@
+{
+ "tool": "script_exec",
+ "args": {
+  "doc": "fcb-doc:Zl_TO-5lU4gEUbmbyKQU0Q",
+  "code": "import Sketcher\ndoc.openTransaction(\"boolean fixture\")\nb2 = doc.addObject(\"PartDesign::Body\", \"Body2\")\nsk = b2.newObject(\"Sketcher::SketchObject\", \"SkC\")\nsk.AttachmentSupport = [([f for f in b2.Origin.OriginFeatures if f.Role == \"XY_Plane\"][0], \"\")]\nsk.MapMode = \"FlatFace\"\npts = [(25, -5), (35, -5), (35, 5), (25, 5)]\nfor i in range(4):\n    a, c = pts[i], pts[(i + 1) % 4]\n    sk.addGeometry(Part.LineSegment(App.Vector(a[0], a[1], 0), App.Vector(c[0], c[1], 0)), False)\nfor i in range(4):\n    sk.addConstraint(Sketcher.Constraint(\"Coincident\", i, 2, (i + 1) % 4, 1))\npc = b2.newObject(\"PartDesign::Pad\", \"PadC\"); pc.Profile = sk; pc.Length = 10\ndoc.recompute()\nbody = doc.getObject(\"Body\")\nboo = body.newObject(\"PartDesign::Boolean\", \"Bool\")\nboo.addObjects([b2])\ndoc.recompute()\ndoc.commitTransaction()\nresult = {\"tip\": body.Tip.Name, \"body_volume\": round(body.Shape.Volume, 3), \"Body2_inlist\": [o.Name for o in b2.InList],\n          \"bool_group\": [o.Name for o in boo.Group], \"UndoCount\": doc.UndoCount, \"invalid\": [o.Name for o in doc.Objects if \"Invalid\" in o.State]}\n"
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "doc": "fcb-doc:Zl_TO-5lU4gEUbmbyKQU0Q",
+   "stdout": "",
+   "value_repr": "{'tip': 'Bool', 'body_volume': 3073.451, 'Body2_inlist': ['Bool'], 'bool_group': ['Body2'], 'UndoCount': 8, 'invalid': []}",
+   "fingerprint_after": null
+  },
+  "text": "doc: fcb-doc:Zl_TO-5lU4gEUbmbyKQU0Q\nfingerprint_after: None\nstdout: \nvalue_repr: <122 chars>",
+  "framing": {
+   "fits": true,
+   "ratio": 0.95,
+   "checked": "cached",
+   "stale_reason": "served from cache; unverified key component(s): geometry"
+  }
+ }
+}

@@ -1,0 +1,997 @@
+[
+ {
+  "step": "LoftPart.create",
+  "tool": "document_create",
+  "args": {
+   "label": "LoftPart"
+  },
+  "isError": false,
+  "elapsed_s": 0.763,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:87uDGGh_fi9Dz-W4RfkxpQ",
+    "name": "LoftPart",
+    "label": "LoftPart"
+   },
+   "text": "doc: fcb-doc:87uDGGh_fi9Dz-W4RfkxpQ\nlabel: LoftPart\nname: LoftPart"
+  }
+ },
+ {
+  "step": "LoftPart.body",
+  "tool": "feature_body_create",
+  "args": {
+   "doc": "fcb-doc:87uDGGh_fi9Dz-W4RfkxpQ",
+   "name": "Body"
+  },
+  "isError": false,
+  "elapsed_s": 0.444,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Body"
+     ]
+    },
+    "feature": "Body",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Body",
+     "readable": false
+    }
+   },
+   "text": "Mutation committed; fingerprint 283569b3f782.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "step": "LoftPart.fixture",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:87uDGGh_fi9Dz-W4RfkxpQ",
+   "code": "import Sketcher\nP = App.Placement\nV = App.Vector\nR = App.Rotation\ndoc.openTransaction('fixture')\nbody = doc.getObject('Body')\n\ndef rect(name, x0, y0, w, h, placement):\n    s = doc.addObject('Sketcher::SketchObject', name)\n    body.addObject(s)\n    s.Placement = placement\n    c = [(x0, y0), (x0 + w, y0), (x0 + w, y0 + h), (x0, y0 + h)]\n    for i in range(4):\n        s.addGeometry(Part.LineSegment(App.Vector(*c[i], 0), App.Vector(*c[(i + 1) % 4], 0)), False)\n    for i in range(4):\n        s.addConstraint(Sketcher.Constraint('Coincident', i, 2, (i + 1) % 4, 1))\n    s.addConstraint(Sketcher.Constraint('Horizontal', 0)); s.addConstraint(Sketcher.Constraint('Horizontal', 2))\n    s.addConstraint(Sketcher.Constraint('Vertical', 1)); s.addConstraint(Sketcher.Constraint('Vertical', 3))\n    s.addConstraint(Sketcher.Constraint('DistanceX', -1, 1, 0, 1, x0))\n    s.addConstraint(Sketcher.Constraint('DistanceY', -1, 1, 0, 1, y0))\n    s.addConstraint(Sketcher.Constraint('DistanceX', 0, 1, 0, 2, w))\n    s.addConstraint(Sketcher.Constraint('DistanceY', 1, 1, 1, 2, h))\n    return s\n\ndef circle(name, cx, cy, r, placement):\n    s = doc.addObject('Sketcher::SketchObject', name)\n    body.addObject(s)\n    s.Placement = placement\n    s.addGeometry(Part.Circle(App.Vector(cx, cy, 0), App.Vector(0, 0, 1), r), False)\n    s.addConstraint(Sketcher.Constraint('Radius', 0, r))\n    s.addConstraint(Sketcher.Constraint('DistanceX', -1, 1, 0, 3, cx))\n    s.addConstraint(Sketcher.Constraint('DistanceY', -1, 1, 0, 3, cy))\n    return s\n\nrect('Base', -15, -15, 30, 30, P(V(0, 0, 0), R()))\ncircle('Mid', 0, 0, 12, P(V(0, 0, 20), R()))\nrect('Top', -8, -8, 16, 16, P(V(0, 0, 40), R()))\n\ndoc.recompute()\ndoc.commitTransaction()\nresult = {o.Name: (o.TypeId, getattr(o, 'FullyConstrained', None)) for o in doc.Objects if o.TypeId.startswith('Sketcher')}\n"
+  },
+  "isError": false,
+  "elapsed_s": 0.682,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:87uDGGh_fi9Dz-W4RfkxpQ",
+    "stdout": "",
+    "value_repr": "{'Base': ('Sketcher::SketchObject', True), 'Mid': ('Sketcher::SketchObject', True), 'Top': ('Sketcher::SketchObject', True)}",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:87uDGGh_fi9Dz-W4RfkxpQ\nfingerprint_after: None\nstdout: \nvalue_repr: <124 chars>\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "SweepPart.create",
+  "tool": "document_create",
+  "args": {
+   "label": "SweepPart"
+  },
+  "isError": false,
+  "elapsed_s": 0.171,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:ND9h20GkEC2BpUZWOSYxBw",
+    "name": "SweepPart",
+    "label": "SweepPart"
+   },
+   "text": "doc: fcb-doc:ND9h20GkEC2BpUZWOSYxBw\nlabel: SweepPart\nname: SweepPart"
+  }
+ },
+ {
+  "step": "SweepPart.body",
+  "tool": "feature_body_create",
+  "args": {
+   "doc": "fcb-doc:ND9h20GkEC2BpUZWOSYxBw",
+   "name": "Body"
+  },
+  "isError": false,
+  "elapsed_s": 0.135,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Body"
+     ]
+    },
+    "feature": "Body",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Body",
+     "readable": false
+    }
+   },
+   "text": "Mutation committed; fingerprint 283569b3f782.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "step": "SweepPart.fixture",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:ND9h20GkEC2BpUZWOSYxBw",
+   "code": "import Sketcher\nP = App.Placement\nV = App.Vector\nR = App.Rotation\ndoc.openTransaction('fixture')\nbody = doc.getObject('Body')\n\ndef rect(name, x0, y0, w, h, placement):\n    s = doc.addObject('Sketcher::SketchObject', name)\n    body.addObject(s)\n    s.Placement = placement\n    c = [(x0, y0), (x0 + w, y0), (x0 + w, y0 + h), (x0, y0 + h)]\n    for i in range(4):\n        s.addGeometry(Part.LineSegment(App.Vector(*c[i], 0), App.Vector(*c[(i + 1) % 4], 0)), False)\n    for i in range(4):\n        s.addConstraint(Sketcher.Constraint('Coincident', i, 2, (i + 1) % 4, 1))\n    s.addConstraint(Sketcher.Constraint('Horizontal', 0)); s.addConstraint(Sketcher.Constraint('Horizontal', 2))\n    s.addConstraint(Sketcher.Constraint('Vertical', 1)); s.addConstraint(Sketcher.Constraint('Vertical', 3))\n    s.addConstraint(Sketcher.Constraint('DistanceX', -1, 1, 0, 1, x0))\n    s.addConstraint(Sketcher.Constraint('DistanceY', -1, 1, 0, 1, y0))\n    s.addConstraint(Sketcher.Constraint('DistanceX', 0, 1, 0, 2, w))\n    s.addConstraint(Sketcher.Constraint('DistanceY', 1, 1, 1, 2, h))\n    return s\n\ndef circle(name, cx, cy, r, placement):\n    s = doc.addObject('Sketcher::SketchObject', name)\n    body.addObject(s)\n    s.Placement = placement\n    s.addGeometry(Part.Circle(App.Vector(cx, cy, 0), App.Vector(0, 0, 1), r), False)\n    s.addConstraint(Sketcher.Constraint('Radius', 0, r))\n    s.addConstraint(Sketcher.Constraint('DistanceX', -1, 1, 0, 3, cx))\n    s.addConstraint(Sketcher.Constraint('DistanceY', -1, 1, 0, 3, cy))\n    return s\n\ncircle('Ring', 0, 0, 3, P(V(0, 0, 0), R()))\ns = doc.addObject('Sketcher::SketchObject', 'Path')\nbody.addObject(s)\ns.Placement = P(V(0, 0, 0), R(V(1, 0, 0), 90))\ns.addGeometry(Part.LineSegment(V(0, 0, 0), V(0, 30, 0)), False)\ns.addConstraint(Sketcher.Constraint('Coincident', 0, 1, -1, 1))\ns.addConstraint(Sketcher.Constraint('Vertical', 0))\ns.addConstraint(Sketcher.Constraint('DistanceY', 0, 1, 0, 2, 30.0))\ns.addGeometry(Part.ArcOfCircle(Part.Circle(V(-20, 30, 0), V(0, 0, 1), 20.0), 0.0, 1.5), False)\ns.addConstraint(Sketcher.Constraint('Tangent', 0, 2, 1, 1))\ns.addConstraint(Sketcher.Constraint('Radius', 1, 20.0))\ns.addConstraint(Sketcher.Constraint('Angle', 1, 1.5))\n\ndoc.recompute()\ndoc.commitTransaction()\nresult = {o.Name: (o.TypeId, getattr(o, 'FullyConstrained', None)) for o in doc.Objects if o.TypeId.startswith('Sketcher')}\n"
+  },
+  "isError": false,
+  "elapsed_s": 0.064,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:ND9h20GkEC2BpUZWOSYxBw",
+    "stdout": "",
+    "value_repr": "{'Ring': ('Sketcher::SketchObject', True), 'Path': ('Sketcher::SketchObject', True)}",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:ND9h20GkEC2BpUZWOSYxBw\nfingerprint_after: None\nstdout: \nvalue_repr: <84 chars>\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.94,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "GroovePart.create",
+  "tool": "document_create",
+  "args": {
+   "label": "GroovePart"
+  },
+  "isError": false,
+  "elapsed_s": 0.197,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:HzJ30tBQDoSdRrepSze7gA",
+    "name": "GroovePart",
+    "label": "GroovePart"
+   },
+   "text": "doc: fcb-doc:HzJ30tBQDoSdRrepSze7gA\nlabel: GroovePart\nname: GroovePart"
+  }
+ },
+ {
+  "step": "GroovePart.body",
+  "tool": "feature_body_create",
+  "args": {
+   "doc": "fcb-doc:HzJ30tBQDoSdRrepSze7gA",
+   "name": "Body"
+  },
+  "isError": false,
+  "elapsed_s": 0.193,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Body"
+     ]
+    },
+    "feature": "Body",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Body",
+     "readable": false
+    }
+   },
+   "text": "Mutation committed; fingerprint 283569b3f782.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "step": "GroovePart.fixture",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:HzJ30tBQDoSdRrepSze7gA",
+   "code": "import Sketcher\nP = App.Placement\nV = App.Vector\nR = App.Rotation\ndoc.openTransaction('fixture')\nbody = doc.getObject('Body')\n\ndef rect(name, x0, y0, w, h, placement):\n    s = doc.addObject('Sketcher::SketchObject', name)\n    body.addObject(s)\n    s.Placement = placement\n    c = [(x0, y0), (x0 + w, y0), (x0 + w, y0 + h), (x0, y0 + h)]\n    for i in range(4):\n        s.addGeometry(Part.LineSegment(App.Vector(*c[i], 0), App.Vector(*c[(i + 1) % 4], 0)), False)\n    for i in range(4):\n        s.addConstraint(Sketcher.Constraint('Coincident', i, 2, (i + 1) % 4, 1))\n    s.addConstraint(Sketcher.Constraint('Horizontal', 0)); s.addConstraint(Sketcher.Constraint('Horizontal', 2))\n    s.addConstraint(Sketcher.Constraint('Vertical', 1)); s.addConstraint(Sketcher.Constraint('Vertical', 3))\n    s.addConstraint(Sketcher.Constraint('DistanceX', -1, 1, 0, 1, x0))\n    s.addConstraint(Sketcher.Constraint('DistanceY', -1, 1, 0, 1, y0))\n    s.addConstraint(Sketcher.Constraint('DistanceX', 0, 1, 0, 2, w))\n    s.addConstraint(Sketcher.Constraint('DistanceY', 1, 1, 1, 2, h))\n    return s\n\ndef circle(name, cx, cy, r, placement):\n    s = doc.addObject('Sketcher::SketchObject', name)\n    body.addObject(s)\n    s.Placement = placement\n    s.addGeometry(Part.Circle(App.Vector(cx, cy, 0), App.Vector(0, 0, 1), r), False)\n    s.addConstraint(Sketcher.Constraint('Radius', 0, r))\n    s.addConstraint(Sketcher.Constraint('DistanceX', -1, 1, 0, 3, cx))\n    s.addConstraint(Sketcher.Constraint('DistanceY', -1, 1, 0, 3, cy))\n    return s\n\nrect('PlateSketch', 0, 0, 60, 40, P(V(0, 0, 0), R()))\ncircle('Ring', 20, 10, 4, P(V(-5, 0, 0), R(V(1, 1, 1), 120)))\ns = doc.addObject('Sketcher::SketchObject', 'Path')\nbody.addObject(s)\ns.Placement = P(V(0, 0, 10), R())\ns.addGeometry(Part.LineSegment(V(-5, 20, 0), V(65, 20, 0)), False)\ns.addConstraint(Sketcher.Constraint('DistanceX', -1, 1, 0, 1, -5.0))\ns.addConstraint(Sketcher.Constraint('DistanceY', -1, 1, 0, 1, 20.0))\ns.addConstraint(Sketcher.Constraint('Horizontal', 0))\ns.addConstraint(Sketcher.Constraint('DistanceX', 0, 1, 0, 2, 70.0))\n\ndoc.recompute()\ndoc.commitTransaction()\nresult = {o.Name: (o.TypeId, getattr(o, 'FullyConstrained', None)) for o in doc.Objects if o.TypeId.startswith('Sketcher')}\n"
+  },
+  "isError": false,
+  "elapsed_s": 0.096,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:HzJ30tBQDoSdRrepSze7gA",
+    "stdout": "",
+    "value_repr": "{'PlateSketch': ('Sketcher::SketchObject', True), 'Ring': ('Sketcher::SketchObject', True), 'Path': ('Sketcher::SketchObject', True)}",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:HzJ30tBQDoSdRrepSze7gA\nfingerprint_after: None\nstdout: \nvalue_repr: <133 chars>\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "GroovePart.pad",
+  "tool": "feature_pad",
+  "args": {
+   "doc": "fcb-doc:HzJ30tBQDoSdRrepSze7gA",
+   "body": "Body",
+   "profile": "PlateSketch",
+   "name": "Plate",
+   "length": {
+    "value": 10,
+    "unit": "mm"
+   }
+  },
+  "isError": false,
+  "elapsed_s": 0.532,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "9e721b170b65c3d9d02e6f9c4201e48ad8840f1e474bdc71a1b955fe3a382eac",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "f7da768f8025b9425f3b308d2c6d083cb366a9076fe5cfb6dec8a0d138e5b8b7",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 24000.0,
+       "area": 6800.0,
+       "com": [
+        30.0,
+        20.0,
+        5.0
+       ]
+      },
+      {
+       "name": "Plate",
+       "volume": 24000.0,
+       "area": 6800.0,
+       "com": [
+        30.0,
+        20.0,
+        5.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Plate",
+      "Body"
+     ]
+    },
+    "feature": "Plate",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Plate",
+     "readable": true,
+     "body": "Body",
+     "is_tip": true,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 6,
+      "edge_count": 12,
+      "vertex_count": 8,
+      "is_valid": true,
+      "volume": 24000.0,
+      "area": 6800.0,
+      "bbox": [
+       60.0,
+       40.0,
+       10.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint f7da768f8025.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "LoftPart.op",
+  "tool": "feature_loft",
+  "args": {
+   "doc": "fcb-doc:87uDGGh_fi9Dz-W4RfkxpQ",
+   "body": "Body",
+   "profile": "Base",
+   "sections": [
+    "Mid",
+    "Top"
+   ],
+   "name": "Lofted"
+  },
+  "isError": false,
+  "elapsed_s": 0.536,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "2622317e4e62f9f30b4fd00eed327da8c38a268b9baf9039d8f0ebca8cc5d13a",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "18cb959dd977ee8fecc3c9ef6cfdc1cf0cc83ff671a103fb0705b99167b1b23d",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 19834.48,
+       "area": 4426.49,
+       "com": [
+        0.0,
+        0.0,
+        15.79
+       ]
+      },
+      {
+       "name": "Lofted",
+       "volume": 19834.48,
+       "area": 4426.49,
+       "com": [
+        0.0,
+        0.0,
+        15.79
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Lofted",
+      "Body",
+      "Base",
+      "Mid",
+      "Top"
+     ]
+    },
+    "feature": "Lofted",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Lofted",
+     "readable": true,
+     "body": "Body",
+     "is_tip": true,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 7,
+      "edge_count": 15,
+      "vertex_count": 10,
+      "is_valid": true,
+      "volume": 19834.48,
+      "area": 4426.49,
+      "bbox": [
+       30.0,
+       30.0,
+       40.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint 18cb959dd977.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "LoftPart.query",
+  "tool": "query_object",
+  "args": {
+   "doc": "fcb-doc:87uDGGh_fi9Dz-W4RfkxpQ",
+   "object": "Lofted"
+  },
+  "isError": false,
+  "elapsed_s": 0.069,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Lofted",
+    "label": "Lofted",
+    "type": "PartDesign::AdditiveLoft",
+    "properties": {
+     "AddSubShape": "<Solid object at 0x55729134d170>",
+     "AllowMultiFace": true,
+     "BaseFeature": null,
+     "Closed": false,
+     "ExpressionEngine": [],
+     "FuzzyTolerance": -1.0,
+     "Label": "Lofted",
+     "Label2": "",
+     "Midplane": false,
+     "Placement": "Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]",
+     "PreviewShape": "<Shape object at 0x55729134d170>",
+     "Profile": [
+      "<Sketcher::SketchObject>",
+      []
+     ],
+     "Refine": true,
+     "Reversed": false,
+     "Ruled": false,
+     "Sections": [
+      [
+       "<Sketcher::SketchObject>",
+       [
+        ""
+       ]
+      ],
+      [
+       "<Sketcher::SketchObject>",
+       [
+        ""
+       ]
+      ]
+     ],
+     "Shape": "<Solid object at 0x55729134d170>",
+     "ShapeMaterial": "<Material at 0x557290fae640>",
+     "Suppressed": false,
+     "SuppressedShape": "<Shape object at 0x55729134d170>",
+     "UpToFace": null,
+     "UpToFace2": null,
+     "UpToShape": [],
+     "UpToShape2": [],
+     "Visibility": true,
+     "_Body": "<body object>",
+     "_ElementMapVersion": "15.70200.5"
+    },
+    "error": null
+   },
+   "text": "error: None\nlabel: Lofted\nname: Lofted\nproperties: {27 fields}\ntype: PartDesign::AdditiveLoft\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "SweepPart.op",
+  "tool": "feature_sweep",
+  "args": {
+   "doc": "fcb-doc:ND9h20GkEC2BpUZWOSYxBw",
+   "body": "Body",
+   "profile": "Ring",
+   "spine": "Path",
+   "mode": "frenet",
+   "name": "Swept"
+  },
+  "isError": false,
+  "elapsed_s": 0.112,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "32e82de2630b479070db07855841dd5d9cb5e53e7861414cdfcd69949a8c1291",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "99c14c477c49c59e36c6f4a9fa7fb110249a81bac127674f4edc3126be708f41",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 1696.46,
+       "area": 1187.52,
+       "com": [
+        -3.31,
+        0.0,
+        28.73
+       ]
+      },
+      {
+       "name": "Swept",
+       "volume": 1696.46,
+       "area": 1187.52,
+       "com": [
+        -3.31,
+        0.0,
+        28.73
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Swept",
+      "Body",
+      "Ring",
+      "Path"
+     ]
+    },
+    "feature": "Swept",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Swept",
+     "readable": true,
+     "body": "Body",
+     "is_tip": true,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 4,
+      "edge_count": 5,
+      "vertex_count": 3,
+      "is_valid": true,
+      "volume": 1696.46,
+      "area": 1187.52,
+      "bbox": [
+       21.8,
+       5.96,
+       52.94
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint 99c14c477c49.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 3.94,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "SweepPart.query",
+  "tool": "query_object",
+  "args": {
+   "doc": "fcb-doc:ND9h20GkEC2BpUZWOSYxBw",
+   "object": "Swept"
+  },
+  "isError": false,
+  "elapsed_s": 0.086,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Swept",
+    "label": "Swept",
+    "type": "PartDesign::AdditivePipe",
+    "properties": {
+     "AddSubShape": "<Solid object at 0x557290e067a0>",
+     "AllowMultiFace": true,
+     "AuxiliaryCurvilinear": true,
+     "AuxiliarySpine": null,
+     "AuxiliarySpineTangent": false,
+     "BaseFeature": null,
+     "Binormal": "Vector (0.0, 0.0, 0.0)",
+     "ExpressionEngine": [],
+     "FuzzyTolerance": -1.0,
+     "Label": "Swept",
+     "Label2": "",
+     "Midplane": false,
+     "Mode": "Frenet",
+     "Placement": "Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]",
+     "PreviewShape": "<Shape object at 0x557290e067a0>",
+     "Profile": [
+      "<Sketcher::SketchObject>",
+      []
+     ],
+     "Refine": true,
+     "Reversed": false,
+     "Sections": [],
+     "Shape": "<Solid object at 0x557290e067a0>",
+     "ShapeMaterial": "<Material at 0x5572916f1f30>",
+     "Spine": [
+      "<Sketcher::SketchObject>",
+      [
+       ""
+      ]
+     ],
+     "SpineTangent": false,
+     "Suppressed": false,
+     "SuppressedShape": "<Shape object at 0x557290e067a0>",
+     "Transformation": "Constant",
+     "Transition": "Transformed",
+     "UpToFace": null,
+     "UpToFace2": null,
+     "UpToShape": [],
+     "UpToShape2": [],
+     "Visibility": true,
+     "_Body": "<body object>",
+     "_ElementMapVersion": "15.70200.5"
+    },
+    "error": null
+   },
+   "text": "error: None\nlabel: Swept\nname: Swept\nproperties: {34 fields}\ntype: PartDesign::AdditivePipe\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 3.94,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "GroovePart.op",
+  "tool": "feature_sweep",
+  "args": {
+   "doc": "fcb-doc:HzJ30tBQDoSdRrepSze7gA",
+   "body": "Body",
+   "profile": "Ring",
+   "spine": "Path",
+   "subtractive": true,
+   "name": "Groove"
+  },
+  "isError": false,
+  "elapsed_s": 1.428,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "f7da768f8025b9425f3b308d2c6d083cb366a9076fe5cfb6dec8a0d138e5b8b7",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "570a4b470076f251367f0cd52581a66d8c920aaae81f033106969b7ca684e9ad",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 22492.04,
+       "area": 7023.72,
+       "com": [
+        30.0,
+        20.0,
+        4.78
+       ]
+      },
+      {
+       "name": "Groove",
+       "volume": 22492.04,
+       "area": 7023.72,
+       "com": [
+        30.0,
+        20.0,
+        4.78
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "PASS": 1
+       },
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Groove",
+      "Body",
+      "Ring",
+      "Path"
+     ]
+    },
+    "feature": "Groove",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Groove",
+     "readable": true,
+     "body": "Body",
+     "is_tip": true,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 8,
+      "edge_count": 18,
+      "vertex_count": 12,
+      "is_valid": true,
+      "volume": 22492.04,
+      "area": 7023.72,
+      "bbox": [
+       60.0,
+       40.0,
+       10.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint 570a4b470076.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "GroovePart.query",
+  "tool": "query_object",
+  "args": {
+   "doc": "fcb-doc:HzJ30tBQDoSdRrepSze7gA",
+   "object": "Groove"
+  },
+  "isError": false,
+  "elapsed_s": 0.035,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Groove",
+    "label": "Groove",
+    "type": "PartDesign::SubtractivePipe",
+    "properties": {
+     "AddSubShape": "<Solid object at 0x5572916e8b90>",
+     "AllowMultiFace": true,
+     "AuxiliaryCurvilinear": true,
+     "AuxiliarySpine": null,
+     "AuxiliarySpineTangent": false,
+     "BaseFeature": "<PartDesign::Pad>",
+     "Binormal": "Vector (0.0, 0.0, 0.0)",
+     "ExpressionEngine": [],
+     "FuzzyTolerance": -1.0,
+     "Label": "Groove",
+     "Label2": "",
+     "Midplane": false,
+     "Mode": "Standard",
+     "Placement": "Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]",
+     "PreviewShape": "<Shape object at 0x5572916e8b90>",
+     "Profile": [
+      "<Sketcher::SketchObject>",
+      []
+     ],
+     "Refine": true,
+     "Reversed": false,
+     "Sections": [],
+     "Shape": "<Compound object at 0x5572916e8b90>",
+     "ShapeMaterial": "<Material at 0x557290e39890>",
+     "Spine": [
+      "<Sketcher::SketchObject>",
+      [
+       ""
+      ]
+     ],
+     "SpineTangent": false,
+     "Suppressed": false,
+     "SuppressedShape": "<Shape object at 0x5572916e8b90>",
+     "Transformation": "Constant",
+     "Transition": "Transformed",
+     "UpToFace": null,
+     "UpToFace2": null,
+     "UpToShape": [],
+     "UpToShape2": [],
+     "Visibility": true,
+     "_Body": "<body object>",
+     "_ElementMapVersion": "15.70200.5"
+    },
+    "error": null
+   },
+   "text": "error: None\nlabel: Groove\nname: Groove\nproperties: {34 fields}\ntype: PartDesign::SubtractivePipe\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ }
+]

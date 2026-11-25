@@ -9,6 +9,7 @@ disagreement forces FAIL in ``assemble_export_verdict``.
 
 from __future__ import annotations
 
+import ctypes
 from pathlib import Path
 
 import pytest
@@ -177,3 +178,228 @@ def test_should_compare_the_displayed_deviation_when_the_volume_sits_at_the_band
     # Assert
     volume_check = next(c for c in result["checks"] if c["id"] == "trimesh_stl.volume_band")
     assert volume_check["passed"] is passed
+
+
+_BOX_TRIANGLES = [
+    (0, 2, 1),
+    (0, 3, 2),
+    (4, 5, 6),
+    (4, 6, 7),
+    (0, 1, 5),
+    (0, 5, 4),
+    (1, 2, 6),
+    (1, 6, 5),
+    (2, 3, 7),
+    (2, 7, 6),
+    (3, 0, 4),
+    (3, 4, 7),
+]
+
+
+def _write_named_boxes(path: Path, boxes: list[tuple[str, float, float, float, float]]) -> None:
+    """Write a 3MF with one named box mesh per ``(name, x_offset, dx, dy, dz)``."""
+    import lib3mf
+
+    wrapper = lib3mf.Wrapper()
+    model = wrapper.CreateModel()
+    model.SetUnit(lib3mf.ModelUnit.MilliMeter)
+    for name, x0, dx, dy, dz in boxes:
+        corners = [
+            (x0, 0, 0),
+            (x0 + dx, 0, 0),
+            (x0 + dx, dy, 0),
+            (x0, dy, 0),
+            (x0, 0, dz),
+            (x0 + dx, 0, dz),
+            (x0 + dx, dy, dz),
+            (x0, dy, dz),
+        ]
+        mesh = model.AddMeshObject()
+        mesh.SetName(name)
+        mesh.SetGeometry(
+            [lib3mf.Position(tuple(float(c) for c in corner)) for corner in corners],
+            [lib3mf.Triangle((ctypes.c_uint * 3)(*triangle)) for triangle in _BOX_TRIANGLES],
+        )
+        model.AddBuildItem(mesh, wrapper.GetIdentityTransform())
+    model.QueryWriter("3mf").WriteToFile(str(path))
+
+
+def _object_entries(boxes: list[tuple[str, float, float, float, float]]) -> list[dict]:
+    return [
+        {"name": name, "label": name, "volume": dx * dy * dz, "band": BAND}
+        for name, _x0, dx, dy, dz in boxes
+    ]
+
+
+THREE_BOXES = [
+    ("Alpha", 0.0, 10.0, 20.0, 30.0),
+    ("Beta", 20.0, 5.0, 5.0, 5.0),
+    ("Gamma", 40.0, 2.0, 3.0, 4.0),
+]
+
+
+def _check_by_id(result: dict) -> dict:
+    return {check["id"]: check for check in result["checks"]}
+
+
+def test_Should_pass_every_object_check_When_a_multi_object_3mf_matches_its_objects(tmp_path):
+    # Arrange
+    path = tmp_path / "three.3mf"
+    _write_named_boxes(path, THREE_BOXES)
+    total = sum(entry["volume"] for entry in _object_entries(THREE_BOXES))
+
+    # Act
+    target = export_oracle.mesh3mf_oracle(
+        str(path), True, total, BAND, None, _object_entries(THREE_BOXES)
+    )
+
+    # Assert
+    checks = _check_by_id(target)
+    assert target["ok"] is True
+    assert checks["lib3mf.object_count"]["measured"] == 3
+    assert checks["lib3mf.object_names"]["measured"] == ["Alpha", "Beta", "Gamma"]
+    for name in ("Alpha", "Beta", "Gamma"):
+        assert checks[f"trimesh_3mf.object_volume:{name}"]["passed"] is True
+
+
+def test_Should_fail_and_name_the_object_When_one_object_volume_is_wrong(tmp_path):
+    # Arrange
+    path = tmp_path / "three.3mf"
+    _write_named_boxes(path, THREE_BOXES)
+    objects = _object_entries(THREE_BOXES)
+    objects[1]["volume"] = 500.0
+    total = sum(entry["volume"] for entry in _object_entries(THREE_BOXES))
+
+    # Act
+    target = export_oracle.mesh3mf_oracle(str(path), True, total, BAND, None, objects)
+
+    # Assert
+    checks = _check_by_id(target)
+    assert target["ok"] is False
+    assert checks["trimesh_3mf.object_volume:Beta"]["passed"] is False
+    assert checks["trimesh_3mf.object_volume:Alpha"]["passed"] is True
+
+
+def test_Should_fail_the_name_check_When_a_mesh_object_carries_another_name(tmp_path):
+    # Arrange
+    path = tmp_path / "three.3mf"
+    _write_named_boxes(path, [("Alpha", 0.0, 10.0, 20.0, 30.0), ("Other", 20.0, 5.0, 5.0, 5.0)])
+    objects = _object_entries(THREE_BOXES[:2])
+    total = sum(entry["volume"] for entry in objects)
+
+    # Act
+    target = export_oracle.mesh3mf_oracle(str(path), True, total, BAND, None, objects)
+
+    # Assert
+    assert _check_by_id(target)["lib3mf.object_names"]["passed"] is False
+
+
+def test_Should_fail_the_count_check_When_the_file_holds_fewer_meshes_than_objects(tmp_path):
+    # Arrange
+    path = tmp_path / "two.3mf"
+    _write_named_boxes(path, THREE_BOXES[:2])
+    objects = _object_entries(THREE_BOXES)
+    total = sum(entry["volume"] for entry in objects)
+
+    # Act
+    target = export_oracle.mesh3mf_oracle(str(path), True, total, BAND, None, objects)
+
+    # Assert
+    assert target["ok"] is False
+    assert _check_by_id(target)["lib3mf.object_count"]["passed"] is False
+
+
+def _box_facets(x0: float, size: float) -> list[tuple]:
+    corners = [
+        (x0, 0, 0),
+        (x0 + size, 0, 0),
+        (x0 + size, size, 0),
+        (x0, size, 0),
+        (x0, 0, size),
+        (x0 + size, 0, size),
+        (x0 + size, size, size),
+        (x0, size, size),
+    ]
+    return [tuple(corners[i] for i in triangle) for triangle in _BOX_TRIANGLES]
+
+
+def _write_binary_stl(path: Path, facets: list[tuple]) -> None:
+    import struct
+
+    data = bytearray(b"\0" * 80 + struct.pack("<I", len(facets)))
+    for v0, v1, v2 in facets:
+        edge_a = [v1[i] - v0[i] for i in range(3)]
+        edge_b = [v2[i] - v0[i] for i in range(3)]
+        normal = (
+            edge_a[1] * edge_b[2] - edge_a[2] * edge_b[1],
+            edge_a[2] * edge_b[0] - edge_a[0] * edge_b[2],
+            edge_a[0] * edge_b[1] - edge_a[1] * edge_b[0],
+        )
+        data += struct.pack("<12fH", *normal, *v0, *v1, *v2, 0)
+    path.write_bytes(bytes(data))
+
+
+TOUCHING_BOXES_VOLUME = 2000.0
+
+
+def test_Should_fail_When_two_boxes_sharing_a_face_are_graded_as_one_mesh(tmp_path):
+    # Arrange
+    path = tmp_path / "touching.stl"
+    _write_binary_stl(path, _box_facets(0.0, 10.0) + _box_facets(10.0, 10.0))
+
+    # Act
+    trimesh_leg = export_oracle.stl_oracle(str(path), TOUCHING_BOXES_VOLUME, BAND)
+    stdlib_leg = export_oracle.StdlibStlOracle().check(str(path))
+
+    # Assert
+    assert trimesh_leg["ok"] is False
+    assert stdlib_leg["ok"] is False
+
+
+def test_Should_pass_both_oracles_When_touching_boxes_are_graded_per_object(tmp_path):
+    # Arrange
+    path = tmp_path / "touching.stl"
+    _write_binary_stl(path, _box_facets(0.0, 10.0) + _box_facets(10.0, 10.0))
+    facet_counts = [12, 12]
+
+    # Act
+    trimesh_leg = export_oracle.stl_oracle(
+        str(path), TOUCHING_BOXES_VOLUME, BAND, None, facet_counts
+    )
+    stdlib_leg = export_oracle.StdlibStlOracle().check(str(path), facet_counts)
+
+    # Assert
+    assert trimesh_leg["ok"] is True
+    assert stdlib_leg["ok"] is True
+    volume_check = _check_by_id(trimesh_leg)["trimesh_stl.volume_band"]
+    assert volume_check["measured"] == pytest.approx(TOUCHING_BOXES_VOLUME)
+
+
+def test_Should_still_fail_per_object_When_one_object_has_a_hole(tmp_path):
+    # Arrange
+    path = tmp_path / "holed.stl"
+    holed = _box_facets(10.0, 10.0)[:-1]
+    _write_binary_stl(path, _box_facets(0.0, 10.0) + holed)
+    facet_counts = [12, 11]
+
+    # Act
+    trimesh_leg = export_oracle.stl_oracle(str(path), 1900.0, BAND, None, facet_counts)
+    stdlib_leg = export_oracle.StdlibStlOracle().check(str(path), facet_counts)
+
+    # Assert
+    assert trimesh_leg["ok"] is False
+    assert stdlib_leg["ok"] is False
+
+
+def test_Should_grade_the_whole_mesh_When_the_facet_counts_do_not_match_the_file(tmp_path):
+    # Arrange
+    path = tmp_path / "one.stl"
+    _write_binary_stl(path, _box_facets(0.0, 10.0))
+
+    # Act
+    trimesh_leg = export_oracle.stl_oracle(str(path), 1000.0, BAND, None, [5, 5])
+    stdlib_leg = export_oracle.StdlibStlOracle().check(str(path), [5, 5])
+
+    # Assert
+    assert trimesh_leg["ok"] is True
+    assert stdlib_leg["ok"] is True

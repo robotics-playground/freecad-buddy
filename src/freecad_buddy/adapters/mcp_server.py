@@ -25,6 +25,7 @@ from freecad_buddy.adapters.audit_log import AuditSink
 from freecad_buddy.adapters.rpc_dispatch import (
     MethodRegistry,
     RpcMethod,
+    exec_digests,
     is_audited,
     wrote_own_audit,
 )
@@ -297,9 +298,9 @@ def build_server(
             return _to_call_result(envelope, structured=structured)
 
         # A mutating call's pair is written after dispatch so a bracketed mutation, which wrote
-        # its own joinable pair, gets no second one. script_exec (mutating, but never bracketed)
-        # and every non-mutating audited call (preview_dry_run) record their `before` line ahead
-        # of execution, so the line survives a call that never returns.
+        # its own joinable pair, gets no second one. script_exec (mutating, but its own bracket
+        # writes no lines) and every non-mutating audited call (preview_dry_run) record their
+        # `before` line ahead of execution, so the line survives a call that never returns.
         before_first = audited and (not mutating or event == "exec")
         if before_first:
             _audit_safe(audit.before, event, tool_name, doc, args)
@@ -313,7 +314,8 @@ def build_server(
         if audited and not (mutating and wrote_own_audit(envelope)):
             if not before_first:
                 _audit_safe(audit.before, event, tool_name, doc, args)
-            _audit_safe(audit.after, event, tool_name, doc, args, envelope.get("status"))
+            digests = exec_digests(envelope) if event == "exec" else (None, None)
+            _audit_safe(audit.after, event, tool_name, doc, args, envelope.get("status"), *digests)
         return _to_call_result(envelope, structured=structured)
 
     return server

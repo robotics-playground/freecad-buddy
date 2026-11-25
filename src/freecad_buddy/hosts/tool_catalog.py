@@ -52,6 +52,7 @@ from freecad_buddy.usecases.capabilities import (
 )
 from freecad_buddy.usecases.documents import DocumentRegistry
 from freecad_buddy.usecases.exports import ExportRegistry
+from freecad_buddy.usecases.parameter_types import PARAMETER_PROPERTY_TYPES
 
 _DOC_SCHEMA = {"type": "string", "description": "opaque fcb-doc handle"}
 
@@ -105,10 +106,13 @@ def _mesh_verify_handler(doc_registry, export_registry, marshal: Marshal | None,
             oracle_legs = [
                 export_oracle.safe_oracle(
                     "trimesh_stl",
-                    lambda: export_oracle.stl_oracle(path, source["volume"], band, decimals),
+                    lambda: export_oracle.stl_oracle(
+                        path, source["volume"], band, decimals, facts.get("facet_counts")
+                    ),
                 ),
                 export_oracle.safe_oracle(
-                    "stdlib_stl", lambda: export_oracle.StdlibStlOracle().check(path)
+                    "stdlib_stl",
+                    lambda: export_oracle.StdlibStlOracle().check(path, facts.get("facet_counts")),
                 ),
             ]
         else:
@@ -116,7 +120,12 @@ def _mesh_verify_handler(doc_registry, export_registry, marshal: Marshal | None,
                 export_oracle.safe_oracle(
                     "lib3mf",
                     lambda: export_oracle.mesh3mf_oracle(
-                        path, source["is_mm"], source["volume"], band, decimals
+                        path,
+                        source["is_mm"],
+                        source["volume"],
+                        band,
+                        decimals,
+                        facts.get("objects"),
                     ),
                 ),
             ]
@@ -659,6 +668,66 @@ def _feature_specs():
             "FreeCAD computes the read-only Base/Axis. Angles are in degrees.",
         ),
         _feature_method(
+            "feature_loft",
+            features.feature_loft,
+            _feature_schema(
+                {
+                    "body": {"type": "string", "description": "target PartDesign Body Name"},
+                    "profile": {"type": "string", "description": "first section: sketch Name"},
+                    "sections": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 1,
+                        "description": "further section sketch Names, in loft order; each has "
+                        "the same number of wires as the profile",
+                    },
+                    "name": _FEATURE_NAME_SCHEMA,
+                    "ruled": {"type": "boolean", "default": False},
+                    "closed": {
+                        "type": "boolean",
+                        "default": False,
+                        "description": "join the last section back to the profile; needs 2 or "
+                        "more sections",
+                    },
+                    "subtractive": {"type": "boolean", "default": False},
+                },
+                ["body", "profile", "sections", "name"],
+            ),
+            "Loft through the profile sketch and the section sketches (additive, or "
+            "subtractive with subtractive=true). Every sketch must be fully constrained. A "
+            "request above the measured cost limit is refused with detail.code "
+            "loft.too_complex.",
+        ),
+        _feature_method(
+            "feature_sweep",
+            features.feature_sweep,
+            _feature_schema(
+                {
+                    "body": {"type": "string", "description": "target PartDesign Body Name"},
+                    "profile": {"type": "string", "description": "sketch Name"},
+                    "spine": {
+                        "oneOf": [
+                            {"type": "string", "description": "spine sketch Name"},
+                            {
+                                **_SUBELEMENT_SELECTOR_SCHEMA,
+                                "description": "one Edge (mapped_name), or a whole edge or "
+                                "wire object (mapped_name omitted)",
+                            },
+                        ],
+                    },
+                    "name": _FEATURE_NAME_SCHEMA,
+                    "mode": {"enum": ["standard", "frenet"], "default": "standard"},
+                    "subtractive": {"type": "boolean", "default": False},
+                },
+                ["body", "profile", "spine", "name"],
+            ),
+            "Sweep the profile sketch along a spine (additive, or subtractive with "
+            "subtractive=true). Every sketch must be fully constrained. mode 'frenet' follows "
+            "the spine's Frenet frame. Refusals with "
+            "detail.code: sweep.too_complex, sweep.degenerate_spine (a spine that doubles back "
+            "inside one edge).",
+        ),
+        _feature_method(
             "feature_hole",
             features.feature_hole,
             _feature_schema(
@@ -819,6 +888,117 @@ def _feature_specs():
             "it opens. A call whose parameters hold only Visibility (true/false) is display state "
             "and needs no confirm in any posture.",
         ),
+        _feature_method(
+            "feature_parameters_define",
+            features.feature_parameters_define,
+            _feature_schema(
+                {
+                    "varset": {
+                        "type": "string",
+                        "description": "VarSet object Name; created when missing",
+                    },
+                    "parameters": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 100,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                    "description": "not a unit symbol (W, T, mm, deg, in, e, ...)",
+                                },
+                                "type": {"enum": sorted(PARAMETER_PROPERTY_TYPES)},
+                                "value": {
+                                    "description": "length: {value, unit: 'mm'}; angle: "
+                                    "{value, unit: 'deg'}; float: number; integer: integer "
+                                    "within +-2147483647; bool; string",
+                                },
+                                "group": {"type": "string", "default": "Parameters"},
+                                "description": {"type": "string"},
+                            },
+                            "required": ["name", "type", "value"],
+                            "additionalProperties": False,
+                        },
+                    },
+                },
+                ["varset", "parameters"],
+            ),
+            "Create the VarSet when missing, then add or update typed parameters on it in one "
+            "transaction. Result {varset, added, updated, unchanged, undo_steps}: a parameter "
+            "that already holds the value is listed in unchanged and not written; undo_steps is "
+            "1 when the call recorded an undo step and 0 when it changed nothing, in which case "
+            "no transaction opened and document_undo would revert an earlier step. group and "
+            "description apply when a parameter is created only. A name (or a new VarSet name) "
+            "that FreeCAD's expression "
+            "parser reads as a unit or constant (W, T, A, V, N, C, K, mm, deg, in, e, pi, ...) "
+            "is refused with INVALID_INPUT code parameters.unit_symbol_name, because every "
+            "expression that reads it would fail to parse. Other refusals: "
+            "parameters.reserved_name, parameters.duplicate_name, parameters.not_a_varset, "
+            "parameters.type_conflict, parameters.metadata_immutable (group or description of "
+            "an existing parameter), parameters.invalid_string (a control character FreeCAD "
+            "would cut or change), parameters.bound_by_expression (update of a property "
+            "an expression drives). A length must not be negative and an angle must be "
+            "within +-360 deg: FreeCAD would clamp them silently.",
+        ),
+        _feature_method(
+            "feature_set_expression",
+            features.feature_set_expression,
+            _feature_schema(
+                {
+                    "expressions": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 100,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "object": {"type": "string", "description": "object Name"},
+                                "path": {
+                                    "type": "string",
+                                    "description": "numeric property path, e.g. Length, "
+                                    ".Constraints.width, .AttachmentOffset.Base.z, "
+                                    ".Placement.Base.y",
+                                },
+                                "expression": {
+                                    "type": ["string", "null"],
+                                    "description": "expression text, e.g. Params.width * 2; "
+                                    "null clears the binding",
+                                },
+                            },
+                            "required": ["object", "path", "expression"],
+                            "additionalProperties": False,
+                        },
+                    },
+                },
+                ["expressions"],
+            ),
+            "Bind or clear expressions on numeric property paths in one transaction, for example "
+            "a VarSet parameter on .Constraints.<name> of a sketch, a feature Length, or "
+            ".AttachmentOffset.Base.z. Result {bound, cleared, unchanged, undo_steps}: each row "
+            "is {object, path, value}, the value read after the recompute; an entry that already "
+            "holds the stored text is unchanged, and a call that changes nothing opens no "
+            "transaction (undo_steps 0), so document_undo would revert an earlier step; on a "
+            "document with touched objects such a call can still record a step and reports "
+            "undo_steps 1. A "
+            "dependency cycle (RECOMPUTE_ERROR, expression.cycle) or a binding that fails the "
+            "recompute aborts the whole call with a proven rollback. Refused with INVALID_INPUT "
+            "before it opens, with detail.code: "
+            "expression.invalid_path (not a property path, or it resolves to nothing), "
+            "expression.unsupported_property (not a number, quantity or bool: bind a leaf such "
+            "as .Placement.Base.x, not the whole Placement; also a spreadsheet cell, a shape and "
+            "the AttachmentOffset of an object that is not attached), expression.invalid_text "
+            "(empty, a control character, over 400 characters), expression.range_unsupported "
+            "(a cell range such as A1:B2), expression.invalid_expression (parse "
+            "error or unknown reference), expression.not_finite (for example 1mm/0), "
+            "expression.value_out_of_range (a negative length, an angle past 360, a value FreeCAD "
+            "would clamp or overflow; also raised with RECOMPUTE_ERROR and a rollback, like "
+            "expression.not_finite, when the recompute leaves a binding reading wrongly), "
+            "expression.unit_mismatch (5 deg on a length, or a unit on a plain number), "
+            "expression.not_integer (a fraction on an integer property) and "
+            "expression.duplicate_path.",
+        ),
     ]
 
 
@@ -973,7 +1153,8 @@ _PREVIEW_INPUT_SCHEMA = {
             "properties": {
                 "tool": {
                     "type": "string",
-                    "description": "a registered sketch_/feature_ mutation tool",
+                    "description": "a registered sketch_, feature_ or document_object_delete "
+                    "mutation tool",
                 },
                 "args": {
                     "type": "object",
@@ -994,22 +1175,63 @@ _PREVIEW_INPUT_SCHEMA = {
 def preview_op_table() -> dict:
     """The ``{tool name: use-case function}`` table ``preview_dry_run`` may run.
 
-    Derived from the catalog's own ``sketch_*``/``feature_*`` spec lists intersected with the
-    matching module-level use-case functions, so a tool registered without becoming previewable
-    (or the reverse) is a mismatch the tests catch rather than a hand-maintained name list that
-    drifts. ``script_exec`` is excluded structurally: it is in neither spec list and carries
-    neither name prefix.
+    Derived from the catalog's own ``sketch_*``, ``feature_*`` and object-edit spec lists
+    intersected with the matching module-level use-case functions, so a tool registered without
+    becoming previewable (or the reverse) is a mismatch the tests catch rather than a
+    hand-maintained name list that drifts. ``script_exec`` is excluded structurally: it is in
+    none of the spec lists and carries neither name prefix.
 
     The entries are the bare use-case functions, not the wired handlers: the handlers close over
     the live registry, while the preview must supply its own document handle at call time.
     """
     table = {}
-    for spec in (*_sketch_specs(), *_feature_specs()):
+    for spec in (*_sketch_specs(), *_feature_specs(), *_object_edit_specs()):
         module = sketches if spec.name.startswith("sketch_") else features
         fn = getattr(module, spec.name, None)
         if fn is not None:
             table[spec.name] = fn
     return table
+
+
+def _object_edit_specs():
+    """The ``document_object_delete`` spec: a geometry mutation named for the document it edits.
+
+    Built with ``_feature_method`` and ``_feature_schema`` because it takes the same confirm gate
+    and runs the same bracket as a feature; its name keeps it out of the ``feature_`` family, so
+    ``preview_op_table`` reads this list as well.
+    """
+    return [
+        _feature_method(
+            "document_object_delete",
+            features.document_object_delete,
+            _feature_schema(
+                {
+                    "objects": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {"type": "string"},
+                        "description": "object Names to delete; a Body also takes its Group "
+                        "members, its Origin and the Origin features",
+                    },
+                    "with_dependents": {
+                        "type": "boolean",
+                        "default": False,
+                        "description": "also delete the objects that depend on the delete set",
+                    },
+                },
+                ["objects"],
+            ),
+            "Delete objects in one transaction; one document_undo restores them. An object "
+            "outside the delete set whose dependencies hold a deleted object is a dependent "
+            "(a pad of a deleted sketch, an object bound by an expression to a deleted VarSet): "
+            "with with_dependents false the call is refused with INVALID_INPUT code "
+            "delete.has_dependents naming them and nothing is deleted; with true they are deleted "
+            "too and listed in dependents. A Body takes its Group, Origin and Origin features, a "
+            "link array its elements; deleting a visible feature shows the previous one. An "
+            "Origin or Origin feature named without its Body is refused (delete.origin_object). "
+            "Result {deleted, dependents}. Previewable with preview_dry_run.",
+        ),
+    ]
 
 
 def _preview_spec():
@@ -1028,9 +1250,9 @@ def _preview_spec():
         name="preview_dry_run",
         make_handler=make,
         input_schema=_PREVIEW_INPUT_SCHEMA,
-        description="Run a proposed sketch_/feature_ mutation on a throwaway copy of the "
-        "document and return a structured geometry diff plus a preview_id. The live "
-        "document is never mutated.",
+        description="Run a proposed sketch_, feature_ or document_object_delete mutation on a "
+        "throwaway copy of the document and return a structured geometry diff plus a "
+        "preview_id. The live document is never mutated.",
         timeout_s=180.0,
         mutating=False,
         audit_event="preview",
@@ -1045,6 +1267,7 @@ READ_ONLY_PROFILE = frozenset(
         "query_mass_properties",
         "query_interference",
         "query_section",
+        "query_parameters",
         "query_dependencies",
         "query_sketch_info",
         "query_placement",
@@ -1194,20 +1417,49 @@ SCRIPT_EXEC_SPEC = ToolSpec(
     name="script_exec",
     make_handler=lambda doc_registry, export_registry, caps, render_port, viewport_port: (
         lambda **params: script_exec_uc.script_exec(
-            doc_registry, params.get("doc"), params.get("code", "")
+            doc_registry,
+            params.get("doc"),
+            params.get("code", ""),
+            params.get("recompute") is not False,
         )
     ),
     input_schema={
         "type": "object",
-        "properties": {"doc": _DOC_SCHEMA, "code": {"type": "string"}},
+        "properties": {
+            "doc": _DOC_SCHEMA,
+            "code": {"type": "string"},
+            "recompute": {
+                "type": "boolean",
+                "description": "Default true: recompute after the script when an object is "
+                "Touched. false leaves it Touched and new_errors as the script left them.",
+            },
+        },
         "required": ["doc", "code"],
         "additionalProperties": False,
     },
     description="Run Python inside FreeCAD for an operation no typed tool covers. Globals: "
-    "`FreeCAD`/`App`, `Part`, `doc`; set `result` to return its repr. Raw: no transaction, "
-    "fingerprint or rollback. Open and commit a transaction in the script so `document_undo` "
-    "covers it, and check geometry with `verify_*` afterwards. Every call is audit-logged with "
-    "its source. Before using it, check the typed tool families in the server instructions.",
+    "`FreeCAD`/`App`, `Part`, `doc`; set `result` to return its repr. The call is bracketed: "
+    "one transaction named `script_exec <first line>` (start with a comment that says what the "
+    "script does), then a recompute when any object is Touched (pass `recompute` false for a "
+    "read-only probe) and a commit, so one `document_undo` reverts the script (not when the "
+    "script calls doc.undo() itself: a note says so). Nothing is "
+    "rolled back: a script that raises "
+    "(any exception, SystemExit included) returns INVALID_INPUT `exec.python_error` and keeps "
+    "the changes it made. Result {doc, stdout, value_repr, fingerprint_before, "
+    "fingerprint_after, changed, new_errors, undo_steps}: changed lists objects whose shape "
+    "changed, new_errors the objects the script left invalid (RECOMPUTE_ERROR), undo_steps the "
+    "undo entries the call added (null when the undo list cannot be read; counted by name, so "
+    "it can read low when a script calls doc.undo() and its first line repeats an earlier "
+    "entry, high, up to 20, on a full stack, and is null when all 20 entries carry one name). "
+    "undo_steps 0 (read-only script, or one that "
+    "touched only another document) means document_undo would revert an earlier step. "
+    "Limits: a script "
+    "that opens its own transaction adds one undo entry per transaction; a write after the "
+    "script commits the bridge transaction is not recorded; a script that closes its document "
+    "leaves a stale handle and fingerprint_after null. On TIMEOUT the late return still "
+    "commits and nothing aborts it; run a query_* read before the next mutation. Check "
+    "geometry with `verify_*` afterwards. Every call is audit-logged with its source. Before "
+    "using it, check the typed tool families in the server instructions.",
     timeout_s=30.0,
     mutating=True,
     audit_event="exec",
@@ -1450,8 +1702,10 @@ def tool_specs() -> list[ToolSpec]:
             "pairs). Result {pairs: [{a, b, common_volume, min_distance, boolean_failed}]}. "
             "boolean_failed true means the overlap is unmeasured, not zero, with "
             "common_volume null: either a shape is not a valid solid with positive volume "
-            "(min_distance is null too), or the boolean returned nothing at distance 0 or an "
-            "unknown distance (solids that only touch also give this). A pair whose faces "
+            "(min_distance is null too), or the boolean returned nothing and either the distance "
+            "is unknown or, at distance 0, a fuse cross-check could not prove the shapes only "
+            "touch. Solids that only touch give common_volume 0 with boolean_failed false; an "
+            "overlap below 1.5e-12 of the summed volumes can read as touching. A pair whose faces "
             "multiplied exceed 150000 is refused, and a call still measuring after 40 s stops, "
             "both with INVALID_INPUT code interference.too_complex. Cost grows with face "
             "count, so query few large pairs per call. Numbers only, no verdict.",
@@ -1520,6 +1774,22 @@ def tool_specs() -> list[ToolSpec]:
             "plane on a planar face (section.plane_on_face, offset it by 1e-6 mm or more). "
             "Solids that overlap or touch inside one compound are not detected: area counts each "
             "solid. Numbers only, no verdict.",
+        ),
+        _query_method(
+            "query_parameters",
+            queries.query_parameters,
+            30.0,
+            {
+                "type": "object",
+                "properties": {"doc": _DOC_SCHEMA},
+                "required": ["doc"],
+                "additionalProperties": False,
+            },
+            "List the document's parameters: every property of each VarSet {name, type, value, "
+            "unit, group, description}, every aliased spreadsheet cell {name, cell, contents, "
+            "value, unit}, and every expression binding {object, path, expression}. A value "
+            "that cannot be read is null with a reason. Each list holds 500 rows at most; "
+            "totals counts all and truncated says when one was cut. Reads without a recompute.",
         ),
         _query_method(
             "query_dependencies",
@@ -1625,7 +1895,8 @@ def tool_specs() -> list[ToolSpec]:
             exports.export_step,
             120.0,
             _EXPORT_STEP_INPUT_SCHEMA,
-            "Write a shape to STEP (unit=MM, AP pinned); result verified:false.",
+            "Write shapes to STEP (unit=MM, AP pinned). Several objects: one product each, named "
+            "by Label. Omit objects for all visible solids; result verified:false.",
             mutating=True,
         ),
         _export_method(
@@ -1633,7 +1904,8 @@ def tool_specs() -> list[ToolSpec]:
             exports.export_stl,
             120.0,
             _MESH_EXPORT_INPUT_SCHEMA,
-            "Write a shape to binary STL from one tessellation; result verified:false.",
+            "Write shapes to one merged binary STL from one tessellation. Omit objects for all "
+            "visible solids; result verified:false.",
             mutating=True,
         ),
         _export_method(
@@ -1641,7 +1913,8 @@ def tool_specs() -> list[ToolSpec]:
             exports.export_3mf,
             120.0,
             _MESH_EXPORT_INPUT_SCHEMA,
-            "Write a shape to 3MF from one tessellation; result verified:false.",
+            "Write shapes to 3MF from one tessellation. Several objects: one mesh object each, "
+            "named by Label. Omit objects for all visible solids; result verified:false.",
             mutating=True,
         ),
         _export_method(
@@ -1665,6 +1938,7 @@ def tool_specs() -> list[ToolSpec]:
         ),
         *_sketch_specs(),
         *_feature_specs(),
+        *_object_edit_specs(),
         _preview_spec(),
     ]
 
@@ -1673,6 +1947,7 @@ def with_framing(
     raw: Callable[..., dict],
     doc_registry: DocumentRegistry,
     viewport_port: ViewportPort | None,
+    fresh: bool = False,
 ) -> Callable[..., dict]:
     """Wrap ``raw`` so its ``OK`` results carry the live-viewport framing verdict (AD-32).
 
@@ -1688,6 +1963,9 @@ def with_framing(
     On **any** non-``OK`` terminal status the block is omitted entirely — one rule, no either/or.
     A verdict on a ``TIMEOUT`` invites a reader to treat a cached answer as current, and geometry
     a rollback undid must never be measured.
+
+    ``fresh`` skips the cache: ``script_exec`` can change what the viewport shows (``Visibility``)
+    without changing the fingerprint digest the cache key holds.
     """
     if viewport_port is None:
         return raw
@@ -1696,7 +1974,9 @@ def with_framing(
         envelope = raw(**params)
         if not isinstance(envelope, dict) or envelope.get("status") != "OK":
             return envelope
-        verdict = _read_framing_quietly(doc_registry, viewport_port, params.get("doc"), envelope)
+        verdict = _read_framing_quietly(
+            doc_registry, viewport_port, params.get("doc"), envelope, fresh
+        )
         if verdict is None:
             return envelope
         text = with_framing_text(envelope["text"], verdict)
@@ -1710,6 +1990,7 @@ def _read_framing_quietly(
     viewport_port: ViewportPort,
     doc: object,
     envelope: dict,
+    fresh: bool = False,
 ) -> dict | None:
     """``read_framing`` for the document the call targeted, or ``None`` when it cannot answer.
 
@@ -1720,7 +2001,9 @@ def _read_framing_quietly(
     if not isinstance(doc, str):
         return None
     try:
-        return framing.read_framing(doc_registry, viewport_port, doc, _geometry_proxy(envelope))
+        return framing.read_framing(
+            doc_registry, viewport_port, doc, _geometry_proxy(envelope), fresh
+        )
     except Exception:  # noqa: BLE001 - an advisory verdict must never fail a completed call
         return None
 
@@ -1814,7 +2097,7 @@ def build_inline_handlers(
         raw = spec.make_handler(doc_registry, export_registry, caps, port, viewport_port)
         if spec.name == "script_exec":
             raw = bound_off_main_thread(raw, spec.timeout_s)
-        framed = with_framing(raw, doc_registry, viewport_port)
+        framed = with_framing(raw, doc_registry, viewport_port, fresh=spec.name == "script_exec")
         methods.register(
             RpcMethod(
                 name=spec.name,

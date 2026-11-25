@@ -1,0 +1,350 @@
+[
+ {
+  "tool": "document_list",
+  "args": {},
+  "seconds": 0.196,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "documents": []
+   },
+   "text": "0 open document(s)."
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"documents\":[]},\"text\":\"0 open document(s).\"}"
+  ]
+ },
+ {
+  "tool": "document_create",
+  "args": {
+   "label": "tc17_touch"
+  },
+  "seconds": 0.187,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g",
+    "name": "tc17_touch",
+    "label": "tc17_touch"
+   },
+   "text": "doc: fcb-doc:RDdna7wjAD_UtmkswaqM2g\nlabel: tc17_touch\nname: tc17_touch"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:RDdna7wjAD_UtmkswaqM2g\",\"name\":\"tc17_touch\",\"label\":\"tc17_touch\"},\"text\":\"doc: fcb-doc:RDdna7wjAD_UtmkswaqM2g\\nlabel: tc17_touch\\nname: tc17_touch\"}"
+  ]
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g",
+   "code": "import Part, FreeCAD as App\nV = App.Vector\ndef add(n, s):\n    o = doc.addObject('Part::Feature', n); o.Shape = s\nadd('A', Part.makeBox(10, 10, 10))\nadd('Face', Part.makeBox(10, 10, 10, V(10, 0, 0)))\nadd('Edge', Part.makeBox(10, 10, 10, V(10, 10, 0)))\nadd('Vertex', Part.makeBox(10, 10, 10, V(10, 10, 10)))\nadd('Big1', Part.makeBox(100, 100, 100, V(0, 100, 0)))\nadd('Big2', Part.makeBox(100, 100, 100, V(100 - 1e-7, 100, 0)))\ndoc.recompute()\nresult = 'built'"
+  },
+  "seconds": 0.124,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g",
+    "stdout": "",
+    "value_repr": "'built'",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:RDdna7wjAD_UtmkswaqM2g\nfingerprint_after: None\nstdout: \nvalue_repr: 'built'\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:RDdna7wjAD_UtmkswaqM2g\",\"stdout\":\"\",\"value_repr\":\"'built'\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:RDdna7wjAD_UtmkswaqM2g\\nfingerprint_after: None\\nstdout: \\nvalue_repr: 'built'\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g"
+  },
+  "seconds": 0.053,
+  "isError": false,
+  "structuredContent": null,
+  "text": [
+   "OK: 6 objects, 6 shown.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\nframing: does not fit, computed\nv [FEATURE] A\nv [FEATURE] Face\nv [FEATURE] Edge\nv [FEATURE] Vertex\nv [FEATURE] Big1\nv [FEATURE] Big2"
+  ]
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g",
+   "code": "a = doc.A.Shape\nresult = [abs(round(a.Volume + doc.getObject(n).Shape.Volume - a.fuse(doc.getObject(n).Shape).Volume, 9)) for n in ('Face', 'Edge', 'Vertex')]"
+  },
+  "seconds": 0.077,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g",
+    "stdout": "",
+    "value_repr": "[0.0, 0.0, 0.0]",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:RDdna7wjAD_UtmkswaqM2g\nfingerprint_after: None\nstdout: \nvalue_repr: [0.0, 0.0, 0.0]\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:RDdna7wjAD_UtmkswaqM2g\",\"stdout\":\"\",\"value_repr\":\"[0.0, 0.0, 0.0]\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:RDdna7wjAD_UtmkswaqM2g\\nfingerprint_after: None\\nstdout: \\nvalue_repr: [0.0, 0.0, 0.0]\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"cached\",\"stale_reason\":\"served from cache; unverified key component(s): geometry\"}}"
+  ]
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g",
+   "code": "c = doc.Big1.Shape.common(doc.Big2.Shape)\nresult = c.isNull() or not c.Volume"
+  },
+  "seconds": 0.061,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g",
+    "stdout": "",
+    "value_repr": "True",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:RDdna7wjAD_UtmkswaqM2g\nfingerprint_after: None\nstdout: \nvalue_repr: True\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:RDdna7wjAD_UtmkswaqM2g\",\"stdout\":\"\",\"value_repr\":\"True\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:RDdna7wjAD_UtmkswaqM2g\\nfingerprint_after: None\\nstdout: \\nvalue_repr: True\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"cached\",\"stale_reason\":\"served from cache; unverified key component(s): geometry\"}}"
+  ]
+ },
+ {
+  "tool": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g"
+  },
+  "seconds": 0.059,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "fitted": true,
+    "document": "tc17_touch",
+    "camera_recorded": true
+   },
+   "text": "fitted the live viewport to 'tc17_touch'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"fitted\":true,\"document\":\"tc17_touch\",\"camera_recorded\":true},\"text\":\"fitted the live viewport to 'tc17_touch'\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "shell": "cd D:/Work/Personal/Sources/freecad-buddy-wt-13-fu && export PROJECT_ROOT=$PWD RUN_DIR=$PWD/tests/uat/run/13-fu-r1 && echo '{\"pid\":1202,\"window_id\":41943133,\"screenshot_out_file\":\"$RUN_DIR/evidence/tc-17-01-before.png\"}' | scripts/automation/fcb_cua.sh get_window_state | head -c 300",
+  "rc": 0,
+  "out": "{\n  \"_note\": \"Prefer `elements` \u2014 `tree_markdown` will continue to work but new fields will only be added to the structured side. Use `max_elements` / `max_depth` to bound the AT-SPI walk on apps with very large trees.\",\n  \"app_name\": \"FreeCAD\",\n  \"element_count\": 671,\n  \"elements\": [\n    {\n      ",
+  "err": "write /dev/stdout: The pipe is being closed.\n"
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g",
+   "code": "from freecad_buddy.usecases.fingerprint import fingerprint\nresult = fingerprint(doc, fresh=True)[\"digest\"]"
+  },
+  "seconds": 0.079,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g",
+    "stdout": "",
+    "value_repr": "'207fd393e59b1501f851772d46392b91db32c8514b0327e9ed94c7ae1fb06415'",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:RDdna7wjAD_UtmkswaqM2g\nfingerprint_after: None\nstdout: \nvalue_repr: '207fd393e59b1501f851772d46392b91db32c8514b0327e9ed94c7ae1fb06415'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:RDdna7wjAD_UtmkswaqM2g\",\"stdout\":\"\",\"value_repr\":\"'207fd393e59b1501f851772d46392b91db32c8514b0327e9ed94c7ae1fb06415'\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:RDdna7wjAD_UtmkswaqM2g\\nfingerprint_after: None\\nstdout: \\nvalue_repr: '207fd393e59b1501f851772d46392b91db32c8514b0327e9ed94c7ae1fb06415'\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "query_interference",
+  "args": {
+   "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g",
+   "pairs": [
+    [
+     "A",
+     "Face"
+    ],
+    [
+     "A",
+     "Edge"
+    ],
+    [
+     "A",
+     "Vertex"
+    ],
+    [
+     "Big1",
+     "Big2"
+    ]
+   ]
+  },
+  "seconds": 0.084,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "pairs": [
+     {
+      "a": "A",
+      "b": "Face",
+      "common_volume": {
+       "value": 0.0,
+       "unit": "mm^3"
+      },
+      "min_distance": {
+       "value": 0.0,
+       "unit": "mm"
+      },
+      "boolean_failed": false
+     },
+     {
+      "a": "A",
+      "b": "Edge",
+      "common_volume": {
+       "value": 0.0,
+       "unit": "mm^3"
+      },
+      "min_distance": {
+       "value": 0.0,
+       "unit": "mm"
+      },
+      "boolean_failed": false
+     },
+     {
+      "a": "A",
+      "b": "Vertex",
+      "common_volume": {
+       "value": 0.0,
+       "unit": "mm^3"
+      },
+      "min_distance": {
+       "value": 0.0,
+       "unit": "mm"
+      },
+      "boolean_failed": false
+     },
+     {
+      "a": "Big1",
+      "b": "Big2",
+      "common_volume": null,
+      "min_distance": {
+       "value": 0.0,
+       "unit": "mm"
+      },
+      "boolean_failed": true
+     }
+    ]
+   },
+   "text": "4 pair(s), 0 overlapping, 1 boolean failed.\nBig1/Big2: BOOLEAN FAILED, overlap unknown.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"pairs\":[{\"a\":\"A\",\"b\":\"Face\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"A\",\"b\":\"Edge\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"A\",\"b\":\"Vertex\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Big1\",\"b\":\"Big2\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true}]},\"text\":\"4 pair(s), 0 overlapping, 1 boolean failed.\\nBig1/Big2: BOOLEAN FAILED, overlap unknown.\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"cached\",\"stale_reason\":\"served from cache; unverified key component(s): geometry\"}}"
+  ]
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g",
+   "code": "from freecad_buddy.usecases.fingerprint import fingerprint\nresult = fingerprint(doc, fresh=True)[\"digest\"]"
+  },
+  "seconds": 0.096,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g",
+    "stdout": "",
+    "value_repr": "'207fd393e59b1501f851772d46392b91db32c8514b0327e9ed94c7ae1fb06415'",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:RDdna7wjAD_UtmkswaqM2g\nfingerprint_after: None\nstdout: \nvalue_repr: '207fd393e59b1501f851772d46392b91db32c8514b0327e9ed94c7ae1fb06415'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:RDdna7wjAD_UtmkswaqM2g\",\"stdout\":\"\",\"value_repr\":\"'207fd393e59b1501f851772d46392b91db32c8514b0327e9ed94c7ae1fb06415'\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:RDdna7wjAD_UtmkswaqM2g\\nfingerprint_after: None\\nstdout: \\nvalue_repr: '207fd393e59b1501f851772d46392b91db32c8514b0327e9ed94c7ae1fb06415'\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"cached\",\"stale_reason\":\"served from cache; unverified key component(s): geometry\"}}"
+  ]
+ },
+ {
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:RDdna7wjAD_UtmkswaqM2g"
+  },
+  "seconds": 0.114,
+  "isError": false,
+  "structuredContent": null,
+  "text": [
+   "OK: 6 objects, 6 shown.\nframing: fits, ratio 0.95, cached, served from cache; unverified key component(s): geometry\nv [FEATURE] A\nv [FEATURE] Face\nv [FEATURE] Edge\nv [FEATURE] Vertex\nv [FEATURE] Big1\nv [FEATURE] Big2"
+  ]
+ },
+ {
+  "shell": "cd D:/Work/Personal/Sources/freecad-buddy-wt-13-fu && export PROJECT_ROOT=$PWD RUN_DIR=$PWD/tests/uat/run/13-fu-r1 && echo '{\"pid\":1202,\"window_id\":41943133,\"screenshot_out_file\":\"$RUN_DIR/evidence/tc-17-01-after.png\"}' | scripts/automation/fcb_cua.sh get_window_state | head -c 300",
+  "rc": 0,
+  "out": "{\n  \"_note\": \"Prefer `elements` \u2014 `tree_markdown` will continue to work but new fields will only be added to the structured side. Use `max_elements` / `max_depth` to bound the AT-SPI walk on apps with very large trees.\",\n  \"app_name\": \"FreeCAD\",\n  \"element_count\": 671,\n  \"elements\": [\n    {\n      ",
+  "err": "write /dev/stdout: The pipe is being closed.\n"
+ }
+]

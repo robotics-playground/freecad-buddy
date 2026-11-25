@@ -470,11 +470,11 @@ sequenceDiagram
   Note over MCP: still an MCP tool — the agent<br/>reaches it through the same surface as every typed tool
   MCP->>Audit: append-only before record with source (before execution)
   MCP->>U: dispatch
-  Note over U: fingerprint → bridge transaction → run → recompute (unless recompute: false) → commit → fingerprint
+  Note over U: fingerprint → bridge transaction → run → recompute (unless recompute: false) → commit → commit any open application-level transaction → fingerprint
   U-->>MCP: result
   MCP->>Audit: append-only after record: status and both fingerprints from the result
   MCP-->>Agent: envelope
-  Note over Agent: fingerprint_before, fingerprint_after,<br/>changed and new_errors; no rollback (TIMEOUT: AD-27) —<br/>the agent checks with verify_* afterwards
+  Note over Agent: fingerprint_before, fingerprint_after,<br/>changed, new_errors and undo_steps; a failed phase gives<br/>exec.bracket_failed; no rollback (TIMEOUT: AD-27) —<br/>the agent checks with verify_* afterwards
   Note over U: in-process restriction is never called a security<br/>boundary — this repo ships NO boundary of its<br/>own, so the operator's environment is it
 ```
 

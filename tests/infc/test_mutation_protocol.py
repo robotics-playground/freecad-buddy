@@ -724,7 +724,7 @@ class TnpGuardTest(_MutationFixture):
             + [_finding("Sketch", "RE_BASELINED")]
         )
         real = tnp_guard.audit_references
-        tnp_guard.audit_references = lambda *_args: {
+        tnp_guard.audit_references = lambda *_args, **_kwargs: {
             "status": "FLAGGED",
             "element_map_version": "4",
             "findings": list(planted),
@@ -892,6 +892,88 @@ class AuditRecordTest(_MutationFixture):
         self.assertEqual(pre, ("before", "mutation", "feature_pad", self.handle, None))
         self.assertEqual(post[4], "SPEC_FAILED")
         self.assertIsNone(post[5])
+
+
+class ApplicationTransactionTest(_MutationFixture):
+    """No exit path of the bracket leaves the application's active transaction open."""
+
+    def _assert_none_open(self):
+        self.assertIsNone(App.getActiveTransaction())
+
+    def test_Should_leave_no_transaction_open_When_the_op_writes_nothing_and_commits(self):
+        # Arrange
+        def write_nothing(document):
+            return []
+
+        # Act
+        _, envelope = self._run("write nothing", write_nothing)
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK")
+        self._assert_none_open()
+
+    def test_Should_leave_no_transaction_open_When_the_op_raises_before_its_first_write(self):
+        # Arrange
+        def refuse(document):
+            raise RuntimeError("refused before the first write")
+
+        # Act
+        _, envelope = self._run("refuse", refuse)
+
+        # Assert
+        self.assertNotEqual(envelope["status"], "OK")
+        self._assert_none_open()
+
+    def test_Should_leave_no_transaction_open_When_the_op_writes_and_commits(self):
+        # Act
+        _, envelope = self._run("add a cylinder", _add_cylinder)
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK")
+        self._assert_none_open()
+
+    def test_Should_leave_no_transaction_open_When_the_op_writes_and_fails(self):
+        # Act
+        _, envelope = self._run("add then fail", _raise_after_add)
+
+        # Assert
+        self.assertNotEqual(envelope["status"], "OK")
+        self._assert_none_open()
+
+    def test_Should_let_the_next_undo_revert_the_next_change_When_a_no_write_call_came_first(self):
+        # Arrange
+        self._run("write nothing", lambda document: [])
+        self._run("add a cylinder", _add_cylinder)
+
+        # Act
+        undone = self.registry.document_undo(doc=self.handle)
+
+        # Assert
+        self.assertEqual(undone["status"], "OK", undone.get("detail"))
+        self.assertIsNone(self.document.getObject("Cyl"))
+
+    def test_Should_leave_a_transaction_of_another_name_open_When_closing_the_bracket_name(self):
+        # Arrange
+        App.setActiveTransaction("user command")
+
+        # Act
+        shim.close_pending_transaction("buddy: set expressions 1")
+
+        # Assert
+        active = App.getActiveTransaction()
+        App.closeActiveTransaction(True)
+        self.assertIsNotNone(active)
+        self.assertEqual(active[0], "user command")
+
+    def test_Should_close_the_transaction_of_the_bracket_name_When_it_is_left_open(self):
+        # Arrange
+        App.setActiveTransaction("buddy: set expressions 1")
+
+        # Act
+        shim.close_pending_transaction("buddy: set expressions 1")
+
+        # Assert
+        self.assertIsNone(App.getActiveTransaction())
 
 
 if __name__ == "__main__":

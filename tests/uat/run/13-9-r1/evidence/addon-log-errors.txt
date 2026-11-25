@@ -1,0 +1,2 @@
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/addon.log
+20

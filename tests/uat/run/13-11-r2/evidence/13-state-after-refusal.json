@@ -1,0 +1,26 @@
+{
+ "tool": "script_exec",
+ "args": {
+  "doc": "fcb-doc:Zl_TO-5lU4gEUbmbyKQU0Q",
+  "code": "b = doc.getObject(\"Body\")\nresult = {\"vis\": {o.Name: o.Visibility for o in doc.Objects if o.TypeId.startswith((\"PartDesign::Pad\", \"PartDesign::Boolean\", \"PartDesign::Body\"))},\n          \"tip\": b.Tip.Name if b.Tip else None, \"body_volume\": round(b.Shape.Volume, 3), \"UndoCount\": doc.UndoCount, \"RedoCount\": doc.RedoCount,\n          \"objects\": len(doc.Objects), \"invalid\": [o.Name for o in doc.Objects if \"Invalid\" in o.State]}\n"
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "doc": "fcb-doc:Zl_TO-5lU4gEUbmbyKQU0Q",
+   "stdout": "",
+   "value_repr": "{'vis': {'Body': True, 'PadA': False, 'PadB': False, 'Body2': True, 'PadC': True, 'Bool': True}, 'tip': 'Bool', 'body_volume': 3073.451, 'UndoCount': 8, 'RedoCount': 0, 'objects': 25, 'invalid': []}",
+   "fingerprint_after": null
+  },
+  "text": "doc: fcb-doc:Zl_TO-5lU4gEUbmbyKQU0Q\nfingerprint_after: None\nstdout: \nvalue_repr: <198 chars>",
+  "framing": {
+   "fits": true,
+   "ratio": 0.95,
+   "checked": "computed",
+   "stale_reason": null
+  }
+ }
+}

@@ -612,3 +612,82 @@ def test_should_report_no_digest_when_the_envelope_carries_none():
 
     # Assert
     assert digest is None
+
+
+def test_should_measure_again_when_the_wrapper_is_fresh_and_the_cache_key_is_unchanged():
+    # Arrange: a Visibility-only script leaves the geometry digest, camera and size equal.
+    view = _FakeView()
+    document = _document()
+    registry = _FakeRegistry(document)
+    port = _FakeViewportPort(view)
+    result = _envelope(structured={"fingerprint_after": "digest-1"})
+    raw = lambda **_params: dict(result)  # noqa: E731
+    cached = tool_catalog.with_framing(raw, registry, port)
+    fresh = tool_catalog.with_framing(raw, registry, port, fresh=True)
+    cached(doc=_HANDLE)
+    projections_before = view.projections
+
+    # Act
+    served = fresh(doc=_HANDLE)
+
+    # Assert
+    assert served["framing"]["checked"] == "computed"
+    assert view.projections > projections_before
+
+
+def test_should_store_the_fresh_verdict_when_a_cached_call_follows_a_fresh_one():
+    # Arrange
+    view = _FakeView()
+    registry = _FakeRegistry(_document())
+    port = _FakeViewportPort(view)
+    result = _envelope(structured={"fingerprint_after": "digest-1"})
+    raw = lambda **_params: dict(result)  # noqa: E731
+    cached = tool_catalog.with_framing(raw, registry, port)
+    fresh = tool_catalog.with_framing(raw, registry, port, fresh=True)
+    fresh(doc=_HANDLE)
+    projections_after_fresh = view.projections
+
+    # Act
+    served = cached(doc=_HANDLE)
+
+    # Assert
+    assert served["framing"]["checked"] == "cached"
+    assert view.projections == projections_after_fresh
+
+
+def test_should_measure_every_script_exec_call_again_when_the_catalog_wires_the_handler(
+    monkeypatch,
+):
+    # Arrange: two calls with the same digest, camera and size, as two Visibility-only scripts give.
+    from freecad_buddy.adapters.mcp_server import Capabilities
+
+    view = _FakeView()
+    structured = {"fingerprint_after": "digest-1"}
+    monkeypatch.setattr(
+        tool_catalog.script_exec_uc,
+        "script_exec",
+        lambda *_args: _envelope(structured=structured),
+    )
+
+    class _CatalogRegistry(_FakeRegistry):
+        """Serves ``with_document``; every lifecycle method the catalog binds is a stub."""
+
+        def __getattr__(self, name):
+            return lambda **_params: None
+
+    registry = tool_catalog.build_inline_handlers(
+        _CatalogRegistry(_document()),
+        tool_catalog.ExportRegistry(),
+        Capabilities(script_exec=True),
+        None,
+        render_port=object(),
+        viewport_port=_FakeViewportPort(view),
+    )
+
+    # Act
+    first = registry.dispatch("script_exec", {"doc": _HANDLE, "code": "x"})
+    second = registry.dispatch("script_exec", {"doc": _HANDLE, "code": "x"})
+
+    # Assert
+    assert first["framing"]["checked"] == "computed"
+    assert second["framing"]["checked"] == "computed"

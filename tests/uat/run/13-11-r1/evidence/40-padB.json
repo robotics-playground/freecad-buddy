@@ -1,0 +1,104 @@
+{
+ "tool": "feature_pad",
+ "args": {
+  "doc": "fcb-doc:dYgwCWXxb154oXxBatWDhg",
+  "body": "Body",
+  "profile": "SkB",
+  "name": "PadB",
+  "length": {
+   "value": 15,
+   "unit": "mm"
+  }
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "mutation": {
+    "schema": "fcb.mutation/2",
+    "fingerprint_before": {
+     "digest": "b54b58f14c5088bcf01ff58cf58eb958f968649f1a466c44e572a6da1833fce9",
+     "serializer": "exportBinary"
+    },
+    "fingerprint_after": {
+     "digest": "2f76350a064498fd8cc6fc23f397f43fde6d40e569cebf0099c5409baec7a041",
+     "serializer": "exportBinary"
+    },
+    "changed": [
+     {
+      "name": "Body",
+      "volume": 2073.45,
+      "area": 1193.81,
+      "com": [
+       0.0,
+       0.0,
+       4.32
+      ]
+     },
+     {
+      "name": "PadB",
+      "volume": 2073.45,
+      "area": 1193.81,
+      "com": [
+       0.0,
+       0.0,
+       4.32
+      ]
+     }
+    ],
+    "post_verify": {
+     "recompute_clean": true,
+     "is_valid": true,
+     "fully_constrained": true,
+     "tnp_audit": {
+      "status": "CLEAN",
+      "element_map_version": "15.70200.5",
+      "counts": {
+       "PASS": 1
+      },
+      "findings": []
+     },
+     "passed": true,
+     "explanation": null
+    },
+    "rolled_back": false,
+    "rollback_proven": null,
+    "touched": [
+     "PadB",
+     "Body"
+    ]
+   },
+   "feature": "PadB",
+   "feature_state": {
+    "schema": "fcb.feature-state/1",
+    "feature": "PadB",
+    "readable": true,
+    "body": "Body",
+    "is_tip": true,
+    "shape_summary": {
+     "solid_count": 1,
+     "face_count": 5,
+     "edge_count": 6,
+     "vertex_count": 4,
+     "is_valid": true,
+     "volume": 2073.45,
+     "area": 1193.81,
+     "bbox": [
+      20.0,
+      20.0,
+      15.0
+     ]
+    }
+   }
+  },
+  "text": "Mutation committed; fingerprint 2f76350a0644.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+  "framing": {
+   "fits": false,
+   "ratio": 4.83,
+   "checked": "computed",
+   "stale_reason": null
+  }
+ }
+}

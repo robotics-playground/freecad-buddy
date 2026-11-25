@@ -1,0 +1,31 @@
+label=e-closed1 rc=0 elapsed=2s
+FEATURES_FILE=D:\Work\Personal\Sources\fcb-verify-13-18\src\freecad_buddy\usecases\features.py
+ERROR: test_Should_carry_the_documented_code_When_a_loft_refusal_names_one (infc.test_feature_tools.LoftTest.test_Should_carry_the_documented_code_When_a_loft_refusal_names_one) [profile in sections]
+freecad_buddy.usecases.documents.ValidationError: an object named Lofted already exists
+ERROR: test_Should_carry_the_documented_code_When_a_loft_refusal_names_one (infc.test_feature_tools.LoftTest.test_Should_carry_the_documented_code_When_a_loft_refusal_names_one) [repeated section]
+freecad_buddy.usecases.documents.ValidationError: an object named Lofted already exists
+ERROR: test_Should_carry_the_documented_code_When_a_loft_refusal_names_one (infc.test_feature_tools.LoftTest.test_Should_carry_the_documented_code_When_a_loft_refusal_names_one) [empty sections]
+freecad_buddy.usecases.documents.ValidationError: an object named Lofted already exists
+ERROR: test_Should_carry_the_documented_code_When_a_loft_refusal_names_one (infc.test_feature_tools.LoftTest.test_Should_carry_the_documented_code_When_a_loft_refusal_names_one) [wire count mismatch]
+freecad_buddy.usecases.documents.ValidationError: an object named Lofted already exists
+FAIL: test_Should_carry_the_documented_code_When_a_loft_refusal_names_one (infc.test_feature_tools.LoftTest.test_Should_carry_the_documented_code_When_a_loft_refusal_names_one) [closed with one section]
+AssertionError: LoftSweepRefusal not raised
+FAIL: test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable (infc.test_feature_tools.LoftTest.test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable) [closed with one section]
+AssertionError: ValidationError not raised
+FAIL: test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable (infc.test_feature_tools.LoftTest.test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable) [profile in sections]
+AssertionError: 'profile' not found in 'an object named Lofted already exists'
+FAIL: test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable (infc.test_feature_tools.LoftTest.test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable) [repeated section]
+AssertionError: 'repeat' not found in 'an object named Lofted already exists'
+FAIL: test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable (infc.test_feature_tools.LoftTest.test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable) [empty sections]
+AssertionError: 'sections' not found in 'an object named Lofted already exists'
+FAIL: test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable (infc.test_feature_tools.LoftTest.test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable) [section is not a sketch]
+AssertionError: 'not a sketch' not found in 'an object named Lofted already exists'
+FAIL: test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable (infc.test_feature_tools.LoftTest.test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable) [unknown section]
+AssertionError: 'Nope' not found in 'an object named Lofted already exists'
+FAIL: test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable (infc.test_feature_tools.LoftTest.test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable) [wire count mismatch]
+AssertionError: 'wires' not found in 'an object named Lofted already exists'
+FAIL: test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable (infc.test_feature_tools.LoftTest.test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable) [ruled is not a bool]
+AssertionError: 'ruled' not found in 'an object named Lofted already exists'
+FAIL: test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable (infc.test_feature_tools.LoftTest.test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable) [subtractive is not a bool]
+AssertionError: 'subtractive' not found in 'an object named Lofted already exists'
+RESULT fail=10 error=4 run=46

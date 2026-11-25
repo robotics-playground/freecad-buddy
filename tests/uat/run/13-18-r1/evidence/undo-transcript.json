@@ -1,0 +1,188 @@
+[
+ {
+  "step": "LoftPart.undo",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:27W2AzOuIZ8JI_JnUX8b6A",
+   "expect_fingerprint": {
+    "digest": "2622317e4e62f9f30b4fd00eed327da8c38a268b9baf9039d8f0ebca8cc5d13a",
+    "serializer": "exportBinary"
+   }
+  },
+  "isError": false,
+  "elapsed_s": 0.152,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:27W2AzOuIZ8JI_JnUX8b6A",
+    "name": "LoftPart",
+    "undone": "buddy: loft Lofted",
+    "fingerprint_before": "18cb959dd977ee8fecc3c9ef6cfdc1cf0cc83ff671a103fb0705b99167b1b23d",
+    "fingerprint_after": "2622317e4e62f9f30b4fd00eed327da8c38a268b9baf9039d8f0ebca8cc5d13a",
+    "matches_pre_op": true,
+    "restored_objects": [
+     "Body",
+     "Origin",
+     "X_Axis",
+     "Y_Axis",
+     "Z_Axis",
+     "XY_Plane",
+     "XZ_Plane",
+     "YZ_Plane",
+     "Origin001",
+     "Base",
+     "Mid",
+     "Top"
+    ],
+    "undo_count": 2,
+    "errors": []
+   },
+   "text": "Undid 'buddy: loft Lofted' on LoftPart: restored the pre-op state (18cb959dd977 -> 2622317e4e62).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.98,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "LoftPart.tree",
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:27W2AzOuIZ8JI_JnUX8b6A"
+  },
+  "isError": false,
+  "elapsed_s": 0.103,
+  "result": {},
+  "text": [
+   "OK: 12 objects, 1 shown.\nframing: fits, ratio 0.98, computed\nv [BODY] Body (+4)"
+  ]
+ },
+ {
+  "step": "SweepPart.undo",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:usKkzUSaB2TiuLRIXCc6Qw",
+   "expect_fingerprint": {
+    "digest": "32e82de2630b479070db07855841dd5d9cb5e53e7861414cdfcd69949a8c1291",
+    "serializer": "exportBinary"
+   }
+  },
+  "isError": false,
+  "elapsed_s": 0.023,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:usKkzUSaB2TiuLRIXCc6Qw",
+    "name": "SweepPart",
+    "undone": "buddy: sweep Swept",
+    "fingerprint_before": "99c14c477c49c59e36c6f4a9fa7fb110249a81bac127674f4edc3126be708f41",
+    "fingerprint_after": "32e82de2630b479070db07855841dd5d9cb5e53e7861414cdfcd69949a8c1291",
+    "matches_pre_op": true,
+    "restored_objects": [
+     "Body",
+     "Origin",
+     "X_Axis",
+     "Y_Axis",
+     "Z_Axis",
+     "XY_Plane",
+     "XZ_Plane",
+     "YZ_Plane",
+     "Origin001",
+     "Ring",
+     "Path"
+    ],
+    "undo_count": 2,
+    "errors": []
+   },
+   "text": "Undid 'buddy: sweep Swept' on SweepPart: restored the pre-op state (99c14c477c49 -> 32e82de2630b).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.9,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "SweepPart.tree",
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:usKkzUSaB2TiuLRIXCc6Qw"
+  },
+  "isError": false,
+  "elapsed_s": 0.106,
+  "result": {},
+  "text": [
+   "OK: 11 objects, 1 shown.\nframing: fits, ratio 0.9, computed\nv [BODY] Body (+3)"
+  ]
+ },
+ {
+  "step": "GroovePart.undo",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:0rVOI4AgUfGd5yS3Sfu5ew",
+   "expect_fingerprint": {
+    "digest": "f7da768f8025b9425f3b308d2c6d083cb366a9076fe5cfb6dec8a0d138e5b8b7",
+    "serializer": "exportBinary"
+   }
+  },
+  "isError": false,
+  "elapsed_s": 0.071,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:0rVOI4AgUfGd5yS3Sfu5ew",
+    "name": "GroovePart",
+    "undone": "buddy: sweep Groove",
+    "fingerprint_before": "570a4b470076f251367f0cd52581a66d8c920aaae81f033106969b7ca684e9ad",
+    "fingerprint_after": "f7da768f8025b9425f3b308d2c6d083cb366a9076fe5cfb6dec8a0d138e5b8b7",
+    "matches_pre_op": true,
+    "restored_objects": [
+     "Body",
+     "Origin",
+     "X_Axis",
+     "Y_Axis",
+     "Z_Axis",
+     "XY_Plane",
+     "XZ_Plane",
+     "YZ_Plane",
+     "Origin001",
+     "PlateSketch",
+     "Ring",
+     "Path",
+     "Plate"
+    ],
+    "undo_count": 5,
+    "errors": []
+   },
+   "text": "Undid 'buddy: sweep Groove' on GroovePart: restored the pre-op state (570a4b470076 -> f7da768f8025).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.69,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "GroovePart.tree",
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:0rVOI4AgUfGd5yS3Sfu5ew"
+  },
+  "isError": false,
+  "elapsed_s": 0.058,
+  "result": {},
+  "text": [
+   "OK: 13 objects, 1 shown.\nframing: fits, ratio 0.69, computed\nv [BODY] Body (+4)"
+  ]
+ }
+]

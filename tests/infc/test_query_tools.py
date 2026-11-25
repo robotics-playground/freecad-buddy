@@ -467,11 +467,21 @@ class QueryObjectDisplayTest(unittest.TestCase):
         self.assertEqual(out, "Vector (6.0, 0.0, 1234.57)")
 
 
+class _EmptySection:
+    Edges = ()
+    Vertexes = ()
+
+
 class _FakeSolid:
     """A stand-in solid the interference trust check accepts; tests override the booleans."""
 
     ShapeType = "Solid"
     Volume = 1.0
+    Solids = ()
+
+    @staticmethod
+    def section(other):
+        return _EmptySection()
 
     @staticmethod
     def isValid():
@@ -564,14 +574,22 @@ class QueryInterferenceTest(unittest.TestCase):
         self.assertIsNone(record["min_distance"])
         self.assertIn("BOOLEAN FAILED", envelope["text"])
 
-    def test_Should_flag_a_failed_boolean_When_common_raises_and_the_distance_is_zero(self):
+    def test_Should_flag_a_failed_boolean_When_common_and_the_fuse_raise_at_distance_zero(
+        self,
+    ):
         # Arrange
+        fuse_calls = []
+
         class RaisingShape(_FakeSolid):
             def common(self, other):
                 raise RuntimeError("boolean failed")
 
             def distToShape(self, other):
                 return (0.0, [], [])
+
+            def fuse(self, other):
+                fuse_calls.append(other)
+                raise RuntimeError("fuse failed")
 
         # Act
         volume, distance, failed = queries._measure_interference(RaisingShape(), RaisingShape())
@@ -580,6 +598,7 @@ class QueryInterferenceTest(unittest.TestCase):
         self.assertIsNone(volume)
         self.assertEqual(distance, 0.0)
         self.assertTrue(failed)
+        self.assertEqual(len(fuse_calls), 1)
 
     def test_Should_flag_a_failed_boolean_When_common_raises_and_the_distance_is_unknown(self):
         # Arrange
@@ -598,10 +617,53 @@ class QueryInterferenceTest(unittest.TestCase):
         self.assertIsNone(distance)
         self.assertTrue(failed)
 
-    def test_Should_flag_a_failed_boolean_When_two_solids_only_touch_at_a_face(self):
+    def test_Should_report_zero_overlap_When_two_solids_only_touch(self):
         # Arrange
+        touching_offsets = {
+            "face": (10, 0, 0),
+            "edge": (10, 10, 0),
+            "vertex": (10, 10, 10),
+        }
         self._add_box("A")
-        self._add_box("B", 10, 0, 0)
+        for kind, offset in touching_offsets.items():
+            self._add_box(f"B_{kind}", *offset)
+
+        for kind in touching_offsets:
+            with self.subTest(contact=kind):
+                # Act
+                envelope = self._measure(pairs=[["A", f"B_{kind}"]])
+
+                # Assert
+                record = envelope["structured_content"]["pairs"][0]
+                self.assertEqual(envelope["status"], "OK")
+                self.assertFalse(record["boolean_failed"])
+                self.assertEqual(record["common_volume"]["value"], 0.0)
+                self.assertEqual(record["min_distance"]["value"], 0.0)
+                self.assertIn("0 overlapping, 0 boolean failed", envelope["text"])
+
+    def test_Should_report_zero_overlap_When_a_pin_touches_the_wall_of_its_hole(self):
+        # Arrange
+        plate = Part.makeBox(40, 40, 10, App.Vector(-20, -20, 0)).cut(Part.makeCylinder(5, 10))
+        self._add_shape("Plate", plate)
+        self._add_shape("Pin", Part.makeCylinder(5, 10))
+
+        # Act
+        envelope = self._measure(objects=["Plate", "Pin"])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertFalse(record["boolean_failed"])
+        self.assertEqual(record["common_volume"]["value"], 0.0)
+
+    def test_Should_flag_a_failed_boolean_When_boxes_overlap_by_a_depth_that_leaves_common_empty(
+        self,
+    ):
+        # Arrange
+        depth = 1e-7
+        self._add_box("A", size=100.0)
+        self._add_box("B", 100.0 - depth, 0, 0, size=100.0)
+        common = self.document.A.Shape.copy().common(self.document.B.Shape.copy())
+        self.assertTrue(common.isNull() or not common.Volume, "the fixture needs an empty common")
 
         # Act
         envelope = self._measure(objects=["A", "B"])
@@ -610,6 +672,390 @@ class QueryInterferenceTest(unittest.TestCase):
         record = envelope["structured_content"]["pairs"][0]
         self.assertTrue(record["boolean_failed"])
         self.assertIsNone(record["common_volume"])
+
+    def test_Should_flag_a_failed_boolean_When_the_overlap_is_just_above_the_tolerance(self):
+        # Arrange
+        overlaps = {"boxes of 100 mm": (100.0, 1e-9), "boxes of 1000 mm": (1000.0, 1e-8)}
+        for label, (size, depth) in overlaps.items():
+            with self.subTest(case=label):
+                self.tearDown()
+                self.setUp()
+                self._add_box("A", size=size)
+                self._add_box("B", size - depth, 0, 0, size=size)
+                common = self.document.A.Shape.copy().common(self.document.B.Shape.copy())
+                self.assertTrue(
+                    common.isNull() or not common.Volume, "the fixture needs an empty common"
+                )
+
+                # Act
+                envelope = self._measure(objects=["A", "B"])
+
+                # Assert
+                record = envelope["structured_content"]["pairs"][0]
+                self.assertTrue(record["boolean_failed"])
+                self.assertIsNone(record["common_volume"])
+
+    def test_Should_flag_a_failed_boolean_When_the_fuse_volume_is_far_below_the_sum(
+        self,
+    ):
+        # Arrange
+        class Inner(_FakeSolid):
+            Volume = 8.0
+
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                return (0.0, [], [])
+
+            def fuse(self, other):
+                return Fused(valid=True, volume=27.0)
+
+        class Fused:
+            def __init__(self, valid, volume):
+                self.valid = valid
+                self.Volume = volume
+
+            def isValid(self):
+                return self.valid
+
+        class Outer(Inner):
+            Volume = 27.0
+
+        # Act
+        volume, distance, failed = queries._measure_interference(Inner(), Outer())
+
+        # Assert
+        self.assertEqual((volume, distance, failed), (None, 0.0, True))
+
+    def test_Should_flag_a_failed_boolean_When_the_fuse_is_not_a_valid_shape(self):
+        # Arrange
+        class Fused:
+            Volume = 2.0
+
+            @staticmethod
+            def isValid():
+                return False
+
+        class Shape(_FakeSolid):
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                return (0.0, [], [])
+
+            def fuse(self, other):
+                return Fused()
+
+        # Act
+        volume, distance, failed = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual((volume, distance, failed), (None, 0.0, True))
+
+    def test_Should_flag_a_failed_boolean_When_the_fuse_raises_or_has_no_finite_volume(self):
+        # Arrange
+        class RaisingFuse(_FakeSolid):
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                return (0.0, [], [])
+
+            def fuse(self, other):
+                raise RuntimeError("fuse failed")
+
+        class NanFused:
+            Volume = float("nan")
+
+            @staticmethod
+            def isValid():
+                return True
+
+        class NanFuse(RaisingFuse):
+            def fuse(self, other):
+                return NanFused()
+
+        for shape_type in (RaisingFuse, NanFuse):
+            with self.subTest(shape=shape_type.__name__):
+                # Act
+                result = queries._measure_interference(shape_type(), shape_type())
+
+                # Assert
+                self.assertEqual(result, (None, 0.0, True))
+
+    def test_Should_not_run_the_fuse_When_the_distance_is_unknown(self):
+        # Arrange
+        class Shape(_FakeSolid):
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                raise RuntimeError("distance failed")
+
+            def fuse(self, other):
+                fuse_calls.append(other)
+                raise RuntimeError("the fuse must not run without a distance")
+
+        fuse_calls = []
+
+        # Act
+        result = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual(result, (None, None, True))
+        self.assertEqual(fuse_calls, [])
+
+    def test_Should_report_zero_overlap_When_common_raises_and_a_valid_fuse_has_the_summed_volume(
+        self,
+    ):
+        # Arrange
+        class Fused:
+            Volume = 2.0
+
+            @staticmethod
+            def isValid():
+                return True
+
+        class Shape(_FakeSolid):
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                return (0.0, [], [])
+
+            def fuse(self, other):
+                return Fused()
+
+        # Act
+        result = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual(result, (0.0, 0.0, False))
+
+    def test_Should_flag_a_failed_boolean_When_one_sphere_lies_inside_another_and_common_is_empty(
+        self,
+    ):
+        # Arrange
+        margin = 1e-6
+        cases = {"radius 10": 10.0, "radius 100": 100.0}
+        for label, radius in cases.items():
+            with self.subTest(case=label):
+                self.tearDown()
+                self.setUp()
+                self._add_shape("Inner", Part.makeSphere(radius))
+                self._add_shape("Outer", Part.makeSphere(radius + margin, App.Vector(margin, 0, 0)))
+                common = self.document.Inner.Shape.copy().common(self.document.Outer.Shape.copy())
+                self.assertTrue(
+                    common.isNull() or not common.Volume, "the fixture needs an empty common"
+                )
+
+                # Act
+                envelope = self._measure(objects=["Inner", "Outer"])
+
+                # Assert
+                record = envelope["structured_content"]["pairs"][0]
+                self.assertTrue(record["boolean_failed"])
+                self.assertIsNone(record["common_volume"])
+
+    def test_Should_flag_a_failed_boolean_When_the_fuse_keeps_two_unmerged_solids_of_nested_spheres(
+        self,
+    ):
+        # Arrange
+        inner = Part.makeSphere(10.0)
+        outer = Part.makeSphere(10.0 + 1e-6, App.Vector(1e-6, 0, 0))
+        fused = inner.fuse(outer)
+        summed = inner.Volume + outer.Volume
+
+        # Act
+        proves_touching = queries._fuse_proves_touching(inner, outer)
+
+        # Assert
+        self.assertEqual(len(fused.Solids), 2)
+        self.assertAlmostEqual(fused.Volume, summed, places=6)
+        self.assertFalse(proves_touching)
+
+    def test_Should_flag_a_failed_boolean_When_the_fuse_volume_is_above_the_sum(self):
+        # Arrange
+        class Fused:
+            Volume = 1000.0 * (1.0 + 1e-9)
+
+            @staticmethod
+            def isValid():
+                return True
+
+        class Shape(_FakeSolid):
+            Volume = 500.0
+
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                return (0.0, [], [])
+
+            def fuse(self, other):
+                return Fused()
+
+        # Act
+        result = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual(result, (None, 0.0, True))
+
+    def test_Should_report_the_gap_When_disjoint_solids_lie_across_a_small_gap(self):
+        # Arrange
+        edge_offset = lambda gap: App.Vector(10 + gap, 10 + gap, 0)  # noqa: E731
+        cases = {
+            "face gap just above the contact distance": (
+                lambda gap: Part.makeBox(10, 10, 10),
+                lambda gap: Part.makeBox(10, 10, 10, App.Vector(10 + gap, 0, 0)),
+                1.5e-7,
+                1.5e-7,
+                None,
+            ),
+            "edge gap just above the contact distance": (
+                lambda gap: Part.makeBox(10, 10, 10),
+                lambda gap: Part.makeBox(10, 10, 10, edge_offset(gap)),
+                1.5e-7,
+                1.5e-7 * math.sqrt(2),
+                None,
+            ),
+            "sphere gap just above the contact distance": (
+                lambda gap: Part.makeSphere(5),
+                lambda gap: Part.makeSphere(5, App.Vector(10 + gap, 0, 0)),
+                2e-7,
+                2e-7,
+                None,
+            ),
+            "edge gap with a loose shape tolerance": (
+                lambda gap: Part.makeBox(10, 10, 10),
+                lambda gap: Part.makeBox(10, 10, 10, edge_offset(gap)),
+                1e-3,
+                1e-3 * math.sqrt(2),
+                1e-2,
+            ),
+        }
+        for label, (make_first, make_second, gap, expected, tolerance) in cases.items():
+            with self.subTest(case=label):
+                self.tearDown()
+                self.setUp()
+                first = make_first(gap)
+                second = make_second(gap)
+                if tolerance is not None:
+                    first.fixTolerance(tolerance)
+                    second.fixTolerance(tolerance)
+                self._add_shape("A", first)
+                self._add_shape("B", second)
+
+                # Act
+                envelope = self._measure(objects=["A", "B"])
+
+                # Assert
+                record = envelope["structured_content"]["pairs"][0]
+                self.assertFalse(record["boolean_failed"])
+                self.assertEqual(record["common_volume"]["value"], 0.0)
+                self.assertAlmostEqual(
+                    record["min_distance"]["value"], expected, delta=expected * 0.01
+                )
+
+    def test_Should_report_zero_overlap_When_a_sphere_touches_a_box_at_a_point(self):
+        # Arrange
+        self._add_box("A")
+        self._add_shape("Ball", Part.makeSphere(5, App.Vector(5, 5, 15)))
+
+        # Act
+        envelope = self._measure(objects=["A", "Ball"])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertFalse(record["boolean_failed"])
+        self.assertEqual(record["common_volume"]["value"], 0.0)
+
+    def test_Should_report_zero_overlap_When_the_overlap_is_below_the_stated_limit(self):
+        # Arrange
+        size = 100.0
+        depth = 2.4e-10
+        self._add_box("A", size=size)
+        self._add_box("B", size - depth, 0, 0, size=size)
+        common = self.document.A.Shape.copy().common(self.document.B.Shape.copy())
+        self.assertTrue(common.isNull() or not common.Volume, "the fixture needs an empty common")
+
+        # Act
+        envelope = self._measure(objects=["A", "B"])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertFalse(record["boolean_failed"])
+        self.assertEqual(record["common_volume"]["value"], 0.0)
+
+    def test_Should_flag_a_failed_boolean_When_the_overlap_is_above_the_stated_limit(self):
+        # Arrange
+        size = 100.0
+        depth = 4.5e-10
+        self._add_box("A", size=size)
+        self._add_box("B", size - depth, 0, 0, size=size)
+        common = self.document.A.Shape.copy().common(self.document.B.Shape.copy())
+        self.assertTrue(common.isNull() or not common.Volume, "the fixture needs an empty common")
+
+        # Act
+        envelope = self._measure(objects=["A", "B"])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertTrue(record["boolean_failed"])
+
+    def test_Should_accept_a_fuse_gap_inside_the_tolerance_and_refuse_one_above_it(self):
+        # Arrange
+        class Fused:
+            def __init__(self, volume):
+                self.Volume = volume
+
+            @staticmethod
+            def isValid():
+                return True
+
+        def shapes_fusing_to(volume):
+            class Shape(_FakeSolid):
+                Volume = 500.0
+
+                def common(self, other):
+                    raise RuntimeError("boolean failed")
+
+                def distToShape(self, other):
+                    return (0.0, [], [])
+
+                def fuse(self, other):
+                    return Fused(volume)
+
+            return Shape(), Shape()
+
+        tolerance = queries._TOUCH_VOLUME_REL_TOL
+        total = 1000.0
+        inside_tolerance = total - tolerance * total * 0.5
+        above_tolerance = total - tolerance * total * 2.0
+
+        # Act
+        inside = queries._measure_interference(*shapes_fusing_to(inside_tolerance))
+        above = queries._measure_interference(*shapes_fusing_to(above_tolerance))
+
+        # Assert
+        self.assertFalse(inside[2])
+        self.assertTrue(above[2])
+
+    def test_Should_leave_a_fresh_fingerprint_digest_equal_When_touching_pairs_are_measured(self):
+        # Arrange
+        self._add_box("A")
+        self._add_box("B", 10, 0, 0)
+        self._add_box("C", 10, 10, 10)
+        self.document.recompute()
+        before = fingerprint(self.document, fresh=True)["digest"]
+
+        # Act
+        envelope = self._measure(objects=["A", "B", "C"])
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual(fingerprint(self.document, fresh=True)["digest"], before)
 
     def test_Should_flag_a_failed_boolean_When_both_shapes_are_faces(
         self,
@@ -1901,6 +2347,319 @@ class QuerySectionTest(unittest.TestCase):
 
         # Assert
         self.assertEqual(text, "1 wire(s), 1 closed, length 60.0 mm, area 200.0 mm^2.")
+
+
+class QueryParametersTest(unittest.TestCase):
+    def setUp(self):
+        self.registry = DocumentRegistry()
+        self.handle = self.registry.document_create("query_parameters")["structured_content"]["doc"]
+        _, self.document = self.registry.with_document(self.handle, lambda h, d: (h, d))
+
+    def tearDown(self):
+        for name in list(App.listDocuments().keys()):
+            App.closeDocument(name)
+
+    def _varset(self):
+        varset = self.document.addObject("App::VarSet", "Params")
+        varset.addProperty("App::PropertyLength", "width", "Size", "overall width")
+        varset.width = App.Units.Quantity("12.5 mm")
+        varset.addProperty("App::PropertyAngle", "tilt", "Parameters")
+        varset.tilt = App.Units.Quantity("30 deg")
+        varset.addProperty("App::PropertyInteger", "count", "Parameters")
+        varset.count = 4
+        varset.addProperty("App::PropertyBool", "hollow", "Parameters")
+        varset.hollow = True
+        varset.addProperty("App::PropertyString", "note", "Parameters")
+        varset.note = "rev A"
+        return varset
+
+    def _sheet(self):
+        sheet = self.document.addObject("Spreadsheet::Sheet", "Sheet")
+        sheet.set("A1", "10 mm")
+        sheet.setAlias("A1", "plate")
+        sheet.set("A2", "=plate * 2")
+        sheet.set("B1", "3")
+        sheet.setAlias("B1", "holes")
+        sheet.set("C1", "hello")
+        sheet.setAlias("C1", "label")
+        sheet.set("D1", "=1/0")
+        sheet.setAlias("D1", "broken")
+        self.document.recompute()
+        return sheet
+
+    def _query(self):
+        return queries.query_parameters(self.registry, doc=self.handle)
+
+    def test_Should_list_every_varset_property_with_value_unit_group_and_description_When_read(
+        self,
+    ):
+        # Arrange
+        self._varset()
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK")
+        rows = {
+            row["name"]: row for row in envelope["structured_content"]["varsets"][0]["parameters"]
+        }
+        self.assertEqual(sorted(rows), ["count", "hollow", "note", "tilt", "width"])
+        self.assertEqual(
+            rows["width"],
+            {
+                "name": "width",
+                "type": "length",
+                "value": 12.5,
+                "unit": "mm",
+                "group": "Size",
+                "description": "overall width",
+            },
+        )
+        self.assertEqual((rows["tilt"]["value"], rows["tilt"]["unit"]), (30.0, "deg"))
+        self.assertEqual((rows["count"]["type"], rows["count"]["value"]), ("integer", 4))
+        self.assertEqual((rows["hollow"]["type"], rows["hollow"]["value"]), ("bool", True))
+        self.assertEqual((rows["note"]["type"], rows["note"]["value"]), ("string", "rev A"))
+        self.assertEqual(envelope["structured_content"]["varsets"][0]["object"], "Params")
+
+    def test_Should_list_only_aliased_cells_with_their_contents_When_a_sheet_exists(self):
+        # Arrange
+        self._sheet()
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        rows = {
+            row["name"]: row
+            for row in envelope["structured_content"]["spreadsheets"][0]["parameters"]
+        }
+        self.assertEqual(sorted(rows), ["broken", "holes", "label", "plate"])
+        self.assertEqual(
+            rows["plate"],
+            {"name": "plate", "cell": "A1", "contents": "=10 mm", "value": 10.0, "unit": "mm"},
+        )
+        self.assertEqual((rows["holes"]["value"], rows["holes"]["unit"]), (3, None))
+        self.assertEqual(rows["label"]["value"], "hello")
+
+    def test_Should_report_null_with_a_reason_When_a_cell_is_in_error(self):
+        # Arrange
+        self._sheet()
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        rows = {
+            row["name"]: row
+            for row in envelope["structured_content"]["spreadsheets"][0]["parameters"]
+        }
+        self.assertIsNone(rows["broken"]["value"])
+        self.assertTrue(rows["broken"]["reason"])
+        self.assertNotIn("reason", rows["plate"])
+
+    def test_Should_keep_a_text_cell_that_starts_with_err_When_it_is_not_a_formula(self):
+        # Arrange
+        sheet = self.document.addObject("Spreadsheet::Sheet", "Sheet")
+        sheet.set("A1", "'ERR: a label")
+        sheet.setAlias("A1", "label")
+        self.document.recompute()
+
+        # Act
+        row = self._query()["structured_content"]["spreadsheets"][0]["parameters"][0]
+
+        # Assert
+        self.assertEqual(row["value"], "ERR: a label")
+        self.assertNotIn("reason", row)
+
+    def test_Should_list_every_expression_binding_When_objects_are_bound(self):
+        # Arrange
+        self._varset()
+        self._sheet()
+        box = self.document.addObject("Part::Box", "Box")
+        box.setExpression("Length", "Params.width")
+        box.setExpression("Width", "Sheet.plate")
+        self.document.recompute()
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        self.assertEqual(
+            envelope["structured_content"]["bindings"],
+            [
+                {"object": "Box", "path": "Length", "expression": "Params.width"},
+                {"object": "Box", "path": "Width", "expression": "Sheet.plate"},
+            ],
+        )
+
+    def test_Should_report_null_with_a_reason_When_a_property_is_not_a_scalar(self):
+        # Arrange
+        varset = self.document.addObject("App::VarSet", "Params")
+        varset.addProperty("App::PropertyVector", "offset", "Parameters")
+        varset.addProperty("App::PropertyFloat", "huge", "Parameters")
+        varset.huge = float("inf")
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        rows = {
+            row["name"]: row for row in envelope["structured_content"]["varsets"][0]["parameters"]
+        }
+        self.assertIsNone(rows["offset"]["value"])
+        self.assertIn("Vector", rows["offset"]["reason"])
+        self.assertIsNone(rows["huge"]["value"])
+        self.assertIn("finite", rows["huge"]["reason"])
+
+    def test_Should_return_empty_lists_When_the_document_holds_no_parameters(self):
+        # Arrange
+        self.document.addObject("Part::Box", "Box")
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        content = envelope["structured_content"]
+        self.assertEqual(
+            (content["varsets"], content["spreadsheets"], content["bindings"]), ([], [], [])
+        )
+        self.assertFalse(content["truncated"])
+
+    def test_Should_cut_a_list_at_500_rows_and_say_so_When_a_varset_holds_more(self):
+        # Arrange
+        varset = self.document.addObject("App::VarSet", "Params")
+        for index in range(501):
+            varset.addProperty("App::PropertyInteger", f"p{index}", "Parameters")
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        content = envelope["structured_content"]
+        self.assertEqual(len(content["varsets"][0]["parameters"]), 500)
+        self.assertEqual(content["totals"]["varset_parameters"], 501)
+        self.assertTrue(content["truncated"])
+        self.assertIn("truncated", envelope["text"])
+
+    def test_Should_cut_the_spreadsheet_and_binding_lists_at_500_rows_When_a_document_holds_more(
+        self,
+    ):
+        # Arrange
+        sheet = self.document.addObject("Spreadsheet::Sheet", "Sheet")
+        holder = self.document.addObject("App::VarSet", "Holder")
+        for index in range(501):
+            sheet.set(f"A{index + 1}", str(index))
+            sheet.setAlias(f"A{index + 1}", f"cell{index}")
+            holder.addProperty("App::PropertyInteger", f"p{index}", "Parameters")
+            holder.setExpression(f"p{index}", str(index))
+
+        # Act
+        content = self._query()["structured_content"]
+
+        # Assert
+        self.assertEqual(len(content["spreadsheets"][0]["parameters"]), 500)
+        self.assertEqual(content["totals"]["spreadsheet_parameters"], 501)
+        self.assertEqual(len(content["bindings"]), 500)
+        self.assertEqual(content["totals"]["bindings"], 501)
+        self.assertTrue(content["truncated"])
+
+    def test_Should_list_a_sketch_constraint_binding_When_a_named_constraint_is_bound(self):
+        # Arrange
+        self._varset()
+        sketch = self.document.addObject("Sketcher::SketchObject", "Sketch")
+        sketch.addGeometry(Part.LineSegment(App.Vector(0, 0, 0), App.Vector(5, 0, 0)), False)
+        index = sketch.addConstraint(Sketcher.Constraint("DistanceX", 0, 1, 0, 2, 5.0))
+        sketch.renameConstraint(index, "span")
+        sketch.setExpression(".Constraints.span", "Params.width")
+        self.document.recompute()
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        self.assertEqual(
+            envelope["structured_content"]["bindings"],
+            [{"object": "Sketch", "path": ".Constraints.span", "expression": "Params.width"}],
+        )
+
+    def test_Should_read_a_dimensionless_quantity_as_its_number_When_the_unit_is_empty(self):
+        # Arrange
+        varset = self.document.addObject("App::VarSet", "Params")
+        varset.addProperty("App::PropertyQuantity", "ratio", "Parameters")
+        varset.ratio = 2.5
+
+        # Act
+        row = self._query()["structured_content"]["varsets"][0]["parameters"][0]
+
+        # Assert
+        self.assertEqual((row["value"], row["unit"]), (2.5, None))
+
+    def test_Should_leave_the_document_untouched_When_read(self):
+        # Arrange
+        self._varset()
+        self._sheet()
+        box = self.document.addObject("Part::Box", "Box")
+        box.setExpression("Length", "Params.width")
+        self.document.recompute()
+        box.Width = 3.0
+        states_before = {obj.Name: list(obj.State) for obj in self.document.Objects}
+        digest_before = fingerprint(self.document, fresh=True)["digest"]
+        undo_before = self.document.UndoCount
+
+        # Act
+        self._query()
+
+        # Assert
+        self.assertIn("Touched", states_before["Box"])
+        self.assertEqual(
+            {obj.Name: list(obj.State) for obj in self.document.Objects}, states_before
+        )
+        self.assertEqual(fingerprint(self.document, fresh=True)["digest"], digest_before)
+        self.assertEqual(self.document.UndoCount, undo_before)
+        self.assertEqual(box.Width.getValueAs("mm"), 3.0)
+
+    def test_Should_read_a_value_just_written_When_called_after_feature_parameters_define(self):
+        # Arrange
+        from freecad_buddy.usecases import confirm, features
+
+        posture = confirm.set_auto_approve(True)
+        self.addCleanup(confirm.set_auto_approve, posture)
+        features.feature_parameters_define(
+            self.registry,
+            doc=self.handle,
+            varset="Params",
+            parameters=[{"name": "width", "type": "length", "value": {"value": 7, "unit": "mm"}}],
+        )
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        row = envelope["structured_content"]["varsets"][0]["parameters"][0]
+        self.assertEqual(
+            (row["name"], row["type"], row["value"], row["unit"]), ("width", "length", 7.0, "mm")
+        )
+
+    def test_Should_raise_a_validation_error_When_the_document_is_unknown(self):
+        # Act
+        act = lambda: queries.query_parameters(self.registry, doc="nope")  # noqa: E731
+
+        # Assert
+        with self.assertRaises(ValidationError):
+            act()
+
+    def test_Should_summarize_the_totals_When_read(self):
+        # Arrange
+        self._varset()
+
+        # Act
+        text = self._query()["text"]
+
+        # Assert
+        self.assertEqual(
+            text, "5 VarSet parameter(s) in 1 VarSet(s), 0 spreadsheet parameter(s), 0 binding(s)."
+        )
 
 
 if __name__ == "__main__":

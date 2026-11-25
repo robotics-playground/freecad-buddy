@@ -1,0 +1,3225 @@
+{
+ "run": {
+  "git_commit": null,
+  "git_dirty": null,
+  "freecad_apprun": "/opt/freecad/AppRun",
+  "freecad_version": "1.1.4",
+  "addon": {
+   "path": "/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy",
+   "exists": true,
+   "linked": false,
+   "target": "/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/freecad_buddy"
+  },
+  "started": "2026-11-25T15:57:00+00:00",
+  "ended": "2026-11-25T15:57:39+00:00",
+  "groups": [
+   {
+    "launch": {},
+    "scenarios": [
+     "TC-02-06",
+     "TC-09-17",
+     "TC-09-18",
+     "TC-12-07"
+    ],
+    "error": null,
+    "freecad_pid": 1635,
+    "freecad_version": "1.1.4",
+    "addon": {
+     "path": "/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy",
+     "exists": true,
+     "linked": false,
+     "target": "/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/freecad_buddy"
+    }
+   }
+  ],
+  "errors": [],
+  "sample_seed": 408164812,
+  "sample_seed_source": "drawn"
+ },
+ "scenarios": [
+  {
+   "id": "TC-02-06",
+   "tc": "TC-02",
+   "title": "query_object returns properties and error state for a Pad",
+   "file": "/repo/tests/uat/scenarios/tc-02-06.json",
+   "launch": {},
+   "steps": [
+    {
+     "name": "create",
+     "mcp": "document_create",
+     "args": {
+      "label": "tc-02-06-pad"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+       "name": "tc_02_06_pad",
+       "label": "tc-02-06-pad"
+      },
+      "text": "doc: fcb-doc:C-fYLWlc2kmBhADRqY1V6A\nlabel: tc-02-06-pad\nname: tc_02_06_pad"
+     }
+    },
+    {
+     "name": "build",
+     "mcp": "script_exec",
+     "args": {
+      "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+      "code": "import Sketcher\nbody = doc.addObject('PartDesign::Body', 'Body')\nsketch = body.newObject('Sketcher::SketchObject', 'Sketch')\ncorners = [App.Vector(0, 0, 0), App.Vector(20, 0, 0), App.Vector(20, 10, 0), App.Vector(0, 10, 0)]\nfor i in range(4):\n    sketch.addGeometry(Part.LineSegment(corners[i], corners[(i + 1) % 4]))\nfor i in range(4):\n    sketch.addConstraint(Sketcher.Constraint('Coincident', i, 2, (i + 1) % 4, 1))\nsketch.addConstraint(Sketcher.Constraint('Horizontal', 0))\nsketch.addConstraint(Sketcher.Constraint('Horizontal', 2))\nsketch.addConstraint(Sketcher.Constraint('Vertical', 1))\nsketch.addConstraint(Sketcher.Constraint('Vertical', 3))\nsketch.addConstraint(Sketcher.Constraint('DistanceX', 0, 20))\nsketch.addConstraint(Sketcher.Constraint('DistanceY', 1, 10))\nsketch.addConstraint(Sketcher.Constraint('Coincident', 0, 1, -1, 1))\npad = body.newObject('PartDesign::Pad', 'Pad')\npad.Profile = sketch\npad.Length = 5\ndoc.recompute()\nresult = round(pad.Shape.Volume, 3)"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+       "stdout": "",
+       "value_repr": "1000.0",
+       "fingerprint_before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+       "fingerprint_after": "8eb06f6bcfa7b916fa985e9cbd539d509d19a328b13d04453b2e8232dcd7cbe7",
+       "changed": [
+        {
+         "name": "Body",
+         "volume": 1000.0,
+         "area": 700.0,
+         "com": [
+          10.0,
+          5.0,
+          2.5
+         ]
+        },
+        {
+         "name": "Pad",
+         "volume": 1000.0,
+         "area": 700.0,
+         "com": [
+          10.0,
+          5.0,
+          2.5
+         ]
+        },
+        {
+         "name": "Sketch",
+         "volume": 0.0,
+         "area": 0.0,
+         "com": [
+          10.0,
+          5.0,
+          0.0
+         ]
+        }
+       ],
+       "new_errors": [],
+       "undo_steps": 1
+      },
+      "text": "changed: [3 items]\ndoc: fcb-doc:C-fYLWlc2kmBhADRqY1V6A\nfingerprint_after: 8eb06f6bcfa7b916fa985e9cbd539d509d19a328b13d04453b2e8232dcd7cbe7\nfingerprint_before: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\nnew_errors: [0 items]\nstdout: \nundo_steps: 1\nvalue_repr: 1000.0\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "tree",
+     "mcp": "query_tree_summary",
+     "args": {
+      "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+      "depth": 3
+     },
+     "result": {
+      "text": "OK: 11 objects, 11 shown.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\nframing: does not fit, ratio 2.72, computed\nv [BODY] Body\n|-- - [ORIGIN] Origin\n|   |-- v [AXIS] X_Axis \"X-axis\"\n|   |-- v [AXIS] Y_Axis \"Y-axis\"\n|   |-- v [AXIS] Z_Axis \"Z-axis\"\n|   |-- v [PLANE] XY_Plane \"XY-plane\"\n|   |-- v [PLANE] XZ_Plane \"XZ-plane\"\n|   |-- v [PLANE] YZ_Plane \"YZ-plane\"\n|   `-- v [POINT] Origin001\n`-- v [PAD] Pad *tip\n    `-- v [SKETCH] Sketch",
+      "is_error": false
+     }
+    },
+    {
+     "name": "healthy",
+     "mcp": "query_object",
+     "args": {
+      "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+      "object": "Pad"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "name": "Pad",
+       "label": "Pad",
+       "type": "PartDesign::Pad",
+       "properties": {
+        "AddSubShape": "<Solid object at 0x5651e8a39710>",
+        "AllowMultiFace": true,
+        "AlongSketchNormal": true,
+        "BaseFeature": null,
+        "Direction": "Vector (0.0, 0.0, 1.0)",
+        "ExpressionEngine": [],
+        "FuzzyTolerance": -1.0,
+        "Label": "Pad",
+        "Label2": "",
+        "Length": "5.0 mm",
+        "Length2": "10.0 mm",
+        "Midplane": false,
+        "Offset": "0.0 mm",
+        "Offset2": "0.0 mm",
+        "Placement": "Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]",
+        "PreviewShape": "<Shape object at 0x5651e8a39710>",
+        "Profile": [
+         "<Sketcher::SketchObject>",
+         []
+        ],
+        "ReferenceAxis": null,
+        "Refine": true,
+        "Reversed": false,
+        "Shape": "<Solid object at 0x5651e8a39710>",
+        "ShapeMaterial": "<Material at 0x5651e906ae20>",
+        "SideType": "One side",
+        "Suppressed": false,
+        "SuppressedShape": "<Shape object at 0x5651e8a39710>",
+        "TaperAngle": "0.0 deg",
+        "TaperAngle2": "0.0 deg",
+        "Type": "Length",
+        "Type2": "Length",
+        "UpToFace": null,
+        "UpToFace2": null,
+        "UpToShape": [],
+        "UpToShape2": [],
+        "UseCustomVector": false,
+        "Visibility": true,
+        "_Body": "<body object>",
+        "_ElementMapVersion": "15.70200.5"
+       },
+       "error": null
+      },
+      "text": "error: None\nlabel: Pad\nname: Pad\nproperties: {37 fields}\ntype: PartDesign::Pad\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "cached",
+       "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+     }
+    },
+    {
+     "name": "typed_break",
+     "mcp": "feature_set_parameters",
+     "args": {
+      "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+      "feature": "Pad",
+      "parameters": {
+       "Length": {
+        "value": 0,
+        "unit": "mm"
+       }
+      }
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "RECOMPUTE_ERROR",
+      "detail": {
+       "code": "mutation.recompute_error",
+       "message": "recompute left 1 object(s) invalid: Pad: Cannot create a pad with a total length of zero."
+      },
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "8eb06f6bcfa7b916fa985e9cbd539d509d19a328b13d04453b2e8232dcd7cbe7",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "8eb06f6bcfa7b916fa985e9cbd539d509d19a328b13d04453b2e8232dcd7cbe7",
+         "serializer": "exportBinary"
+        },
+        "changed": [],
+        "post_verify": {
+         "recompute_clean": false,
+         "is_valid": false,
+         "fully_constrained": "not_measured",
+         "tnp_audit": {
+          "status": "FLAGGED",
+          "element_map_version": "15.70200.5",
+          "counts": {
+           "BROKEN": 1,
+           "PASS": 1
+          },
+          "findings": [
+           {
+            "owner": "Pad",
+            "prop": "Profile",
+            "mapped_before": null,
+            "state_after": "Cannot create a pad with a total length of zero.",
+            "verdict": "BROKEN",
+            "layer": 0,
+            "detail": "Pad is invalid after the mutation: Cannot create a pad with a total length of zero."
+           }
+          ]
+         },
+         "passed": false,
+         "explanation": "recompute left 1 object(s) invalid: Pad: Cannot create a pad with a total length of zero."
+        },
+        "rolled_back": true,
+        "rollback_proven": "rolled_back_verified",
+        "touched": [
+         "Pad",
+         "Body"
+        ]
+       },
+       "feature": "Pad",
+       "feature_state": {
+        "schema": "fcb.feature-state/1",
+        "feature": "Pad",
+        "readable": true,
+        "body": "Body",
+        "is_tip": true,
+        "shape_summary": {
+         "solid_count": 1,
+         "face_count": 6,
+         "edge_count": 12,
+         "vertex_count": 8,
+         "is_valid": true,
+         "volume": 1000.0,
+         "area": 700.0,
+         "bbox": [
+          20.0,
+          10.0,
+          5.0
+         ]
+        }
+       }
+      },
+      "text": "Mutation rolled back (rolled_back_verified): recompute left 1 object(s) invalid: Pad: Cannot create a pad with a total length of zero."
+     }
+    },
+    {
+     "name": "after_typed",
+     "mcp": "query_object",
+     "args": {
+      "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+      "object": "Pad"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "name": "Pad",
+       "label": "Pad",
+       "type": "PartDesign::Pad",
+       "properties": {
+        "AddSubShape": "<Solid object at 0x5651e7452020>",
+        "AllowMultiFace": true,
+        "AlongSketchNormal": true,
+        "BaseFeature": null,
+        "Direction": "Vector (0.0, 0.0, 1.0)",
+        "ExpressionEngine": [],
+        "FuzzyTolerance": -1.0,
+        "Label": "Pad",
+        "Label2": "",
+        "Length": "5.0 mm",
+        "Length2": "10.0 mm",
+        "Midplane": false,
+        "Offset": "0.0 mm",
+        "Offset2": "0.0 mm",
+        "Placement": "Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]",
+        "PreviewShape": "<Shape object at 0x5651e7452020>",
+        "Profile": [
+         "<Sketcher::SketchObject>",
+         []
+        ],
+        "ReferenceAxis": null,
+        "Refine": true,
+        "Reversed": false,
+        "Shape": "<Solid object at 0x5651e7452020>",
+        "ShapeMaterial": "<Material at 0x5651e7fdd0b0>",
+        "SideType": "One side",
+        "Suppressed": false,
+        "SuppressedShape": "<Shape object at 0x5651e7452020>",
+        "TaperAngle": "0.0 deg",
+        "TaperAngle2": "0.0 deg",
+        "Type": "Length",
+        "Type2": "Length",
+        "UpToFace": null,
+        "UpToFace2": null,
+        "UpToShape": [],
+        "UpToShape2": [],
+        "UseCustomVector": false,
+        "Visibility": true,
+        "_Body": "<body object>",
+        "_ElementMapVersion": "15.70200.5"
+       },
+       "error": null
+      },
+      "text": "error: None\nlabel: Pad\nname: Pad\nproperties: {37 fields}\ntype: PartDesign::Pad\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "cached",
+       "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+     }
+    },
+    {
+     "name": "exec_break",
+     "mcp": "script_exec",
+     "args": {
+      "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+      "recompute": false,
+      "code": "doc.getObject('Pad').Length = 0"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+       "stdout": "",
+       "value_repr": null,
+       "fingerprint_before": "8eb06f6bcfa7b916fa985e9cbd539d509d19a328b13d04453b2e8232dcd7cbe7",
+       "fingerprint_after": "8eb06f6bcfa7b916fa985e9cbd539d509d19a328b13d04453b2e8232dcd7cbe7",
+       "changed": [],
+       "new_errors": [],
+       "undo_steps": 1
+      },
+      "text": "changed: [0 items]\ndoc: fcb-doc:C-fYLWlc2kmBhADRqY1V6A\nfingerprint_after: 8eb06f6bcfa7b916fa985e9cbd539d509d19a328b13d04453b2e8232dcd7cbe7\nfingerprint_before: 8eb06f6bcfa7b916fa985e9cbd539d509d19a328b13d04453b2e8232dcd7cbe7\nnew_errors: [0 items]\nstdout: \nundo_steps: 1\nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "recompute_broken",
+     "mcp": "document_recompute",
+     "args": {
+      "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "RECOMPUTE_ERROR",
+      "detail": {
+       "code": "recompute.failed_objects",
+       "message": "Pad: ['Touched', 'Invalid']",
+       "objects": [
+        "Pad"
+       ]
+      },
+      "structured_content": {
+       "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+       "name": "tc_02_06_pad",
+       "touched": 1,
+       "errors": [
+        {
+         "name": "Pad",
+         "error": [
+          "Touched",
+          "Invalid"
+         ]
+        }
+       ]
+      },
+      "text": "Recompute tc_02_06_pad: 1 error(s): Pad."
+     }
+    },
+    {
+     "name": "broken",
+     "mcp": "query_object",
+     "args": {
+      "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+      "object": "Pad"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "name": "Pad",
+       "label": "Pad",
+       "type": "PartDesign::Pad",
+       "properties": {
+        "AddSubShape": "<Solid object at 0x5651e74256e0>",
+        "AllowMultiFace": true,
+        "AlongSketchNormal": true,
+        "BaseFeature": null,
+        "Direction": "Vector (0.0, 0.0, 1.0)",
+        "ExpressionEngine": [],
+        "FuzzyTolerance": -1.0,
+        "Label": "Pad",
+        "Label2": "",
+        "Length": "0.0 mm",
+        "Length2": "10.0 mm",
+        "Midplane": false,
+        "Offset": "0.0 mm",
+        "Offset2": "0.0 mm",
+        "Placement": "Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]",
+        "PreviewShape": "<Shape object at 0x5651e74256e0>",
+        "Profile": [
+         "<Sketcher::SketchObject>",
+         []
+        ],
+        "ReferenceAxis": null,
+        "Refine": true,
+        "Reversed": false,
+        "Shape": "<Solid object at 0x5651e74256e0>",
+        "ShapeMaterial": "<Material at 0x5651e7fdd0b0>",
+        "SideType": "One side",
+        "Suppressed": false,
+        "SuppressedShape": "<Shape object at 0x5651e74256e0>",
+        "TaperAngle": "0.0 deg",
+        "TaperAngle2": "0.0 deg",
+        "Type": "Length",
+        "Type2": "Length",
+        "UpToFace": null,
+        "UpToFace2": null,
+        "UpToShape": [],
+        "UpToShape2": [],
+        "UseCustomVector": false,
+        "Visibility": true,
+        "_Body": "<body object>",
+        "_ElementMapVersion": "15.70200.5"
+       },
+       "error": "Cannot create a pad with a total length of zero."
+      },
+      "text": "error: Cannot create a pad with a total length of zero.\nlabel: Pad\nname: Pad\nproperties: {37 fields}\ntype: PartDesign::Pad\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "unknown",
+     "mcp": "query_object",
+     "args": {
+      "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+      "object": "NoSuchPad"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown object: NoSuchPad",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 171, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1970, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1025, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 573, in query_object\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 432, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 559, in read\n    obj = _resolve_object(document, object)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 203, in _resolve_object\n    raise ValidationError(f\"unknown object: {name}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown object: NoSuchPad\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "restore",
+     "mcp": "script_exec",
+     "args": {
+      "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+      "code": "doc.getObject('Pad').Length = '5.0 mm'"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+       "stdout": "",
+       "value_repr": null,
+       "fingerprint_before": "8eb06f6bcfa7b916fa985e9cbd539d509d19a328b13d04453b2e8232dcd7cbe7",
+       "fingerprint_after": "8eb06f6bcfa7b916fa985e9cbd539d509d19a328b13d04453b2e8232dcd7cbe7",
+       "changed": [],
+       "new_errors": [],
+       "undo_steps": 1
+      },
+      "text": "changed: [0 items]\ndoc: fcb-doc:C-fYLWlc2kmBhADRqY1V6A\nfingerprint_after: 8eb06f6bcfa7b916fa985e9cbd539d509d19a328b13d04453b2e8232dcd7cbe7\nfingerprint_before: 8eb06f6bcfa7b916fa985e9cbd539d509d19a328b13d04453b2e8232dcd7cbe7\nnew_errors: [0 items]\nstdout: \nundo_steps: 1\nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "recompute_restored",
+     "mcp": "document_recompute",
+     "args": {
+      "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A",
+       "name": "tc_02_06_pad",
+       "touched": 0,
+       "errors": []
+      },
+      "text": "Recompute tc_02_06_pad: clean, 0 object(s) touched.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "fit",
+     "mcp": "view_fit_viewport",
+     "args": {
+      "doc": "fcb-doc:C-fYLWlc2kmBhADRqY1V6A"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "fitted": true,
+       "document": "tc_02_06_pad",
+       "camera_recorded": true
+      },
+      "text": "fitted the live viewport to 'tc_02_06_pad'",
+      "framing": {
+       "fits": true,
+       "ratio": 0.95,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    }
+   ],
+   "findings": [],
+   "disagreements": [],
+   "errors": [],
+   "capture": "/repo/tests/uat/run/13-13-r1/runner/captures/TC-02-06.png",
+   "agent_check": "The script does not check these Thens; check each one in the gate run: Given: healthy state captured before the break (tc-02-06-before.png) (GUI action).",
+   "probe_snapshot": {
+    "freecad_version": "1.1.4",
+    "active_document": "tc_02_06_pad",
+    "documents": [
+     {
+      "modified": true,
+      "name": "tc_02_06_pad",
+      "label": "tc-02-06-pad",
+      "objects": [
+       {
+        "name": "Body",
+        "type": "PartDesign::Body",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 999.9999999999998,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          20.0,
+          10.0,
+          5.0
+         ]
+        },
+        "screen_center": [
+         932,
+         563
+        ]
+       },
+       {
+        "name": "Origin",
+        "type": "App::Origin",
+        "visibility": false,
+        "shape": null,
+        "screen_center": null
+       },
+       {
+        "name": "X_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100,
+          0.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         468,
+         563
+        ]
+       },
+       {
+        "name": "Y_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100,
+          0.0
+         ]
+        },
+        "screen_center": [
+         468,
+         563
+        ]
+       },
+       {
+        "name": "Z_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         468,
+         563
+        ]
+       },
+       {
+        "name": "XY_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          -1e+100,
+          0.0,
+          1e+100,
+          1e+100,
+          0.0
+         ]
+        },
+        "screen_center": [
+         468,
+         563
+        ]
+       },
+       {
+        "name": "XZ_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          0.0,
+          -1e+100,
+          1e+100,
+          0.0,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         468,
+         563
+        ]
+       },
+       {
+        "name": "YZ_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          -1e+100,
+          -1e+100,
+          0.0,
+          1e+100,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         468,
+         563
+        ]
+       },
+       {
+        "name": "Origin001",
+        "type": "App::Point",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         468,
+         563
+        ]
+       },
+       {
+        "name": "Sketch",
+        "type": "Sketcher::SketchObject",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          20.0,
+          10.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         932,
+         652
+        ]
+       },
+       {
+        "name": "Pad",
+        "type": "PartDesign::Pad",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 999.9999999999998,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          20.0,
+          10.0,
+          5.0
+         ]
+        },
+        "screen_center": [
+         932,
+         563
+        ]
+       }
+      ]
+     }
+    ],
+    "view": {
+     "camera": "#Inventor V2.1 ascii\n\n\nOrthographicCamera {\n  viewportMapping ADJUST_CAMERA\n  position 16.618935 -1.5973697 9.126833\n  orientation 0.74290609 0.30772209 0.59447283  1.2171158\n  nearDistance 1.3514552\n  farDistance 21.581633\n  aspectRatio 1\n  focalDistance 11.456439\n  height 17.184658\n\n}\n",
+     "size": [
+      1334,
+      752
+     ],
+     "visible_size": [
+      1334,
+      752
+     ],
+     "clipped": false,
+     "rect": [
+      266,
+      187,
+      1334,
+      752
+     ]
+    }
+   },
+   "golden": null,
+   "pixel": {
+    "view_box": [
+     260,
+     133,
+     1568,
+     870
+    ],
+    "samples": {
+     "tc_02_06_pad.Pad": {
+      "point": [
+       913,
+       501
+      ],
+      "rgb": [
+       159,
+       165,
+       170
+      ],
+      "geometry": true
+     }
+    },
+    "extent": {
+     "box": [
+      460,
+      157,
+      1372,
+      853
+     ],
+     "fraction": 0.9443690637720489,
+     "touches_edge": false
+    }
+   },
+   "verdict": "ESCALATE",
+   "reasons": [
+    "agent check: The script does not check these Thens; check each one in the gate run: Given: healthy state captured before the break (tc-02-06-before.png) (GUI action)."
+   ],
+   "review": "escalate"
+  },
+  {
+   "id": "TC-09-17",
+   "tc": "TC-09",
+   "title": "A broken recompute returns RECOMPUTE_ERROR, not a false OK",
+   "file": "/repo/tests/uat/scenarios/tc-09-17.json",
+   "launch": {},
+   "steps": [
+    {
+     "name": "create",
+     "mcp": "document_create",
+     "args": {
+      "label": "TC0917Broken"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:IxAwoc19L7nqu4Afr1XW8A",
+       "name": "TC0917Broken",
+       "label": "TC0917Broken"
+      },
+      "text": "doc: fcb-doc:IxAwoc19L7nqu4Afr1XW8A\nlabel: TC0917Broken\nname: TC0917Broken"
+     }
+    },
+    {
+     "name": "build",
+     "mcp": "script_exec",
+     "args": {
+      "doc": "fcb-doc:IxAwoc19L7nqu4Afr1XW8A",
+      "code": "import Part\nimport Sketcher\nbody = doc.addObject('PartDesign::Body', 'Body')\nsketch = body.newObject('Sketcher::SketchObject', 'Sketch')\nsketch.AttachmentSupport = [(doc.getObject('XY_Plane') or body.Origin.OriginFeatures[3], '')]\nsketch.MapMode = 'FlatFace'\npoints = [App.Vector(0, 0, 0), App.Vector(20, 0, 0), App.Vector(20, 20, 0), App.Vector(0, 20, 0)]\nfor i in range(4):\n    sketch.addGeometry(Part.LineSegment(points[i], points[(i + 1) % 4]))\nfor i in range(4):\n    sketch.addConstraint(Sketcher.Constraint('Coincident', i, 2, (i + 1) % 4, 1))\npad = body.newObject('PartDesign::Pad', 'Pad')\npad.Profile = sketch\npad.Length = 10\ndoc.recompute()\nclean_volume = pad.Shape.Volume\nsketch.deleteAllGeometry()\ndoc.recompute()\nresult = [clean_volume, pad.State, pad.getStatusString()]"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "RECOMPUTE_ERROR",
+      "detail": {
+       "code": "recompute.failed_objects",
+       "message": "the script left invalid objects: Pad",
+       "data": {
+        "objects": [
+         "Pad"
+        ]
+       }
+      },
+      "structured_content": {
+       "doc": "fcb-doc:IxAwoc19L7nqu4Afr1XW8A",
+       "stdout": "",
+       "value_repr": "[3999.999999999999, ['Touched', 'Invalid'], 'Linked shape object is empty']",
+       "fingerprint_before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+       "fingerprint_after": "d369297a61ca93abb26fbdff6d016439e08b59b739a06038d8b117e21bc68e21",
+       "changed": [
+        {
+         "name": "Body",
+         "volume": 4000.0,
+         "area": 1600.0,
+         "com": [
+          10.0,
+          10.0,
+          5.0
+         ]
+        },
+        {
+         "name": "Pad",
+         "volume": 4000.0,
+         "area": 1600.0,
+         "com": [
+          10.0,
+          10.0,
+          5.0
+         ]
+        },
+        {
+         "name": "Sketch",
+         "volume": 0.0,
+         "area": 0.0,
+         "com": [
+          0.0,
+          0.0,
+          0.0
+         ]
+        }
+       ],
+       "new_errors": [
+        "Pad"
+       ],
+       "undo_steps": 1
+      },
+      "text": "changed: [3 items]\ndoc: fcb-doc:IxAwoc19L7nqu4Afr1XW8A\nfingerprint_after: d369297a61ca93abb26fbdff6d016439e08b59b739a06038d8b117e21bc68e21\nfingerprint_before: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\nnew_errors: [1 items]\nstdout: \nundo_steps: 1\nvalue_repr: [3999.999999999999, ['Touched', 'Invalid'], 'Linked shape object is empty']\nnew invalid objects: Pad"
+     }
+    },
+    {
+     "name": "grade",
+     "mcp": "verify_recompute",
+     "args": {
+      "doc": "fcb-doc:IxAwoc19L7nqu4Afr1XW8A"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "RECOMPUTE_ERROR",
+      "detail": {
+       "code": "RECOMPUTE_ERROR",
+       "message": "recompute.object; recompute.object",
+       "objects": []
+      },
+      "structured_content": {
+       "subject": {
+        "failing_objects": [
+         "Body",
+         "Pad"
+        ]
+       },
+       "checks": [
+        {
+         "id": "recompute.object",
+         "measured": "Touched",
+         "expected": null,
+         "passed": false,
+         "detail": {
+          "code": "recompute.error",
+          "message": "Body: Touched",
+          "objects": [
+           "Body"
+          ]
+         }
+        },
+        {
+         "id": "recompute.object",
+         "measured": "Linked shape object is empty",
+         "expected": null,
+         "passed": false,
+         "detail": {
+          "code": "recompute.error",
+          "message": "Pad: Linked shape object is empty",
+          "objects": [
+           "Pad"
+          ]
+         }
+        }
+       ],
+       "schema": "fcb.validation-report/1",
+       "banner": {
+        "freecad_version": "1.1.4",
+        "element_map_version": 15
+       },
+       "verdict": "RECOMPUTE_ERROR"
+      },
+      "text": "Recompute: 2 error(s): Body, Pad."
+     }
+    },
+    {
+     "name": "grade_again",
+     "mcp": "verify_recompute",
+     "args": {
+      "doc": "fcb-doc:IxAwoc19L7nqu4Afr1XW8A"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "RECOMPUTE_ERROR",
+      "detail": {
+       "code": "RECOMPUTE_ERROR",
+       "message": "recompute.object; recompute.object",
+       "objects": []
+      },
+      "structured_content": {
+       "subject": {
+        "failing_objects": [
+         "Body",
+         "Pad"
+        ]
+       },
+       "checks": [
+        {
+         "id": "recompute.object",
+         "measured": "Touched",
+         "expected": null,
+         "passed": false,
+         "detail": {
+          "code": "recompute.error",
+          "message": "Body: Touched",
+          "objects": [
+           "Body"
+          ]
+         }
+        },
+        {
+         "id": "recompute.object",
+         "measured": "Linked shape object is empty",
+         "expected": null,
+         "passed": false,
+         "detail": {
+          "code": "recompute.error",
+          "message": "Pad: Linked shape object is empty",
+          "objects": [
+           "Pad"
+          ]
+         }
+        }
+       ],
+       "schema": "fcb.validation-report/1",
+       "banner": {
+        "freecad_version": "1.1.4",
+        "element_map_version": 15
+       },
+       "verdict": "RECOMPUTE_ERROR"
+      },
+      "text": "Recompute: 2 error(s): Body, Pad."
+     }
+    },
+    {
+     "name": "clean_open",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:LracAzXst8xmKItaGGLgOg",
+       "name": "box_10_20_30",
+       "label": "box-10-20-30",
+       "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      },
+      "text": "Opened box-10-20-30 -> fcb-doc:LracAzXst8xmKItaGGLgOg."
+     }
+    },
+    {
+     "name": "clean",
+     "mcp": "verify_recompute",
+     "args": {
+      "doc": "fcb-doc:LracAzXst8xmKItaGGLgOg"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "subject": {
+        "failing_objects": []
+       },
+       "checks": [
+        {
+         "id": "recompute.clean",
+         "measured": 0,
+         "expected": 0,
+         "passed": true,
+         "detail": {
+          "message": "no object left in an error state"
+         }
+        }
+       ],
+       "schema": "fcb.validation-report/1",
+       "banner": {
+        "freecad_version": "1.1.4",
+        "element_map_version": 15
+       },
+       "verdict": "OK"
+      },
+      "text": "Recompute clean: no errors.",
+      "framing": {
+       "fits": null,
+       "ratio": null,
+       "checked": "unavailable",
+       "stale_reason": "no visible shape-bearing objects to measure"
+      }
+     }
+    },
+    {
+     "name": "clean_close",
+     "mcp": "document_close",
+     "args": {
+      "doc": "fcb-doc:LracAzXst8xmKItaGGLgOg"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:LracAzXst8xmKItaGGLgOg",
+       "name": "box_10_20_30",
+       "closed": true
+      },
+      "text": "Closed box_10_20_30 (doc=fcb-doc:LracAzXst8xmKItaGGLgOg)."
+     }
+    },
+    {
+     "name": "fit",
+     "mcp": "view_fit_viewport",
+     "args": {
+      "doc": "fcb-doc:IxAwoc19L7nqu4Afr1XW8A"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "fitted": true,
+       "document": "TC0917Broken",
+       "camera_recorded": true
+      },
+      "text": "fitted the live viewport to 'TC0917Broken'",
+      "framing": {
+       "fits": true,
+       "ratio": 0.95,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    }
+   ],
+   "findings": [],
+   "disagreements": [],
+   "errors": [],
+   "capture": "/repo/tests/uat/run/13-13-r1/runner/captures/TC-09-17.png",
+   "agent_check": "Read the capture: the FreeCAD tree marks the failing object (Pad) with an error icon, and the 3D view still shows the last valid 20 x 20 x 10 block (FreeCAD keeps it on a failed recompute). If the fit step did not return OK (the test case expects the MCP fit may refuse a faulted document), the capture is unframed: click the GUI Fit All toolbar button, capture the window and judge that. A tree with no error marker on Pad is a finding. The script does not check these Thens; check each one in the gate run: at least one check recompute.object with passed false (checked at checks.0 only) (comparison op); _RECOMPUTE_ERROR_STATES in usecases/verify.py includes Touched (encoded as measured equals Touched) (file check).",
+   "probe_snapshot": {
+    "freecad_version": "1.1.4",
+    "active_document": "TC0917Broken",
+    "documents": [
+     {
+      "modified": true,
+      "name": "TC0917Broken",
+      "label": "TC0917Broken",
+      "objects": [
+       {
+        "name": "Body",
+        "type": "PartDesign::Body",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 3999.999999999999,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          20.0,
+          20.0,
+          10.0
+         ]
+        },
+        "screen_center": [
+         932,
+         563
+        ]
+       },
+       {
+        "name": "Origin",
+        "type": "App::Origin",
+        "visibility": false,
+        "shape": null,
+        "screen_center": null
+       },
+       {
+        "name": "X_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100,
+          0.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         520,
+         682
+        ]
+       },
+       {
+        "name": "Y_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100,
+          0.0
+         ]
+        },
+        "screen_center": [
+         520,
+         682
+        ]
+       },
+       {
+        "name": "Z_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         520,
+         682
+        ]
+       },
+       {
+        "name": "XY_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          -1e+100,
+          0.0,
+          1e+100,
+          1e+100,
+          0.0
+         ]
+        },
+        "screen_center": [
+         520,
+         682
+        ]
+       },
+       {
+        "name": "XZ_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          0.0,
+          -1e+100,
+          1e+100,
+          0.0,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         520,
+         682
+        ]
+       },
+       {
+        "name": "YZ_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          -1e+100,
+          -1e+100,
+          0.0,
+          1e+100,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         520,
+         682
+        ]
+       },
+       {
+        "name": "Origin001",
+        "type": "App::Point",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         520,
+         682
+        ]
+       },
+       {
+        "name": "Sketch",
+        "type": "Sketcher::SketchObject",
+        "visibility": true,
+        "shape": null,
+        "screen_center": null
+       },
+       {
+        "name": "Pad",
+        "type": "PartDesign::Pad",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 3999.999999999999,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          20.0,
+          20.0,
+          10.0
+         ]
+        },
+        "screen_center": [
+         932,
+         563
+        ]
+       }
+      ]
+     }
+    ],
+    "view": {
+     "camera": "#Inventor V2.1 ascii\n\n\nOrthographicCamera {\n  viewportMapping ADJUST_CAMERA\n  position 18.666218 1.3620167 13.676562\n  orientation 0.74290609 0.30772209 0.59447283  1.2171158\n  nearDistance 0.56567788\n  farDistance 29.463196\n  aspectRatio 1\n  focalDistance 15\n  height 25.771276\n\n}\n",
+     "size": [
+      1334,
+      752
+     ],
+     "visible_size": [
+      1334,
+      752
+     ],
+     "clipped": false,
+     "rect": [
+      266,
+      187,
+      1334,
+      752
+     ]
+    }
+   },
+   "golden": null,
+   "pixel": {
+    "view_box": [
+     260,
+     133,
+     1568,
+     870
+    ],
+    "samples": {
+     "TC0917Broken.Pad": {
+      "point": [
+       913,
+       501
+      ],
+      "rgb": [
+       159,
+       165,
+       170
+      ],
+      "geometry": true
+     }
+    },
+    "extent": {
+     "box": [
+      508,
+      149,
+      1316,
+      853
+     ],
+     "fraction": 0.9552238805970149,
+     "touches_edge": false
+    }
+   },
+   "verdict": "ESCALATE",
+   "reasons": [
+    "agent check: Read the capture: the FreeCAD tree marks the failing object (Pad) with an error icon, and the 3D view still shows the last valid 20 x 20 x 10 block (FreeCAD keeps it on a failed recompute). If the fit step did not return OK (the test case expects the MCP fit may refuse a faulted document), the capture is unframed: click the GUI Fit All toolbar button, capture the window and judge that. A tree with no error marker on Pad is a finding. The script does not check these Thens; check each one in the gate run: at least one check recompute.object with passed false (checked at checks.0 only) (comparison op); _RECOMPUTE_ERROR_STATES in usecases/verify.py includes Touched (encoded as measured equals Touched) (file check)."
+   ],
+   "review": "escalate"
+  },
+  {
+   "id": "TC-09-18",
+   "tc": "TC-09",
+   "title": "A broken reference surfaces the failing object and its status string",
+   "file": "/repo/tests/uat/scenarios/tc-09-18.json",
+   "launch": {},
+   "steps": [
+    {
+     "name": "create",
+     "mcp": "document_create",
+     "args": {
+      "label": "TC0918Broken"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:oMiwdRtY1fArD-2onZcI2A",
+       "name": "TC0918Broken",
+       "label": "TC0918Broken"
+      },
+      "text": "doc: fcb-doc:oMiwdRtY1fArD-2onZcI2A\nlabel: TC0918Broken\nname: TC0918Broken"
+     }
+    },
+    {
+     "name": "build",
+     "mcp": "script_exec",
+     "args": {
+      "doc": "fcb-doc:oMiwdRtY1fArD-2onZcI2A",
+      "code": "import Part\nimport Sketcher\nbody = doc.addObject('PartDesign::Body', 'Body')\nsketch = body.newObject('Sketcher::SketchObject', 'Sketch')\nsketch.AttachmentSupport = [(doc.getObject('XY_Plane') or body.Origin.OriginFeatures[3], '')]\nsketch.MapMode = 'FlatFace'\npoints = [App.Vector(0, 0, 0), App.Vector(20, 0, 0), App.Vector(20, 20, 0), App.Vector(0, 20, 0)]\nfor i in range(4):\n    sketch.addGeometry(Part.LineSegment(points[i], points[(i + 1) % 4]))\nfor i in range(4):\n    sketch.addConstraint(Sketcher.Constraint('Coincident', i, 2, (i + 1) % 4, 1))\npad = body.newObject('PartDesign::Pad', 'Pad')\npad.Profile = sketch\npad.Length = 10\ndoc.recompute()\nclean_volume = pad.Shape.Volume\nbody.removeObject(sketch)\ndoc.removeObject('Sketch')\ndoc.recompute()\nresult = [clean_volume, pad.State, pad.getStatusString(), pad.Profile]"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "RECOMPUTE_ERROR",
+      "detail": {
+       "code": "recompute.failed_objects",
+       "message": "the script left invalid objects: Pad",
+       "data": {
+        "objects": [
+         "Pad"
+        ]
+       }
+      },
+      "structured_content": {
+       "doc": "fcb-doc:oMiwdRtY1fArD-2onZcI2A",
+       "stdout": "",
+       "value_repr": "[3999.999999999999, ['Touched', 'Invalid'], 'No object linked', None]",
+       "fingerprint_before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+       "fingerprint_after": "8f5ad32859ef013003429d74048232167485f9ae6822e90352016ab2c11a6505",
+       "changed": [
+        {
+         "name": "Body",
+         "volume": 4000.0,
+         "area": 1600.0,
+         "com": [
+          10.0,
+          10.0,
+          5.0
+         ]
+        },
+        {
+         "name": "Pad",
+         "volume": 4000.0,
+         "area": 1600.0,
+         "com": [
+          10.0,
+          10.0,
+          5.0
+         ]
+        }
+       ],
+       "new_errors": [
+        "Pad"
+       ],
+       "undo_steps": 1
+      },
+      "text": "changed: [2 items]\ndoc: fcb-doc:oMiwdRtY1fArD-2onZcI2A\nfingerprint_after: 8f5ad32859ef013003429d74048232167485f9ae6822e90352016ab2c11a6505\nfingerprint_before: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\nnew_errors: [1 items]\nstdout: \nundo_steps: 1\nvalue_repr: [3999.999999999999, ['Touched', 'Invalid'], 'No object linked', None]\nnew invalid objects: Pad"
+     }
+    },
+    {
+     "name": "grade",
+     "mcp": "verify_recompute",
+     "args": {
+      "doc": "fcb-doc:oMiwdRtY1fArD-2onZcI2A"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "RECOMPUTE_ERROR",
+      "detail": {
+       "code": "RECOMPUTE_ERROR",
+       "message": "recompute.object; recompute.object",
+       "objects": []
+      },
+      "structured_content": {
+       "subject": {
+        "failing_objects": [
+         "Body",
+         "Pad"
+        ]
+       },
+       "checks": [
+        {
+         "id": "recompute.object",
+         "measured": "Touched",
+         "expected": null,
+         "passed": false,
+         "detail": {
+          "code": "recompute.error",
+          "message": "Body: Touched",
+          "objects": [
+           "Body"
+          ]
+         }
+        },
+        {
+         "id": "recompute.object",
+         "measured": "No object linked",
+         "expected": null,
+         "passed": false,
+         "detail": {
+          "code": "recompute.error",
+          "message": "Pad: No object linked",
+          "objects": [
+           "Pad"
+          ]
+         }
+        }
+       ],
+       "schema": "fcb.validation-report/1",
+       "banner": {
+        "freecad_version": "1.1.4",
+        "element_map_version": 15
+       },
+       "verdict": "RECOMPUTE_ERROR"
+      },
+      "text": "Recompute: 2 error(s): Body, Pad."
+     }
+    },
+    {
+     "name": "deps",
+     "mcp": "query_dependencies",
+     "args": {
+      "doc": "fcb-doc:oMiwdRtY1fArD-2onZcI2A"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "edges": [
+        {
+         "from": "Body",
+         "to": "Pad"
+        },
+        {
+         "from": "Body",
+         "to": "Origin"
+        },
+        {
+         "from": "Origin",
+         "to": "X_Axis"
+        },
+        {
+         "from": "Origin",
+         "to": "Y_Axis"
+        },
+        {
+         "from": "Origin",
+         "to": "Z_Axis"
+        },
+        {
+         "from": "Origin",
+         "to": "XY_Plane"
+        },
+        {
+         "from": "Origin",
+         "to": "XZ_Plane"
+        },
+        {
+         "from": "Origin",
+         "to": "YZ_Plane"
+        },
+        {
+         "from": "Origin",
+         "to": "Origin001"
+        }
+       ],
+       "total_edges": 9,
+       "returned_edges": 9,
+       "truncated": false
+      },
+      "text": "9 dependency edge(s).\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "pad_deps",
+     "mcp": "query_dependencies",
+     "args": {
+      "doc": "fcb-doc:oMiwdRtY1fArD-2onZcI2A",
+      "object": "Pad"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "object": "Pad",
+       "in_list": [
+        "Body"
+       ],
+       "out_list": []
+      },
+      "text": "Pad: 1 upstream, 0 downstream.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "cached",
+       "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+     }
+    },
+    {
+     "name": "freecad_status",
+     "mcp": "script_exec",
+     "args": {
+      "doc": "fcb-doc:oMiwdRtY1fArD-2onZcI2A",
+      "code": "print(doc.getObject('Pad').getStatusString(), end='')"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:oMiwdRtY1fArD-2onZcI2A",
+       "stdout": "No object linked",
+       "value_repr": null,
+       "fingerprint_before": "8f5ad32859ef013003429d74048232167485f9ae6822e90352016ab2c11a6505",
+       "fingerprint_after": "8f5ad32859ef013003429d74048232167485f9ae6822e90352016ab2c11a6505",
+       "changed": [],
+       "new_errors": [],
+       "undo_steps": 1
+      },
+      "text": "changed: [0 items]\ndoc: fcb-doc:oMiwdRtY1fArD-2onZcI2A\nfingerprint_after: 8f5ad32859ef013003429d74048232167485f9ae6822e90352016ab2c11a6505\nfingerprint_before: 8f5ad32859ef013003429d74048232167485f9ae6822e90352016ab2c11a6505\nnew_errors: [0 items]\nstdout: No object linked\nundo_steps: 1\nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "fit",
+     "mcp": "view_fit_viewport",
+     "args": {
+      "doc": "fcb-doc:oMiwdRtY1fArD-2onZcI2A"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "fitted": true,
+       "document": "TC0918Broken",
+       "camera_recorded": true
+      },
+      "text": "fitted the live viewport to 'TC0918Broken'",
+      "framing": {
+       "fits": true,
+       "ratio": 0.95,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    }
+   ],
+   "findings": [],
+   "disagreements": [],
+   "errors": [],
+   "capture": "/repo/tests/uat/run/13-13-r1/runner/captures/TC-09-18.png",
+   "agent_check": "Read the capture: the object named in subject.failing_objects (Pad) has an error icon in the tree and its Sketch is gone from the tree; the 3D view still shows the last valid 20 x 20 x 10 block (FreeCAD keeps it on a failed recompute). If the fit step did not return OK (the test case expects the MCP fit may refuse a faulted document), the capture is unframed: click the GUI Fit All toolbar button, capture the window and judge that. A tree with no error marker on Pad is a finding. The script does not check these Thens; check each one in the gate run: Pad's recompute.object check picked by index checks.1 (comparison op).",
+   "probe_snapshot": {
+    "freecad_version": "1.1.4",
+    "active_document": "TC0918Broken",
+    "documents": [
+     {
+      "modified": true,
+      "name": "TC0918Broken",
+      "label": "TC0918Broken",
+      "objects": [
+       {
+        "name": "Body",
+        "type": "PartDesign::Body",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 3999.999999999999,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          20.0,
+          20.0,
+          10.0
+         ]
+        },
+        "screen_center": [
+         932,
+         563
+        ]
+       },
+       {
+        "name": "Origin",
+        "type": "App::Origin",
+        "visibility": false,
+        "shape": null,
+        "screen_center": null
+       },
+       {
+        "name": "X_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100,
+          0.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         520,
+         682
+        ]
+       },
+       {
+        "name": "Y_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100,
+          0.0
+         ]
+        },
+        "screen_center": [
+         520,
+         682
+        ]
+       },
+       {
+        "name": "Z_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         520,
+         682
+        ]
+       },
+       {
+        "name": "XY_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          -1e+100,
+          0.0,
+          1e+100,
+          1e+100,
+          0.0
+         ]
+        },
+        "screen_center": [
+         520,
+         682
+        ]
+       },
+       {
+        "name": "XZ_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          0.0,
+          -1e+100,
+          1e+100,
+          0.0,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         520,
+         682
+        ]
+       },
+       {
+        "name": "YZ_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          -1e+100,
+          -1e+100,
+          0.0,
+          1e+100,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         520,
+         682
+        ]
+       },
+       {
+        "name": "Origin001",
+        "type": "App::Point",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         520,
+         682
+        ]
+       },
+       {
+        "name": "Pad",
+        "type": "PartDesign::Pad",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 3999.999999999999,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          20.0,
+          20.0,
+          10.0
+         ]
+        },
+        "screen_center": [
+         932,
+         563
+        ]
+       }
+      ]
+     }
+    ],
+    "view": {
+     "camera": "#Inventor V2.1 ascii\n\n\nOrthographicCamera {\n  viewportMapping ADJUST_CAMERA\n  position 18.666218 1.3620167 13.676562\n  orientation 0.74290609 0.30772209 0.59447283  1.2171158\n  nearDistance 0.56567788\n  farDistance 29.463196\n  aspectRatio 1\n  focalDistance 15\n  height 25.771276\n\n}\n",
+     "size": [
+      1334,
+      752
+     ],
+     "visible_size": [
+      1334,
+      752
+     ],
+     "clipped": false,
+     "rect": [
+      266,
+      187,
+      1334,
+      752
+     ]
+    }
+   },
+   "golden": null,
+   "pixel": {
+    "view_box": [
+     260,
+     133,
+     1568,
+     870
+    ],
+    "samples": {
+     "TC0918Broken.Pad": {
+      "point": [
+       913,
+       501
+      ],
+      "rgb": [
+       159,
+       165,
+       170
+      ],
+      "geometry": true
+     }
+    },
+    "extent": {
+     "box": [
+      508,
+      149,
+      1316,
+      853
+     ],
+     "fraction": 0.9552238805970149,
+     "touches_edge": false
+    }
+   },
+   "verdict": "ESCALATE",
+   "reasons": [
+    "agent check: Read the capture: the object named in subject.failing_objects (Pad) has an error icon in the tree and its Sketch is gone from the tree; the 3D view still shows the last valid 20 x 20 x 10 block (FreeCAD keeps it on a failed recompute). If the fit step did not return OK (the test case expects the MCP fit may refuse a faulted document), the capture is unframed: click the GUI Fit All toolbar button, capture the window and judge that. A tree with no error marker on Pad is a finding. The script does not check these Thens; check each one in the gate run: Pad's recompute.object check picked by index checks.1 (comparison op)."
+   ],
+   "review": "escalate"
+  },
+  {
+   "id": "TC-12-07",
+   "tc": "TC-12",
+   "title": "A GUI-side recompute agrees with the bridge",
+   "file": "/repo/tests/uat/scenarios/tc-12-07.json",
+   "launch": {},
+   "steps": [
+    {
+     "name": "create",
+     "mcp": "document_create",
+     "args": {
+      "label": "TC1207"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A",
+       "name": "TC1207",
+       "label": "TC1207"
+      },
+      "text": "doc: fcb-doc:o0KWCTmzEAlmkXKuryci7A\nlabel: TC1207\nname: TC1207"
+     }
+    },
+    {
+     "name": "body",
+     "mcp": "feature_body_create",
+     "args": {
+      "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A",
+      "name": "Body"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "Body",
+          "volume": 0.0,
+          "area": 0.0,
+          "com": [
+           0.0,
+           0.0,
+           0.0
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": null,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {},
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "Body"
+        ]
+       },
+       "feature": "Body",
+       "feature_state": {
+        "schema": "fcb.feature-state/1",
+        "feature": "Body",
+        "readable": false
+       }
+      },
+      "text": "Mutation committed; fingerprint 283569b3f782.",
+      "framing": {
+       "fits": null,
+       "ratio": null,
+       "checked": "unavailable",
+       "stale_reason": "no visible shape-bearing objects to measure"
+      }
+     }
+    },
+    {
+     "name": "sketch",
+     "mcp": "sketch_create",
+     "args": {
+      "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A",
+      "name": "Sketch",
+      "plane": "XY",
+      "body": "Body"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "Sketch",
+          "volume": 0.0,
+          "area": 0.0,
+          "com": [
+           0.0,
+           0.0,
+           0.0
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {},
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "Sketch"
+        ]
+       },
+       "sketch": "Sketch",
+       "sketch_state": {
+        "schema": "fcb.sketch-state/1",
+        "sketch": "Sketch",
+        "readable": true,
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 0,
+        "constraint_count": 0,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       }
+      },
+      "text": "Mutation committed; fingerprint 3f7a8ffb0fe0.",
+      "framing": {
+       "fits": null,
+       "ratio": null,
+       "checked": "unavailable",
+       "stale_reason": "no visible shape-bearing objects to measure"
+      }
+     }
+    },
+    {
+     "name": "rect",
+     "mcp": "sketch_add_geometry",
+     "args": {
+      "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A",
+      "sketch": "Sketch",
+      "geometry": [
+       {
+        "kind": "line_segment",
+        "start": [
+         0,
+         0
+        ],
+        "end": [
+         20,
+         0
+        ]
+       },
+       {
+        "kind": "line_segment",
+        "start": [
+         20,
+         0
+        ],
+        "end": [
+         20,
+         10
+        ]
+       },
+       {
+        "kind": "line_segment",
+        "start": [
+         20,
+         10
+        ],
+        "end": [
+         0,
+         10
+        ]
+       },
+       {
+        "kind": "line_segment",
+        "start": [
+         0,
+         10
+        ],
+        "end": [
+         0,
+         0
+        ]
+       }
+      ],
+      "constraints": [
+       {
+        "type": "Coincident",
+        "first": 0,
+        "first_pos": 2,
+        "second": 1,
+        "second_pos": 1
+       },
+       {
+        "type": "Coincident",
+        "first": 1,
+        "first_pos": 2,
+        "second": 2,
+        "second_pos": 1
+       },
+       {
+        "type": "Coincident",
+        "first": 2,
+        "first_pos": 2,
+        "second": 3,
+        "second_pos": 1
+       },
+       {
+        "type": "Coincident",
+        "first": 3,
+        "first_pos": 2,
+        "second": 0,
+        "second_pos": 1
+       },
+       {
+        "type": "Horizontal",
+        "first": 0
+       },
+       {
+        "type": "Horizontal",
+        "first": 2
+       },
+       {
+        "type": "Vertical",
+        "first": 1
+       },
+       {
+        "type": "Vertical",
+        "first": 3
+       },
+       {
+        "type": "Coincident",
+        "first": 0,
+        "first_pos": 1,
+        "second": -1,
+        "second_pos": 1
+       },
+       {
+        "type": "DistanceX",
+        "first": 0,
+        "first_pos": 1,
+        "second": 0,
+        "second_pos": 2,
+        "value": {
+         "value": 20,
+         "unit": "mm"
+        }
+       },
+       {
+        "type": "DistanceY",
+        "first": 1,
+        "first_pos": 1,
+        "second": 1,
+        "second_pos": 2,
+        "value": {
+         "value": 10,
+         "unit": "mm"
+        }
+       }
+      ]
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "0605c302dc8fe04891863b2e6b99d6a2a151968b085d112ca196e8e1589dbf98",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "Sketch",
+          "volume": 0.0,
+          "area": 0.0,
+          "com": [
+           10.0,
+           5.0,
+           0.0
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {},
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "Sketch"
+        ]
+       },
+       "sketch": "Sketch",
+       "sketch_state": {
+        "schema": "fcb.sketch-state/1",
+        "sketch": "Sketch",
+        "readable": true,
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 4,
+        "constraint_count": 11,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       },
+       "geo_ids": [
+        0,
+        1,
+        2,
+        3
+       ],
+       "constraint_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+       ]
+      },
+      "text": "Mutation committed; fingerprint 0605c302dc8f.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "pad",
+     "mcp": "feature_pad",
+     "args": {
+      "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A",
+      "body": "Body",
+      "profile": "Sketch",
+      "name": "Pad",
+      "length": {
+       "value": 5,
+       "unit": "mm"
+      }
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "0605c302dc8fe04891863b2e6b99d6a2a151968b085d112ca196e8e1589dbf98",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "1589f809660ec056598321ab90d7fa450baa2cf397ffafa0534c7b55dfa76c56",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "Body",
+          "volume": 1000.0,
+          "area": 700.0,
+          "com": [
+           10.0,
+           5.0,
+           2.5
+          ]
+         },
+         {
+          "name": "Pad",
+          "volume": 1000.0,
+          "area": 700.0,
+          "com": [
+           10.0,
+           5.0,
+           2.5
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {},
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "Pad",
+         "Body"
+        ]
+       },
+       "feature": "Pad",
+       "feature_state": {
+        "schema": "fcb.feature-state/1",
+        "feature": "Pad",
+        "readable": true,
+        "body": "Body",
+        "is_tip": true,
+        "shape_summary": {
+         "solid_count": 1,
+         "face_count": 6,
+         "edge_count": 12,
+         "vertex_count": 8,
+         "is_valid": true,
+         "volume": 1000.0,
+         "area": 700.0,
+         "bbox": [
+          20.0,
+          10.0,
+          5.0
+         ]
+        }
+       }
+      },
+      "text": "Mutation committed; fingerprint 1589f809660e.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "mass_given",
+     "mcp": "query_mass_properties",
+     "args": {
+      "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A",
+      "object": "Pad"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "name": "Pad",
+       "solid": true,
+       "volume": {
+        "value": 1000.0,
+        "unit": "mm^3"
+       },
+       "area": {
+        "value": 700.0,
+        "unit": "mm^2"
+       },
+       "bbox": {
+        "xmin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "xmax": {
+         "value": 20.0,
+         "unit": "mm"
+        },
+        "ymin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "ymax": {
+         "value": 10.0,
+         "unit": "mm"
+        },
+        "zmin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "zmax": {
+         "value": 5.0,
+         "unit": "mm"
+        }
+       },
+       "com": {
+        "x": {
+         "value": 10.0,
+         "unit": "mm"
+        },
+        "y": {
+         "value": 5.0,
+         "unit": "mm"
+        },
+        "z": {
+         "value": 2.5,
+         "unit": "mm"
+        }
+       },
+       "counts": {
+        "faces": 6,
+        "edges": 12,
+        "vertices": 8,
+        "solids": 1
+       },
+       "is_valid": true
+      },
+      "text": "Pad: volume 1000.0 mm^3 (solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "clean",
+     "mcp": "verify_recompute",
+     "args": {
+      "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "subject": {
+        "failing_objects": []
+       },
+       "checks": [
+        {
+         "id": "recompute.clean",
+         "measured": 0,
+         "expected": 0,
+         "passed": true,
+         "detail": {
+          "message": "no object left in an error state"
+         }
+        }
+       ],
+       "schema": "fcb.validation-report/1",
+       "banner": {
+        "freecad_version": "1.1.4",
+        "element_map_version": 15
+       },
+       "verdict": "OK"
+      },
+      "text": "Recompute clean: no errors.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "cached",
+       "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+     }
+    },
+    {
+     "name": "touch",
+     "mcp": "script_exec",
+     "args": {
+      "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A",
+      "recompute": false,
+      "code": "doc.getObject('Pad').Length = 8\nresult = doc.getObject('Pad').State"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A",
+       "stdout": "",
+       "value_repr": "['Touched']",
+       "fingerprint_before": "1589f809660ec056598321ab90d7fa450baa2cf397ffafa0534c7b55dfa76c56",
+       "fingerprint_after": "1589f809660ec056598321ab90d7fa450baa2cf397ffafa0534c7b55dfa76c56",
+       "changed": [],
+       "new_errors": [],
+       "undo_steps": 1
+      },
+      "text": "changed: [0 items]\ndoc: fcb-doc:o0KWCTmzEAlmkXKuryci7A\nfingerprint_after: 1589f809660ec056598321ab90d7fa450baa2cf397ffafa0534c7b55dfa76c56\nfingerprint_before: 1589f809660ec056598321ab90d7fa450baa2cf397ffafa0534c7b55dfa76c56\nnew_errors: [0 items]\nstdout: \nundo_steps: 1\nvalue_repr: ['Touched']\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "shot",
+     "mcp": "query_screenshot",
+     "args": {
+      "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "render": {
+        "available": true,
+        "resource_link": "/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_1635_8275c82b/FCB_TMP_shot_94bu72ev.png",
+        "reason": null,
+        "dirty_document": true,
+        "empty_scene": false
+       },
+       "scene": {
+        "rendered_objects": [
+         "Sketch",
+         "Pad"
+        ],
+        "focused_on": null
+       }
+      },
+      "text": "Rendered 2 objects. Document dirty (pending/broken recompute).\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "images": [
+       {
+        "kind": "resource_link",
+        "uri": "/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_1635_8275c82b/FCB_TMP_shot_94bu72ev.png",
+        "mime_type": "image/png",
+        "audience": [
+         "user"
+        ]
+       }
+      ],
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "menu": [
+      "Edit",
+      "Recompute"
+     ],
+     "attempts": 1,
+     "attempt_log": []
+    },
+    {
+     "name": "gui_recomputed",
+     "mcp": "script_exec",
+     "args": {
+      "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A",
+      "code": "result = 'Touched' in doc.getObject('Pad').State"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A",
+       "stdout": "",
+       "value_repr": "False",
+       "fingerprint_before": "9520499d3ab6f468501b9bd1ebffa6301c4802435b9e9ab6db156cf12592926e",
+       "fingerprint_after": "9520499d3ab6f468501b9bd1ebffa6301c4802435b9e9ab6db156cf12592926e",
+       "changed": [],
+       "new_errors": [],
+       "undo_steps": 0
+      },
+      "text": "changed: [0 items]\ndoc: fcb-doc:o0KWCTmzEAlmkXKuryci7A\nfingerprint_after: 9520499d3ab6f468501b9bd1ebffa6301c4802435b9e9ab6db156cf12592926e\nfingerprint_before: 9520499d3ab6f468501b9bd1ebffa6301c4802435b9e9ab6db156cf12592926e\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: False\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "verify",
+     "mcp": "verify_recompute",
+     "args": {
+      "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "subject": {
+        "failing_objects": []
+       },
+       "checks": [
+        {
+         "id": "recompute.clean",
+         "measured": 0,
+         "expected": 0,
+         "passed": true,
+         "detail": {
+          "message": "no object left in an error state"
+         }
+        }
+       ],
+       "schema": "fcb.validation-report/1",
+       "banner": {
+        "freecad_version": "1.1.4",
+        "element_map_version": 15
+       },
+       "verdict": "OK"
+      },
+      "text": "Recompute clean: no errors.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "recompute",
+     "mcp": "document_recompute",
+     "args": {
+      "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A",
+       "name": "TC1207",
+       "touched": 0,
+       "errors": []
+      },
+      "text": "Recompute TC1207: clean, 0 object(s) touched.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "cached",
+       "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+     }
+    },
+    {
+     "name": "mass",
+     "mcp": "query_mass_properties",
+     "args": {
+      "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A",
+      "object": "Pad"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "name": "Pad",
+       "solid": true,
+       "volume": {
+        "value": 1600.0,
+        "unit": "mm^3"
+       },
+       "area": {
+        "value": 880.0,
+        "unit": "mm^2"
+       },
+       "bbox": {
+        "xmin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "xmax": {
+         "value": 20.0,
+         "unit": "mm"
+        },
+        "ymin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "ymax": {
+         "value": 10.0,
+         "unit": "mm"
+        },
+        "zmin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "zmax": {
+         "value": 8.0,
+         "unit": "mm"
+        }
+       },
+       "com": {
+        "x": {
+         "value": 10.0,
+         "unit": "mm"
+        },
+        "y": {
+         "value": 5.0,
+         "unit": "mm"
+        },
+        "z": {
+         "value": 4.0,
+         "unit": "mm"
+        }
+       },
+       "counts": {
+        "faces": 6,
+        "edges": 12,
+        "vertices": 8,
+        "solids": 1
+       },
+       "is_valid": true
+      },
+      "text": "Pad: volume 1600.0 mm^3 (solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 2.72,
+       "checked": "cached",
+       "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+     }
+    },
+    {
+     "name": "fit",
+     "mcp": "view_fit_viewport",
+     "args": {
+      "doc": "fcb-doc:o0KWCTmzEAlmkXKuryci7A"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "fitted": true,
+       "document": "TC1207",
+       "camera_recorded": true
+      },
+      "text": "fitted the live viewport to 'TC1207'",
+      "framing": {
+       "fits": true,
+       "ratio": 0.95,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    }
+   ],
+   "findings": [],
+   "disagreements": [],
+   "errors": [],
+   "capture": "/repo/tests/uat/run/13-13-r1/runner/captures/TC-12-07.png",
+   "agent_check": "The runner takes no capture between steps: the clean-state Given (toolbar Recompute button disabled) and the dirty-state Then (tc-12-07-props.png: old 5 mm pad still drawn, touched marker on the Pad row where Body is expanded, Recompute button enabled) are not captured; the Edit > Recompute step succeeding is the only scripted sign the command was enabled. Re-run those two GUI reads by hand, then judge the capture: no touched or error marker on any tree row, Recompute button disabled again, a solid visibly taller than the 5 mm plate (20 x 10 x 8). The script does not check these Thens; check each one in the gate run: Given: toolbar Recompute button reads disabled (GUI action); GUI dirty state: Recompute enabled and the touched marker in the tree (GUI action).",
+   "probe_snapshot": {
+    "freecad_version": "1.1.4",
+    "active_document": "TC1207",
+    "documents": [
+     {
+      "modified": true,
+      "name": "TC1207",
+      "label": "TC1207",
+      "objects": [
+       {
+        "name": "Body",
+        "type": "PartDesign::Body",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 1599.9999999999995,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          20.0,
+          10.0,
+          8.0
+         ]
+        },
+        "screen_center": [
+         932,
+         563
+        ]
+       },
+       {
+        "name": "Origin",
+        "type": "App::Origin",
+        "visibility": false,
+        "shape": null,
+        "screen_center": null
+       },
+       {
+        "name": "X_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100,
+          0.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         529,
+         609
+        ]
+       },
+       {
+        "name": "Y_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100,
+          0.0
+         ]
+        },
+        "screen_center": [
+         529,
+         609
+        ]
+       },
+       {
+        "name": "Z_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         529,
+         609
+        ]
+       },
+       {
+        "name": "XY_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          -1e+100,
+          0.0,
+          1e+100,
+          1e+100,
+          0.0
+         ]
+        },
+        "screen_center": [
+         529,
+         609
+        ]
+       },
+       {
+        "name": "XZ_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          0.0,
+          -1e+100,
+          1e+100,
+          0.0,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         529,
+         609
+        ]
+       },
+       {
+        "name": "YZ_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          -1e+100,
+          -1e+100,
+          0.0,
+          1e+100,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         529,
+         609
+        ]
+       },
+       {
+        "name": "Origin001",
+        "type": "App::Point",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         529,
+         609
+        ]
+       },
+       {
+        "name": "Sketch",
+        "type": "Sketcher::SketchObject",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          20.0,
+          10.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         932,
+         687
+        ]
+       },
+       {
+        "name": "Pad",
+        "type": "PartDesign::Pad",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 1599.9999999999995,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          20.0,
+          10.0,
+          8.0
+         ]
+        },
+        "screen_center": [
+         932,
+         563
+        ]
+       }
+      ]
+     }
+    ],
+    "view": {
+     "camera": "#Inventor V2.1 ascii\n\n\nOrthographicCamera {\n  viewportMapping ADJUST_CAMERA\n  position 16.860376 -1.8380251 10.868564\n  orientation 0.74290609 0.30772209 0.59447283  1.2171158\n  nearDistance 0.90378129\n  farDistance 22.866846\n  aspectRatio 1\n  focalDistance 11.874342\n  height 19.769516\n\n}\n",
+     "size": [
+      1334,
+      752
+     ],
+     "visible_size": [
+      1334,
+      752
+     ],
+     "clipped": false,
+     "rect": [
+      266,
+      187,
+      1334,
+      752
+     ]
+    }
+   },
+   "golden": null,
+   "pixel": {
+    "view_box": [
+     260,
+     133,
+     1568,
+     870
+    ],
+    "samples": {
+     "TC1207.Pad": {
+      "point": [
+       913,
+       501
+      ],
+      "rgb": [
+       159,
+       165,
+       170
+      ],
+      "geometry": true
+     }
+    },
+    "extent": {
+     "box": [
+      516,
+      157,
+      1308,
+      853
+     ],
+     "fraction": 0.9443690637720489,
+     "touches_edge": false
+    }
+   },
+   "verdict": "ESCALATE",
+   "reasons": [
+    "agent check: The runner takes no capture between steps: the clean-state Given (toolbar Recompute button disabled) and the dirty-state Then (tc-12-07-props.png: old 5 mm pad still drawn, touched marker on the Pad row where Body is expanded, Recompute button enabled) are not captured; the Edit > Recompute step succeeding is the only scripted sign the command was enabled. Re-run those two GUI reads by hand, then judge the capture: no touched or error marker on any tree row, Recompute button disabled again, a solid visibly taller than the 5 mm plate (20 x 10 x 8). The script does not check these Thens; check each one in the gate run: Given: toolbar Recompute button reads disabled (GUI action); GUI dirty state: Recompute enabled and the touched marker in the tree (GUI action)."
+   ],
+   "review": "escalate"
+  }
+ ]
+}

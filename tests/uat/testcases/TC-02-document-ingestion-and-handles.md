@@ -264,9 +264,9 @@ mcp query_object { doc: <handle>, object: "Pad" }
 mcp feature_set_parameters { doc: <handle>, feature: "Pad", parameters: { Length: { value: 0, unit: "mm" } } }
 mcp query_object { doc: <handle>, object: "Pad" }
 ```
-**And** the Pad is broken outside the bracket with `script_exec`, so FreeCAD marks it invalid, then recomputed and read again. `script_exec` opens no transaction, so `document_undo` cannot revert it (see Cleanup)  
+**And** the Pad is broken outside the typed-tool bracket with `script_exec` and `recompute:false`, so the later `document_recompute` finds the error. Without `recompute:false` the `script_exec` bracket recomputes and itself returns `RECOMPUTE_ERROR`  
 ```
-mcp script_exec { doc: <handle>, code: "doc.getObject('Pad').Length = 0" }
+mcp script_exec { doc: <handle>, recompute: false, code: "doc.getObject('Pad').Length = 0" }
 mcp document_recompute { doc: <handle> }
 mcp query_object { doc: <handle>, object: "Pad" }
 ```
@@ -283,7 +283,7 @@ mcp query_object { doc: <handle>, object: "Pad" }
 **And** *(visual)* after the restore in Cleanup, the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* look at the window and say what is on screen: a padded solid restored to the same extent it had in the before image, not a collapsed zero-length one; no error marker or exclamation icon on the `Pad` tree item; no error dialog — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-02-06-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and judge them. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image; a clean restore envelope over a collapsed solid on screen is the defect this closer catches.  
 
-**Cleanup**: restore the recorded `Length` so later scenarios see a healthy document. `document_undo` does not revert a `script_exec` change, so restore it the same way.
+**Cleanup**: restore the recorded `Length` so later scenarios see a healthy document. Restore it with `script_exec`, which recomputes the Pad in its bracket.
 ```
 mcp script_exec { doc: <handle>, code: "doc.getObject('Pad').Length = <recorded Length>" }
 mcp document_recompute { doc: <handle> }
@@ -625,7 +625,7 @@ mcp query_screenshot { doc: "fcb-doc:not-a-real-handle" }
 mcp query_tree_summary { doc: 12345 }
 ```
 
-**Then** every read-only tool refuses — verify: each of the five envelope tools among the six read-only calls (`query_object`, `query_mass_properties`, `query_dependencies`, `query_placement`, `query_sketch_info`) returns `status: "INVALID_INPUT"` with message `unknown or stale document handle: fcb-doc:not-a-real-handle`; `query_tree_summary` is a text-only tool, so its refusal is the one text line `INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle` (`mcp-tools-design.md:60`)  
+**Then** every read-only tool refuses — verify: each of the five envelope tools among the six read-only calls (`query_object`, `query_mass_properties`, `query_dependencies`, `query_placement`, `query_sketch_info`) returns `status: "INVALID_INPUT"` with message `unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles`; `query_tree_summary` is a text-only tool, so its refusal is the one text line `INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles` (`mcp-tools-design.md:60`)  
 **And** every lifecycle tool refuses — verify: each of the six lifecycle calls returns the same `INVALID_INPUT` message  
 **And** the refusal is an envelope, not a protocol error — verify: each of the eleven envelope-tool responses (five read-only, six lifecycle) carries `schema` `fcb.result-envelope/1` and `detail.code` `INVALID_INPUT`, because a well-typed but unknown handle passes the JSON Schema and fails at resolution. The `query_tree_summary` refusal is the exception by design: the tool declares no `outputSchema` and its result is one plain `TextContent` with no `structuredContent` (`mcp-tools-design.md:60`), so read its text line and expect no `schema` or `detail` field; it is still a tool error (`isError`), not a protocol rejection  
 **And** nothing crashes — verify: after all twelve calls, `mcp query_capabilities {}` still returns `status: "OK"` and `docker exec -u cua fcb-desktop grep -iE "access violation|segfault|swig" "$FCB_USER_DIR/freecad-buddy/addon.log"` returns nothing  
@@ -661,7 +661,7 @@ mcp query_tree_summary { doc: <handle> }
 ```
 
 **Then** the first close succeeds — verify: `status: "OK"` with `closed: true` and `name` `sphere_r10` (FreeCAD's internal `Name` replaces the `-` of the file stem with `_`)  
-**And** the second close is refused — verify: `status: "INVALID_INPUT"` with message `unknown or stale document handle: <handle>`  
+**And** the second close is refused — verify: `status: "INVALID_INPUT"` with message `unknown or stale document handle: <handle>; call document_list for the current handles`  
 **And** the refusal names the handle that failed — verify: the message contains the exact handle string passed in, so a caller can identify which of several handles is stale  
 **And** a query through the released handle is refused the same way — verify: the `query_tree_summary` returns the same `INVALID_INPUT` message  
 **And** no document was closed twice in FreeCAD — verify: `mcp document_list {}` returns `0 open document(s).` and the FreeCAD window shows no orphan MDI child  

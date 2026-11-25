@@ -1,0 +1,21 @@
+== ruff check .
+All checks passed!
+exit=0
+== python scripts/check_imports.py
+check_imports OK
+exit=0
+== python scripts/gen_schemas.py --check
+gen_schemas --check OK
+exit=0
+== python scripts/check_provenance.py
+check_provenance OK
+exit=0
+== python scripts/check_status_vocab.py
+check_status_vocab OK
+exit=0
+== python scripts/check_skill_shape.py
+exit=0
+== format check changed
+Would reformat: tests\external\test_feature_contract.py
+Would reformat: tests\infc\test_feature_tools.py
+2 files would be reformatted, 4 files already formatted

@@ -219,7 +219,7 @@ dist/addon/
 | FreeCAD GUI process | `Mod/FreeCADBuddy/freecad_buddy/` on `sys.path` | stdlib + FreeCAD API; Qt in hosts/marshal/render_probe only | `scripts/check_imports.py` (AD-1/12) |
 | Headless inline (`serve --mode inline`) | external install; process itself does `import FreeCAD` | pyproject deps + FreeCAD module | conda env provides FreeCAD (§4.2) |
 
-Import discipline making this safe: `adapters/__init__.py` and `hosts/__init__.py` are empty; every module imports its own deps at module top; in-FreeCAD code paths (`rpc_listener`, `marshal`, `gui_addon`, all of `usecases/`+`contracts/`) never import an `[ext-only]` module. `check_imports.py` asserts, per AST walk: `contracts/` = stdlib only; `usecases/` = stdlib + {FreeCAD, Part, Sketcher, PartDesign, Mesh, MeshPart} via shim; `rpc_listener.py` = stdlib only; `FreeCADGui`/`PySide*` nowhere outside `hosts/`, `marshal.py`, `render_probe.py` (AD-1 + §7).
+Import discipline making this safe: `adapters/__init__.py` and `hosts/__init__.py` are empty; every module imports its own deps at module top; in-FreeCAD code paths (`rpc_listener`, `marshal`, `gui_addon`, all of `usecases/`+`contracts/`) never import an `[ext-only]` module. `check_imports.py` asserts, per AST walk: `contracts/` = stdlib only; `usecases/` = stdlib + {FreeCAD, Part, Sketcher, PartDesign, Mesh, MeshPart, Import} via shim; `rpc_listener.py` = stdlib only; `FreeCADGui`/`PySide*` nowhere outside `hosts/`, `marshal.py`, `render_probe.py` (AD-1 + §7).
 
 ### 2.4 Release and plugin
 

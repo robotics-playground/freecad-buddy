@@ -1,0 +1,124 @@
+[
+ {
+  "name": "create",
+  "tool": "document_create",
+  "args": {
+   "label": "V1313Edit"
+  }
+ },
+ {
+  "name": "body",
+  "tool": "feature_body_create",
+  "args": {
+   "doc": "$DOC",
+   "name": "Body"
+  }
+ },
+ {
+  "name": "sketch",
+  "tool": "sketch_create",
+  "args": {
+   "doc": "$DOC",
+   "body": "Body",
+   "plane": "XY",
+   "name": "Sketch"
+  }
+ },
+ {
+  "name": "geo",
+  "tool": "sketch_add_geometry",
+  "args": {
+   "doc": "$DOC",
+   "sketch": "Sketch",
+   "geometry": [
+    {
+     "kind": "line_segment",
+     "start": [
+      0,
+      0
+     ],
+     "end": [
+      20,
+      0
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      20,
+      0
+     ],
+     "end": [
+      20,
+      10
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      20,
+      10
+     ],
+     "end": [
+      0,
+      10
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      0,
+      10
+     ],
+     "end": [
+      0,
+      0
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "setedit",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "import FreeCADGui\nFreeCADGui.getDocument(doc.Name).setEdit(doc.getObject('Sketch'))\nresult = str(FreeCADGui.getDocument(doc.Name).getInEdit())"
+  }
+ },
+ {
+  "name": "camera_ro",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "recompute": false,
+   "code": "import FreeCADGui\ng = FreeCADGui.getDocument(doc.Name)\nresult = [str(g.getInEdit()), g.ActiveView.getCameraType(), list(doc.UndoNames)]"
+  }
+ },
+ {
+  "name": "camera_ro_default",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "import FreeCADGui\ng = FreeCADGui.getDocument(doc.Name)\nresult = [str(g.getInEdit()), g.ActiveView.getCameraType()]"
+  }
+ },
+ {
+  "shell": "docker exec -u cua fcb-desktop bash -c 'eval \"$(fcb-session-env)\"; echo \"{\\\"screenshot_out_file\\\":\\\"/repo/tests/uat/run/13-13-r1/evidence/tc03-editmode-open.png\\\"}\" | /usr/local/bin/cua-driver call get_desktop_state' | grep -c path"
+ },
+ {
+  "name": "resetedit",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "import FreeCADGui\nFreeCADGui.getDocument(doc.Name).resetEdit()\nresult = str(FreeCADGui.getDocument(doc.Name).getInEdit())"
+  }
+ },
+ {
+  "name": "tree",
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "$DOC"
+  }
+ }
+]

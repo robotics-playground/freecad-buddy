@@ -1,0 +1,17 @@
+# Story 13-13 round 3: leader triage
+
+Base: 2c925827 (story/13-13-script-exec-bracket). Reports: review-blind-r3-s13-13 (R3-B1, R3-L1, R3-L2), review-edge-r3-s13-13 (E3-1..E3-4), review-gap-r3-s13-13 (G1) — chat reports, copied into the ledger `review-ledger-13-13.md`. Probes: scratchpad `review-blind-r3-s13-13\probe\`, `review-edge-r3-s13-13\`.
+Each non-doc fix needs a test that fails first, or a mutant that the new test kills.
+
+| # | Source | Finding | Required fix |
+| --- | --- | --- | --- |
+| T1 | R3-B1 (medium, product; blind) | `script_exec.py:249` `"value_repr": repr(value) if value is not _UNSET else None,` runs after the commit unguarded; FreeCAD's repr of a deleted object raises -> `RECOMPUTE_ERROR`, `structured={}`, no fingerprints, no `undo_steps`, audit after-line without digests, while the change is committed. Input: `t = doc.addObject('Part::Box','T')\nresult = t\ndoc.removeObject('T')\ndoc.Box.Width = 5`; also `result = doc` then `App.closeDocument(doc.Name)`. Breaks `tool-contracts.md:226` and `mcp-tools-design.md:848` rule 7. | Guard the repr (`try/except Exception`): `value_repr` = `"<repr failed: <Type>: <msg>>"` plus a note; status stays as the bracket decides (OK here). infc tests for both inputs (red first): status OK, fingerprints present, `undo_steps` 1. Same guard for the message f-string at `:282` (`str(script_error)`), test with an exception class whose `__str__` raises. Regression risk: normal `value_repr` text changes — neighbouring tests are the existing value_repr tests. |
+| T2 | G1 (low, test gap; gap lens) | `_observe` `UndoNames` read failure -> `undo_steps = 0` mutant survives (`script_exec.py:146-148`) | Test where the second `list(document.UndoNames)` read raises: `undo_steps is None`, no "undo_steps 0" note. |
+| T3 | E3-4 (low; edge) | `script_exec.py:287` note "the changes it made so far are kept" is false when the script aborted its own transaction (SKILL.md:62-63 pattern) | Base the note on `changed` (no note claim when `changed` is empty), or "…, if any, are kept". Test with the SKILL.md try/abort/re-raise pattern. |
+| T4 | E3-3 (low; edge) | `script_exec.py:120` combined message starts with the wrapper type, second failure has no type | Build the message from parts: `"<Type1>: <msg1>; <phase> also failed: <Type2>: <msg2>"`; update its test. |
+| T5 | E3-2 (low; edge) | `script_exec.py:285` script raised AND a bracket phase failed: only the phase name is reported, the bracket exception text is lost | Add `data["bracket_message"]` (or a note) with the bracket exception text; test. |
+| T6 | E3-1, R3-L1 (low; edge, blind) | `_added_undo_steps` can undercount on a short stack (script calls `doc.undo()` and its first line matches an earlier entry) and overcount on a full stack (returns 20 for 2) | Documentation only: state both limits in the `_added_undo_steps` docstring, `mcp-tools-design.md` rule 4 (~:845) and the tool description. Do not change the algorithm. |
+| T7 | R3-L2 (low; blind) | `tool_catalog.py:1448-1451` description does not say `undo_steps` can be null | Add "null when the undo list cannot be read". |
+
+## After the fixes
+Gates: full infc, `tests/external` (Git Bash), ruff, check_imports, check_status_vocab, gen_schemas --check, check_skill_shape. Three review rounds are used: no fourth lens round. The fix batch goes to the red team (attacks it first) and the verifier (gates, mutants, container UAT Q15).

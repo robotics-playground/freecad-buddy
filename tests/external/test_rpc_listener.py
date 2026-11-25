@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import queue
 import socket
 import struct
 import sys
 import threading
 import time
+from pathlib import Path
 
 from freecad_buddy.adapters import rpc_listener
 from freecad_buddy.adapters.marshal import Marshal
@@ -70,12 +72,16 @@ class RecordingAudit:
     def __init__(self):
         self.before_calls = []
         self.after_calls = []
+        self.after_fingerprints = []
 
     def before(self, event, tool, doc, params):
         self.before_calls.append((event, tool, doc))
 
-    def after(self, event, tool, doc, params, verdict):
+    def after(
+        self, event, tool, doc, params, verdict, fingerprint_before=None, fingerprint_after=None
+    ):
         self.after_calls.append((event, tool, doc, verdict))
+        self.after_fingerprints.append((fingerprint_before, fingerprint_after))
 
 
 def _ok_envelope(structured=None):
@@ -553,6 +559,57 @@ def test_listener_writes_the_before_line_of_a_script_exec_call_before_it_runs(tm
         listener.stop()
 
 
+def test_listener_passes_both_digests_to_the_after_line_of_a_script_exec_call(tmp_path):
+    audit = RecordingAudit()
+    registry = MethodRegistry()
+    registry.register(
+        RpcMethod(
+            name=SCRIPT_EXEC_SPEC.name,
+            handler=lambda **_params: _ok_envelope(
+                {"fingerprint_before": "a" * 64, "fingerprint_after": "b" * 64}
+            ),
+            mutating=SCRIPT_EXEC_SPEC.mutating,
+            audit_event=SCRIPT_EXEC_SPEC.audit_event,
+            timeout_s=SCRIPT_EXEC_SPEC.timeout_s,
+        )
+    )
+    listener, host, port = _start_listener(registry, ThreadedExecutor(), tmp_path, audit=audit)
+    try:
+        conn = Conn(host, port)
+        conn.hello()
+        conn.call("script_exec", {"doc": "fcb-doc:a", "code": "1+1"})
+        time.sleep(0.05)
+        assert audit.after_fingerprints == [("a" * 64, "b" * 64)]
+        conn.close()
+    finally:
+        listener.stop()
+
+
+def test_listener_records_no_digest_on_the_after_line_when_a_script_exec_call_times_out(tmp_path):
+    audit = RecordingAudit()
+    registry = MethodRegistry()
+    registry.register(
+        RpcMethod(
+            name=SCRIPT_EXEC_SPEC.name,
+            handler=lambda **_params: time.sleep(1.0) or _ok_envelope(),
+            mutating=SCRIPT_EXEC_SPEC.mutating,
+            audit_event=SCRIPT_EXEC_SPEC.audit_event,
+            timeout_s=0.1,
+        )
+    )
+    listener, host, port = _start_listener(registry, ThreadedExecutor(), tmp_path, audit=audit)
+    try:
+        conn = Conn(host, port)
+        conn.hello()
+        reply = conn.call("script_exec", {"doc": "fcb-doc:a", "code": "1+1"})
+        time.sleep(0.05)
+        assert reply["result"]["status"] == "TIMEOUT"
+        assert audit.after_fingerprints == [(None, None)]
+        conn.close()
+    finally:
+        listener.stop()
+
+
 # -- discovery -------------------------------------------------------------------------------
 
 
@@ -567,6 +624,109 @@ def test_discovery_file_written_0600_and_deleted_on_stop(tmp_path):
     assert record["token"] == TOKEN
     listener.stop()
     assert list(disco_dir.glob("rpc-*.json")) == []
+
+
+def _discovery_file(directory, pid, content=None):
+    path = directory / f"rpc-{pid}.json"
+    path.write_text(json.dumps({"pid": pid}) if content is None else content, encoding="utf-8")
+    return path
+
+
+def _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids):
+    monkeypatch.setattr(rpc_listener, "pid_alive", lambda pid: pid in alive_pids)
+    directory = tmp_path / "freecad-buddy"
+    directory.mkdir()
+    return directory
+
+
+def test_Should_delete_the_discovery_file_When_its_pid_is_dead(tmp_path, monkeypatch):
+    # Arrange
+    directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids=set())
+    dead = _discovery_file(directory, 4_000_001)
+    target = RpcListener(
+        _fake_registry(), Marshal(ThreadedExecutor()), TOKEN, appdata_dir=str(tmp_path)
+    )
+
+    # Act
+    target.bind()
+    target.stop()
+
+    # Assert
+    assert not dead.exists()
+
+
+def test_Should_keep_the_discovery_file_When_its_pid_is_alive(tmp_path, monkeypatch):
+    # Arrange
+    directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids={4_000_002})
+    live = _discovery_file(directory, 4_000_002)
+    target = RpcListener(
+        _fake_registry(), Marshal(ThreadedExecutor()), TOKEN, appdata_dir=str(tmp_path)
+    )
+
+    # Act
+    target.bind()
+    target.stop()
+
+    # Assert
+    assert live.exists()
+
+
+def test_Should_keep_the_discovery_file_When_it_is_unreadable_or_has_no_integer_pid(
+    tmp_path, monkeypatch
+):
+    # Arrange
+    directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids=set())
+    kept = [
+        _discovery_file(directory, 4_000_003, content="{not json"),
+        _discovery_file(directory, 4_000_004, content=json.dumps({"pid": "4000004"})),
+        _discovery_file(directory, 4_000_005, content=json.dumps({"pid": True})),
+        _discovery_file(directory, 4_000_006, content=json.dumps([4_000_006])),
+        _discovery_file(directory, 4_000_007, content=json.dumps({})),
+    ]
+    target = RpcListener(
+        _fake_registry(), Marshal(ThreadedExecutor()), TOKEN, appdata_dir=str(tmp_path)
+    )
+
+    # Act
+    target.bind()
+    target.stop()
+
+    # Assert
+    assert [path.exists() for path in kept] == [True] * len(kept)
+
+
+def test_Should_keep_the_own_discovery_file_When_pid_alive_reports_the_own_pid_dead(
+    tmp_path, monkeypatch
+):
+    # Arrange
+    directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids=set())
+    own = _discovery_file(directory, os.getpid())
+
+    # Act
+    RpcListener._sweep_orphan_discovery(directory)
+
+    # Assert
+    assert own.exists()
+
+
+def test_Should_keep_the_discovery_file_When_pid_alive_rejects_its_pid_as_out_of_range(
+    tmp_path, monkeypatch
+):
+    # Arrange
+    directory = tmp_path / "freecad-buddy"
+    directory.mkdir()
+
+    def reject(pid):
+        raise OverflowError(pid)
+
+    monkeypatch.setattr(rpc_listener, "pid_alive", reject)
+    huge = _discovery_file(directory, 2**80)
+
+    # Act
+    RpcListener._sweep_orphan_discovery(directory)
+
+    # Assert
+    assert huge.exists()
 
 
 # -- connection-end logging ------------------------------------------------------------------
@@ -942,3 +1102,55 @@ def test_should_end_the_idle_serving_thread_when_stop_runs(tmp_path):
 
     # Assert
     assert not serving.is_alive()
+
+
+def test_Should_bind_and_write_the_own_file_When_a_discovery_file_is_nested_too_deep(
+    tmp_path, monkeypatch, caplog
+):
+    # Arrange
+    directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids=set())
+    nested = directory / "rpc-99999999.json"
+    nested.write_text("[" * 50_000, encoding="utf-8")
+    target = RpcListener(
+        _fake_registry(), Marshal(ThreadedExecutor()), TOKEN, appdata_dir=str(tmp_path)
+    )
+
+    # Act
+    with caplog.at_level(logging.WARNING, logger=_LISTENER_LOGGER):
+        target.bind()
+    own_file_written = (directory / f"rpc-{os.getpid()}.json").exists()
+    target.stop()
+
+    # Assert
+    assert own_file_written
+    assert nested.exists()
+    assert "discovery sweep kept rpc-99999999.json after RecursionError" in caplog.text
+
+
+def test_Should_keep_the_discovery_file_When_it_is_larger_than_a_discovery_record(
+    tmp_path, monkeypatch
+):
+    # Arrange
+    directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids=set())
+    padding = " " * (rpc_listener._DISCOVERY_FILE_LIMIT_BYTES + 1)
+    large = _discovery_file(directory, 4_000_010, content=json.dumps({"pid": 4_000_010}) + padding)
+
+    # Act
+    RpcListener._sweep_orphan_discovery(directory)
+
+    # Assert
+    assert large.exists()
+
+
+def test_Should_not_raise_When_the_discovery_directory_cannot_be_listed(tmp_path, monkeypatch):
+    # Arrange
+    def refuse(self, pattern):
+        raise PermissionError(pattern)
+
+    monkeypatch.setattr(Path, "glob", refuse)
+
+    # Act
+    act = lambda: RpcListener._sweep_orphan_discovery(tmp_path)  # noqa: E731
+
+    # Assert
+    act()

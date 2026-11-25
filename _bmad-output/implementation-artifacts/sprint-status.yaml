@@ -82,7 +82,7 @@
 #   hosts/tool_catalog.py and mcp-tools-design.md: one at a time. Opens no gate, reopens no epic.
 
 generated: 2026-07-21
-last_updated: 2026-11-23
+last_updated: 2026-11-25
 project: freecad-buddy
 project_key: NOKEY
 tracking_system: file-system
@@ -188,27 +188,27 @@ development_status:
   epic-12: done
   12-1-script-exec-official-tool: done
   epic-12-retrospective: optional
-  epic-13: backlog
-  13-1-result-text-without-duplicated-long-strings: backlog
-  13-2-align-documents-on-script-exec-role-and-amend-ad-5: backlog
-  13-3-server-instructions-typed-tools-first: backlog
-  13-4-skill-routing-existing-typed-tools-and-gap-list: backlog
-  13-5-multi-object-step-3mf-stl-export: backlog
-  13-6-query-mass-properties-several-objects: backlog
-  13-7-query-interference-tool: backlog
-  13-8-query-section-tool: backlog
-  13-9-varset-parameters-and-query-parameters: backlog
-  13-10-feature-set-expression-tool: backlog
-  13-11-document-object-delete-tool: backlog
-  13-12-skill-routing-measure-parameter-delete-tools: backlog
-  13-13-script-exec-observe-only-bracket-and-error-status: backlog
-  13-14-typed-verify-shape-check-schema: backlog
-  13-15-tnp-audit-expected-reattachment-moves: backlog
+  epic-13: in-progress
+  13-1-result-text-without-duplicated-long-strings: done
+  13-2-align-documents-on-script-exec-role-and-amend-ad-5: done
+  13-3-server-instructions-typed-tools-first: done
+  13-4-skill-routing-existing-typed-tools-and-gap-list: done
+  13-5-multi-object-step-3mf-stl-export: done
+  13-6-query-mass-properties-several-objects: done
+  13-7-query-interference-tool: done
+  13-8-query-section-tool: done
+  13-9-varset-parameters-and-query-parameters: done
+  13-10-feature-set-expression-tool: done
+  13-11-document-object-delete-tool: done
+  13-12-skill-routing-measure-parameter-delete-tools: done
+  13-13-script-exec-observe-only-bracket-and-error-status: ready-for-dev
+  13-14-typed-verify-shape-check-schema: done
+  13-15-tnp-audit-expected-reattachment-moves: review
   13-16-feature-set-parameters-placement-and-strings: backlog
-  13-17-part-primitive-and-part-boolean-tools: backlog
-  13-18-loft-and-sweep-tools: backlog
+  13-17-part-primitive-and-part-boolean-tools: ready-for-dev
+  13-18-loft-and-sweep-tools: done
   13-19-skill-routing-part-loft-sweep-placement-tools: backlog
-  13-20-usage-report-and-bridge-hygiene: backlog
+  13-20-usage-report-and-bridge-hygiene: done
   epic-13-retrospective: optional
 
 action_items:

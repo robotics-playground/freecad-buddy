@@ -1,0 +1,361 @@
+{
+ "_errors": [],
+ "_test_ok": true,
+ "define_new": {
+  "app_active_after": "None",
+  "code": null,
+  "envelope": {
+   "detail": null,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "added": [
+     "height"
+    ],
+    "mutation": {
+     "changed": [],
+     "fingerprint_after": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_before": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "post_verify": {
+      "explanation": null,
+      "fully_constrained": null,
+      "is_valid": true,
+      "passed": true,
+      "recompute_clean": true,
+      "tnp_audit": {
+       "counts": {},
+       "element_map_version": "15.70200.5",
+       "findings": [],
+       "status": "CLEAN"
+      }
+     },
+     "rollback_proven": null,
+     "rolled_back": false,
+     "schema": "fcb.mutation/2",
+     "touched": [
+      "Params"
+     ]
+    },
+    "unchanged": [],
+    "undo_steps": 1,
+    "updated": [],
+    "varset": "Params"
+   },
+   "text": "Mutation committed; fingerprint 4f53cda18c2b."
+  },
+  "pending_after": false,
+  "status": "OK"
+ },
+ "define_noop": {
+  "app_active_after": "None",
+  "code": null,
+  "envelope": {
+   "detail": null,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "added": [],
+    "unchanged": [
+     "height"
+    ],
+    "undo_steps": 0,
+    "updated": [],
+    "varset": "Params"
+   },
+   "text": "Params: 1 parameter(s) already hold the values; no undo step recorded, so document_undo would revert an earlier step."
+  },
+  "pending_after": false,
+  "status": "OK"
+ },
+ "delete_plain": {
+  "app_active_after": "None",
+  "code": null,
+  "envelope": {
+   "detail": null,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "deleted": [
+     "Lone"
+    ],
+    "dependents": [],
+    "mutation": {
+     "changed": [
+      {
+       "area": null,
+       "com": null,
+       "name": "Lone",
+       "volume": null
+      }
+     ],
+     "fingerprint_after": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_before": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "post_verify": {
+      "explanation": null,
+      "fully_constrained": null,
+      "is_valid": true,
+      "passed": true,
+      "recompute_clean": true,
+      "tnp_audit": {
+       "counts": {
+        "PASS": 3
+       },
+       "element_map_version": "15.70200.5",
+       "findings": [],
+       "status": "CLEAN"
+      }
+     },
+     "rollback_proven": null,
+     "rolled_back": false,
+     "schema": "fcb.mutation/2",
+     "touched": [
+      "Lone"
+     ]
+    }
+   },
+   "text": "Mutation committed; fingerprint c83d6b221942."
+  },
+  "pending_after": false,
+  "status": "OK"
+ },
+ "delete_refused_dependent": {
+  "app_active_after": "None",
+  "code": "delete.has_dependents",
+  "envelope": {
+   "detail": {
+    "code": "delete.has_dependents",
+    "message": "objects that depend on the delete set: User; pass with_dependents true to delete them too"
+   },
+   "status": "raised ObjectDeleteRefusal"
+  },
+  "pending_after": false,
+  "status": "raised ObjectDeleteRefusal"
+ },
+ "delete_unknown": {
+  "app_active_after": "None",
+  "code": null,
+  "envelope": {
+   "detail": {
+    "code": null,
+    "message": "unknown object in objects: Nope"
+   },
+   "status": "raised ValidationError"
+  },
+  "pending_after": false,
+  "status": "raised ValidationError"
+ },
+ "delete_with_dependents": {
+  "app_active_after": "None",
+  "code": null,
+  "envelope": {
+   "detail": null,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "deleted": [
+     "Spare",
+     "User"
+    ],
+    "dependents": [
+     "User"
+    ],
+    "mutation": {
+     "changed": [
+      {
+       "area": null,
+       "com": null,
+       "name": "Spare",
+       "volume": null
+      },
+      {
+       "area": null,
+       "com": null,
+       "name": "User",
+       "volume": null
+      }
+     ],
+     "fingerprint_after": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_before": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "post_verify": {
+      "explanation": null,
+      "fully_constrained": null,
+      "is_valid": true,
+      "passed": true,
+      "recompute_clean": true,
+      "tnp_audit": {
+       "counts": {
+        "PASS": 3
+       },
+       "element_map_version": "15.70200.5",
+       "findings": [],
+       "status": "CLEAN"
+      }
+     },
+     "rollback_proven": null,
+     "rolled_back": false,
+     "schema": "fcb.mutation/2",
+     "touched": [
+      "Spare",
+      "User"
+     ]
+    }
+   },
+   "text": "Mutation committed; fingerprint 01a78914d93e."
+  },
+  "pending_after": false,
+  "status": "OK"
+ },
+ "document_undo": {
+  "app_active_after": "None",
+  "code": null,
+  "envelope": {
+   "detail": null,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "doc": "fcb-doc:4PKQPMb53sYX7hLYBCoZ7A",
+    "errors": [],
+    "fingerprint_after": "c83d6b22194299f1221638c8581edd748761680d0b20a1010034b4e0f9572b6f",
+    "fingerprint_before": "01a78914d93e1c2c8b04995004fc3c7fdd36dfe6f45e24746d6d6a4197d4f12d",
+    "matches_pre_op": null,
+    "name": "feature_tools",
+    "restored_objects": [
+     "Params",
+     "Body",
+     "Origin",
+     "X_Axis",
+     "Y_Axis",
+     "Z_Axis",
+     "XY_Plane",
+     "XZ_Plane",
+     "YZ_Plane",
+     "Origin001",
+     "Profile",
+     "Pad",
+     "User",
+     "Spare"
+    ],
+    "undo_count": 3,
+    "undone": "buddy: delete Spare"
+   },
+   "text": "Undid 'buddy: delete Spare' on feature_tools: no pre-op digest supplied to compare against (01a78914d93e -> c83d6b221942)."
+  },
+  "pending_after": false,
+  "status": "OK"
+ },
+ "feature_pad": {
+  "app_active_after": "None",
+  "code": null,
+  "envelope": {
+   "detail": null,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "feature": "Pad",
+    "feature_state": {
+     "body": "Body",
+     "feature": "Pad",
+     "is_tip": true,
+     "readable": true,
+     "schema": "fcb.feature-state/1",
+     "shape_summary": {
+      "area": 2200.0,
+      "bbox": [
+       20.0,
+       30.0,
+       10.0
+      ],
+      "edge_count": 12,
+      "face_count": 6,
+      "is_valid": true,
+      "solid_count": 1,
+      "vertex_count": 8,
+      "volume": 6000.0
+     }
+    },
+    "mutation": {
+     "changed": [
+      {
+       "area": 2200.0,
+       "com": [
+        10.0,
+        15.0,
+        5.0
+       ],
+       "name": "Body",
+       "volume": 6000.0
+      },
+      {
+       "area": 2200.0,
+       "com": [
+        10.0,
+        15.0,
+        5.0
+       ],
+       "name": "Pad",
+       "volume": 6000.0
+      }
+     ],
+     "fingerprint_after": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_before": {
+      "digest": "<v>",
+      "serializer": "exportBinary"
+     },
+     "post_verify": {
+      "explanation": null,
+      "fully_constrained": true,
+      "is_valid": true,
+      "passed": true,
+      "recompute_clean": true,
+      "tnp_audit": {
+       "counts": {},
+       "element_map_version": "15.70200.5",
+       "findings": [],
+       "status": "CLEAN"
+      }
+     },
+     "rollback_proven": null,
+     "rolled_back": false,
+     "schema": "fcb.mutation/2",
+     "touched": [
+      "Pad",
+      "Body"
+     ]
+    }
+   },
+   "text": "Mutation committed; fingerprint 01a78914d93e."
+  },
+  "pending_after": false,
+  "status": "OK"
+ },
+ "final": {
+  "app_active": "None",
+  "pending": false,
+  "undo_names": [
+   "buddy: delete Lone",
+   "buddy: feature_pad Pad",
+   "buddy: define parameters on Params"
+  ]
+ }
+}

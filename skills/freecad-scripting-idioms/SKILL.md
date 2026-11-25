@@ -54,13 +54,18 @@ MCP client at it — otherwise none of these steps can run.
 - Drive a mutation through a **typed tool** (`sketch_*`, `feature_*`, `document_*`)
   whenever one covers it, because the typed path runs the transaction, verification,
   and reference audit around the change. Use `script_exec` only for an operation no
-  typed tool covers. It runs raw: open and commit a transaction in the script
-  (`doc.openTransaction(...)` … `doc.commitTransaction()`) so `document_undo` covers
-  it, then check the result with `verify_*`. Wrap the script body in `try`/`except`
-  that calls `doc.abortTransaction()` and re-raises, so a failed script leaves no
-  half-applied change. A script has a 30 s budget, and a `TIMEOUT` marks the
-  document suspect. A script must always return — one that loops forever freezes
-  FreeCAD.
+  typed tool covers. The call runs in a bracket: one transaction named after the
+  script's first line (start with a `# what this does` comment), a recompute when
+  any object is Touched, and a commit, so one `document_undo` reverts the
+  script. The result carries `changed`, `new_errors` and `undo_steps`; check it with
+  `verify_*`. The bracket never rolls back: a script that raises keeps its changes
+  (`INVALID_INPUT`, `exec.python_error`). For all-or-nothing, wrap the writes in
+  `try`/`except` that calls `doc.abortTransaction()` and re-raises. `undo_steps` 0
+  means one `document_undo` would revert an earlier step. A transaction the script
+  opens adds one undo entry, and a write after the script's own
+  `doc.commitTransaction()` is not recorded. A script has a 30 s budget; a
+  `TIMEOUT` marks the document suspect, and the late return still commits. A script
+  must always return — one that loops forever freezes FreeCAD.
 - Take an **explicit document handle** on every call; never rely on the active
   document, because "the active document" is whichever the user last focused and an
   implicit target silently drives the wrong file.
@@ -73,7 +78,10 @@ MCP client at it — otherwise none of these steps can run.
   recompute reshuffles them; never store an index for later reuse.
 - **Exhaust the typed tools before any fallback**: `feature_set_parameters` writes
   booleans, numbers, quantities, and enum members on any object — including
-  `Visibility` — so try it before GUI input or a script. `references/gap-list.md`
+  `Visibility` — and `feature_parameters_define`, `feature_set_expression`,
+  `document_object_delete`, `query_interference`, `query_section` and
+  `query_parameters` cover parameters, bindings, deletes and measurements, so try
+  them before GUI input or a script. `references/gap-list.md`
   names every operation with no typed tool; only a row there, or a tool list that
   shows no typed tool, justifies a fallback. Before each `script_exec` call, state
   the missing typed tool in one sentence.
@@ -84,8 +92,8 @@ MCP client at it — otherwise none of these steps can run.
   or overwrites the script's change.
 - The fallback for a gap is **`script_exec` on the live document**, with the
   transaction and `verify_*` rule above. In a script, `body.removeObject(feature)`
-  relinks the next feature's `BaseFeature`, and `body.newObject(...)` inserts after
-  the Tip and becomes the new Tip. Only when `script_exec` is absent
+  relinks the next feature's `BaseFeature` (the typed delete cannot keep later
+  features), and `body.newObject(...)` inserts after the Tip and becomes the new Tip. Only when `script_exec` is absent
   (`query_capabilities` reports `exec_enabled: false`), use a **headless script on
   the closed document**: close it in the GUI, edit and save with `freecadcmd`,
   reopen with `document_open`, then run the full verification and one
@@ -118,9 +126,9 @@ human-facing handle, give the feature an intent-bearing Name when you create it.
 - **Keying lookups on Label.** Symptom: a lookup fails after a rename. Why: Label is
   mutable. Fix: identify by immutable Name.
 - **`script_exec` where a typed tool exists.** Symptom: an unverified or corrupt
-  document that recomputed fine. Why: raw code bypassed the transaction/verify
-  wrapper. Fix: use the typed tool; when none exists, wrap the script in a
-  transaction and run `verify_*` after it.
+  document that recomputed fine. Why: a script bypasses the verify and
+  reference-audit wrapper. Fix: use the typed tool; when none exists, run `verify_*`
+  after the script.
 - **Scripting the open document.** Symptom: a headless edit vanishes after the next
   GUI save, or the GUI shows geometry the file no longer has. Why: the script and
   the bridge edited two copies of one model. Fix: use a typed tool, or close the

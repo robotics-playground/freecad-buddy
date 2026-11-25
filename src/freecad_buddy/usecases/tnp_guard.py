@@ -3,8 +3,9 @@
 ``snapshot_references(doc)`` records one ``RefRecord`` per subelement link across the four
 reference-holding subsystems (Sketcher external geometry, attachment/datums, PartDesign
 profile/base, expression-engine dependencies), capturing the owner's ``ElementMapVersion``, each
-entry's subname, its resolved mapped shadow, a geometric witness and its element ancestry.
-``audit_references(doc, snapshot, written)`` runs the Layer-0 validity sweep over
+entry's subname, its resolved mapped shadow, a geometric witness and its element ancestry, plus a
+witness of the whole target shape (the support) for the record.
+``audit_references(doc, snapshot, written, removed_bindings)`` runs the Layer-0 validity sweep over
 ``isValid()``/``getStatusString()``, then the Layer-1 per-entry diff (resolution, mapped name,
 witness, entry count, ``ElementMapVersion`` re-baseline) and the Layer-2 ancestry cross-check over
 the entries Layer 1 left ambiguous, returning a ``TnpAuditBlock``.
@@ -20,7 +21,10 @@ never imported here — the document and its objects are passed in.
 
 from __future__ import annotations
 
-from typing import TypedDict
+import math
+import re
+from collections.abc import Collection
+from typing import NotRequired, TypedDict
 
 from freecad_buddy.contracts import RefFinding, RefVerdict, TnpAuditBlock
 from freecad_buddy.usecases import shim
@@ -47,16 +51,43 @@ _SKETCH_TYPE_PREFIX = "Sketcher::"
 # its own. Part.Shape.getTolerance(1) measures 1.0000000000000002e-07 on a padded solid.
 _WITNESS_EPSILON = 1e-7
 
+# FreeCAD 1.1 mapped-name markers whose number counts pieces in build order (ElementNamingUtils.h:
+# POSTFIX_MOD ";:M", POSTFIX_GEN ";:G", POSTFIX_MODGEN ";:MG", POSTFIX_UPPER ";:U", appended with
+# an index in TopoShapeExpansion.cpp:1768-1776 and :1871; the bare marker is index 1) and the
+# random duplicate rename ";D<hex>" (ElementMap.cpp:753 renameDuplicateElement). No other marker
+# starts with M, G or U. The number is printed only when the index exceeds 1 (:1782-1784); the
+# indices 0 and 00 name coplanar or parallel faces with a fixed name (:1622-1625, :1776-1781), so
+# ";:G0" is stable, but its extra sources are numbered ";K" (:1711-1727) and then hashed, so
+# ";:G0#" is positional. A hash id of a multi-source name follows the marker directly, so a "#"
+# after ";:G" marks the same positional form. ";K<n>" and ";:I<n>" (PartFeature.cpp:291) number
+# extra sources and ancestor faces. A bare ";:G" or ";:U" is index 1 and is positional only while
+# a sibling with an index exists (``_split_sibling_stems``). A pattern names instance n as the
+# transform op code ";_<n>" and instance 1 as the empty code, which leaves ";:H," with no tag
+# (FeatureTransformed.cpp:366, ElementNamingUtils.cpp:116-123): a position in the instance list.
+_POSITIONAL_COUNTER = re.compile(
+    r";:MG|;:M|;:[GU](?:[1-9]|0{0,2}#)|;K[0-9]|;:I[0-9]|;D[0-9a-f]+(?=;|$)|;_[0-9]|;:H,"
+)
+_INDEXED_MARKER = re.compile(r";:[GU](?:[1-9]|#)")
+_BARE_MARKER = re.compile(r";:[GU](?![0-9#])")
+
 # The sub-shape type plus its bounding-box corners: (ShapeType, XMin, YMin, ZMin, XMax, YMax,
 # ZMax). BoundBox reads on every shape type, while CenterOfMass does not — Part.Vertex raises
 # AttributeError for it.
 Witness = tuple[str, float, float, float, float, float, float]
+
+# Signed bounding-box face shifts per axis, (minimum face, maximum face) for x, y and z.
+AxisShifts = tuple[tuple[float, float], tuple[float, float], tuple[float, float]]
 
 # A record's identity within one document: owner name, property name, target object name, and the
 # occurrence index of that triple. A PropertyLinkSubList emits one record per (target, subs) pair,
 # so the target is part of the identity; the index disambiguates a property that links the same
 # target more than once.
 RecordKey = tuple[str, str, str | None, int]
+
+# Element counts of a whole target shape by ``ShapeType``: the faces, edges and vertices a
+# referenced element can be.
+ElementCounts = dict[str, int]
+_COUNTED_TYPES = ("Face", "Edge", "Vertex")
 
 
 class RefEntry(TypedDict):
@@ -65,6 +96,13 @@ class RefEntry(TypedDict):
     missing: bool
     witness: Witness | None
     history: tuple[int, str] | None
+    # True when a positional piece counter appears anywhere in the element's lineage, or the
+    # lineage cannot be read (``_lineage_has_counter``). Set at grading time, on the live entry
+    # only and only for a moved element, because the walk costs time per feature.
+    lineage_counter: NotRequired[bool]
+    # True when the mapped name carries a bare ";:G" or ";:U" and the same shape holds a sibling
+    # with an indexed marker after the same text. Absent in a record from an older snapshot.
+    split_siblings: NotRequired[bool]
 
 
 class RefRecord(TypedDict):
@@ -73,6 +111,9 @@ class RefRecord(TypedDict):
     target: str | None
     entries: list[RefEntry]
     element_map_version: str | None
+    target_witness: Witness | None
+    # Absent in an older snapshot record; ``None`` when the counts could not be read.
+    target_counts: NotRequired[ElementCounts | None]
 
 
 def _element_map_version(obj: object) -> str | None:
@@ -166,9 +207,15 @@ def _mapped_name(shape: object, indexed: str) -> str | None:
 
 
 def _witness(element: object) -> Witness | None:
-    """Return ``element``'s type-plus-bounding-box witness, or ``None`` when unreadable."""
+    """Return ``element``'s type-plus-bounding-box witness, or ``None`` when unreadable.
+
+    The box comes from the exact geometry (``optimalBoundingBox(False, False)``: no triangulation,
+    no shape tolerance). ``BoundBox`` reads the display mesh once a view has tessellated the shape,
+    and the mesh nodes sit off a curved face's extreme (2.0 became 2.0009 on a r3 cylinder after
+    ``tessellate(0.5)``), so the same face would read as moved in the GUI and not headless.
+    """
     try:
-        bbox = element.BoundBox
+        bbox = element.optimalBoundingBox(False, False)
         return (
             str(element.ShapeType),
             float(bbox.XMin),
@@ -191,6 +238,131 @@ def _element_tolerance(element: object) -> float:
         return max(float(getter(1)), _WITNESS_EPSILON)
     except Exception:  # noqa: BLE001 - an element reporting no tolerance uses the default floor
         return _WITNESS_EPSILON
+
+
+def _axis_shifts(before: Witness | None, after: Witness | None) -> AxisShifts | None:
+    """Return the signed shift of a witness's bounding-box faces per axis, or ``None``.
+
+    Each axis carries ``(minimum-face shift, maximum-face shift)``, after minus before. The sign is
+    kept so that a face that grew upward and a face that moved downward stay different. Not
+    comparable: a side that could not be read, a changed ``ShapeType``, or a non-finite component
+    (NaN, infinity). Callers read ``None`` as "no bound", never as "no movement".
+    """
+    if before is None or after is None or before[0] != after[0]:
+        return None
+    deltas = [a - b for a, b in zip(after[1:], before[1:])]
+    if not all(math.isfinite(delta) for delta in deltas):
+        return None
+    return ((deltas[0], deltas[3]), (deltas[1], deltas[4]), (deltas[2], deltas[5]))
+
+
+def _has_positional_counter(name: str | None) -> bool:
+    """Whether a mapped name carries a build-order piece counter or a duplicate-rename marker.
+
+    FreeCAD numbers the pieces of a split face or edge by position (``;:M``, ``;:M2``, ...). An edit
+    that changes the piece count shifts every counter, so one name and one history source can
+    then denote a different piece. Such a name proves nothing about identity.
+    """
+    return bool(name) and _POSITIONAL_COUNTER.search(name) is not None
+
+
+def _split_sibling_stems(shape: object) -> frozenset[str]:
+    """Return the text before each indexed ``;:G``/``;:U`` marker in ``shape``'s element map.
+
+    An element named with the bare marker is piece 1 of that stem; a stem that also appears here
+    has further pieces, so piece 1 can name another piece after a piece-count change.
+    """
+    try:
+        names = shape.ElementMap
+    except Exception:  # noqa: BLE001 - a shape without an element map has no sibling evidence
+        return frozenset()
+    return frozenset(
+        name[: match.start()] for name in names for match in _INDEXED_MARKER.finditer(name)
+    )
+
+
+def _has_split_siblings(name: str | None, stems: frozenset[str]) -> bool:
+    """Whether a bare-marker mapped name shares its leading text with an indexed sibling."""
+    return bool(name) and any(
+        name[: match.start()] in stems for match in _BARE_MARKER.finditer(name)
+    )
+
+
+def _lineage_has_counter(target: object, name: str) -> bool:
+    """Whether any name in the element's whole history chain carries a positional counter.
+
+    FreeCAD folds the older part of a mapped name into a ``#id`` hash (``ElementMap.cpp:668``), and
+    ``TopoShape.getElementHistory`` steps back one object only, so a counter can sit two features
+    behind the visible name. ``Part.Feature.getElementHistory(recursive=True)`` walks to the origin
+    and returns each source name and its intermediate names. A lineage that cannot be read counts
+    as positional: no proof of identity, no excuse.
+    """
+    getter = getattr(target, "getElementHistory", None)
+    if not callable(getter):
+        return True
+    try:
+        chain = getter(name, recursive=True, showName=True)
+    except Exception:  # noqa: BLE001 - an unreadable lineage proves nothing about identity
+        return True
+    if not chain:
+        return False
+    try:
+        return any(
+            _has_positional_counter(candidate)
+            for item in chain
+            for candidate in [item[1], *item[2]]
+        )
+    except Exception:  # noqa: BLE001 - an unexpected record shape proves nothing about identity
+        return True
+
+
+def _follows_support(
+    before: RefEntry, after: RefEntry, support_shift: AxisShifts | None, tolerance: float
+) -> bool:
+    """Whether a moved witness is the same element carried along by its support object.
+
+    FreeCAD itself must call it the same element — an equal mapped name and an equal history
+    source on both sides, neither unreadable — and the support object must really have changed.
+    Each face shift of the element must then lie in the range spanned by zero and both of the
+    support's face shifts on that axis. A shift along an axis the support did not move on, or
+    outside that range, stays ``REPOINTED``. The range joins both support faces because a face
+    must be able to follow the support's other face (midplane growth); the cost is that a tampered
+    shift opposite to its own face but inside that range is excused.
+
+    A mapped name or history source name that carries a positional piece counter
+    (``_has_positional_counter``) anywhere in its lineage (``lineage_counter``), or a bare
+    ``;:G``/``;:U`` name whose shape holds indexed
+    siblings (``split_siblings``), is never excused: after a piece-count change the same name can
+    denote another piece, so equality of the two names no longer shows the same element.
+    """
+    element_shift = _axis_shifts(before["witness"], after["witness"])
+    if element_shift is None or support_shift is None:
+        return False
+    same_element = (
+        before["mapped"] is not None
+        and before["mapped"] == after["mapped"]
+        and before["history"] is not None
+        and before["history"] == after["history"]
+        and not after.get("lineage_counter", False)
+        and not before.get("split_siblings", False)
+        and not after.get("split_siblings", False)
+        and not any(
+            _has_positional_counter(name)
+            for name in (
+                before["mapped"],
+                after["mapped"],
+                before["history"][1],
+                after["history"][1],
+            )
+        )
+    )
+    support_moved = any(abs(shift) > tolerance for axis in support_shift for shift in axis)
+    inside_support_shift = all(
+        min(0.0, *support_axis) - tolerance <= shift <= max(0.0, *support_axis) + tolerance
+        for element_axis, support_axis in zip(element_shift, support_shift)
+        for shift in element_axis
+    )
+    return same_element and support_moved and inside_support_shift
 
 
 def _witness_moved(before: Witness | None, after: Witness | None, tolerance: float) -> bool:
@@ -228,8 +400,12 @@ def _history(shape: object, mapped: str | None) -> tuple[int, str] | None:
         return None
 
 
-def _capture_entry(target: object, subname: str) -> RefEntry:
+def _capture_entry(
+    target: object, subname: str, sibling_stems: dict[str | None, frozenset[str]] | None = None
+) -> RefEntry:
     """Split ``subname`` and fill its mapped shadow, witness and ancestry from ``target``.
+
+    ``sibling_stems`` caches ``_split_sibling_stems`` per target name across one walk.
 
     An entry that names no element (a whole-object link), a target carrying no shape, or an
     element that does not resolve leaves the resolved halves ``None`` rather than raising.
@@ -247,7 +423,26 @@ def _capture_entry(target: object, subname: str) -> RefEntry:
     if element is not None:
         entry["witness"] = _witness(element)
     entry["history"] = _history(shape, entry["mapped"])
+    if entry["mapped"] and _BARE_MARKER.search(entry["mapped"]):
+        cache = sibling_stems if sibling_stems is not None else {}
+        key = getattr(target, "Name", None)
+        if key not in cache:
+            cache[key] = _split_sibling_stems(shape)
+        entry["split_siblings"] = _has_split_siblings(entry["mapped"], cache[key])
     return entry
+
+
+def _support_witness(target: object) -> Witness | None:
+    """Return the witness of ``target``'s whole shape, or ``None`` when it carries none.
+
+    A whole-object link never read its target's shape before, so a shape that cannot be read here
+    must cost only the excuse, never the reference record.
+    """
+    try:
+        shape = _shape_of(target)
+    except Exception:  # noqa: BLE001 - an unreadable shape leaves the support unwitnessed
+        return None
+    return None if shape is None else _witness(shape)
 
 
 def _link_sub_entries(value: object) -> list[tuple[object, list[str]]]:
@@ -299,9 +494,36 @@ def _expression_records(obj: object, prop: str, value: object) -> list[RefRecord
                     }
                 ],
                 "element_map_version": version,
+                "target_witness": None,
             }
         )
     return records
+
+
+def _support_counts(target: object) -> ElementCounts | None:
+    """Return the face, edge and vertex count of ``target``'s shape, or ``None`` when unreadable."""
+    try:
+        shape = _shape_of(target)
+        if shape is None:
+            return None
+        return {kind: int(shape.countElement(kind)) for kind in _COUNTED_TYPES}
+    except Exception:  # noqa: BLE001 - unreadable counts cost only the excuse, never the record
+        return None
+
+
+def _same_element_count(
+    before: ElementCounts | None, after: ElementCounts | None, element_type: str | None
+) -> bool:
+    """Whether the support held as many elements of ``element_type`` before as after.
+
+    Every positional name form renumbers only when the number of pieces changes (a split, a
+    pattern grid, a column count). Name forms cannot be listed to the end, so an excuse needs the
+    count of the referenced type unchanged. Unreadable counts, or a type that is not counted,
+    give no proof.
+    """
+    if before is None or after is None or element_type not in _COUNTED_TYPES:
+        return False
+    return before.get(element_type) == after.get(element_type)
 
 
 def snapshot_references(doc: object) -> list[RefRecord]:
@@ -311,10 +533,14 @@ def snapshot_references(doc: object) -> list[RefRecord]:
     ``getTypeIdOfProperty`` names a subelement-link or expression-engine property. Each record
     carries the owner ``Name``, the property name, the target object ``Name``, one entry per
     subname (split into its mapped/indexed halves and resolved against the target's shape for
-    its mapped shadow, geometric witness and element ancestry) and the owner's
-    ``ElementMapVersion``. A property that cannot be read is skipped, never raised.
+    its mapped shadow, geometric witness and element ancestry), a witness of the whole target
+    shape (``target_witness``) and the owner's ``ElementMapVersion``. A property that cannot be
+    read is skipped, never raised.
     """
     records: list[RefRecord] = []
+    support_witnesses: dict[str | None, Witness | None] = {}
+    support_counts: dict[str | None, ElementCounts | None] = {}
+    sibling_stems: dict[str | None, frozenset[str]] = {}
     for obj in sorted(doc.Objects, key=lambda o: o.Name):
         for prop in sorted(getattr(obj, "PropertiesList", None) or ()):
             try:
@@ -329,13 +555,19 @@ def snapshot_references(doc: object) -> list[RefRecord]:
                 value = getattr(obj, prop, None)
                 version = _element_map_version(obj)
                 for target, subs in _link_sub_entries(value):
+                    target_name = getattr(target, "Name", None)
+                    if target_name not in support_witnesses:
+                        support_witnesses[target_name] = _support_witness(target)
+                        support_counts[target_name] = _support_counts(target)
                     records.append(
                         {
                             "owner": obj.Name,
                             "prop": prop,
-                            "target": getattr(target, "Name", None),
-                            "entries": [_capture_entry(target, sub) for sub in subs],
+                            "target": target_name,
+                            "entries": [_capture_entry(target, sub, sibling_stems) for sub in subs],
                             "element_map_version": version,
+                            "target_witness": support_witnesses[target_name],
+                            "target_counts": support_counts[target_name],
                         }
                     )
             except Exception:  # noqa: BLE001 - an unreadable property records no reference
@@ -413,6 +645,8 @@ def audit_references(
     doc: object,
     snapshot: list[RefRecord],
     written: list[RefRecord] | None = None,
+    deleted: frozenset[str] = frozenset(),
+    removed_bindings: Collection[tuple[str, str]] = (),
 ) -> TnpAuditBlock:
     """Audit ``doc``'s references against ``snapshot`` and return a ``TnpAuditBlock``.
 
@@ -422,9 +656,10 @@ def audit_references(
     a vanished owner is ``BROKEN``, a changed target object is ``REPOINTED``, an
     ``ElementMapVersion`` bump adds a ``RE_BASELINED`` annotation, a lost entry is ``DROPPED``,
     and per entry a non-resolving element is ``BROKEN`` while a changed mapped name or a moved
-    witness is ``REPOINTED``. Layer 2 cross-checks the ancestry of the entries Layer 1 left
-    ambiguous, reporting ``REPOINTED`` on a divergent ``(sourceTag, sourceName)`` and abstaining
-    where no history is available.
+    witness is ``REPOINTED`` (a witness move is excused when the same element rode a support that
+    moved the same way and at least as far). Layer 2 cross-checks the ancestry of the entries
+    Layer 1 left ambiguous, reporting ``REPOINTED`` on a divergent ``(sourceTag, sourceName)`` and
+    abstaining where no history is available.
 
     ``status`` is ``UNSUPPORTED`` when ``shim.element_map_available()`` is false (no reference
     reports ``PASS`` in that case), ``FLAGGED`` when any finding carries a verdict other than
@@ -436,6 +671,13 @@ def audit_references(
     :param written: the post-op, pre-recompute reading of the same references. A reference whose
         live value matches what the op wrote is the mutation's intended target and is excused the
         entry-count comparison.
+    :param deleted: names of the objects the op deleted on purpose. A snapshotted record whose
+        owner is in this set and absent from ``doc`` is excused; an owner that vanished any other
+        way stays ``BROKEN``.
+    :param removed_bindings: ``(owner, record prop)`` of each expression binding the op reports
+        it removed. Such a binding, absent from ``written`` and from the live reading on an owner
+        that still exists, passes; a binding removed by anything else grades ``BROKEN``, as does
+        every removal when no ``written`` reading is given.
     """
     version = _element_map_version_banner()
     live = snapshot_references(doc)
@@ -448,7 +690,7 @@ def audit_references(
             "findings": findings + _unsupported_findings(snapshot),
         }
 
-    findings += _reference_findings(doc, snapshot, live, written or [])
+    findings += _reference_findings(doc, snapshot, live, written, deleted, removed_bindings)
     failing = [f for f in findings if f["verdict"] not in ("PASS", "RE_BASELINED")]
     return {
         "status": "FLAGGED" if failing else "CLEAN",
@@ -658,14 +900,22 @@ def _grade_resolution(doc: object, record: RefRecord, entry: RefEntry) -> RefFin
     return None
 
 
-def _grade_entry(doc: object, record: RefRecord, before: RefEntry, after: RefEntry) -> RefFinding:
+def _grade_entry(
+    doc: object,
+    record: RefRecord,
+    before: RefEntry,
+    after: RefEntry,
+    support_shift: AxisShifts | None,
+) -> RefFinding:
     """Layer 1: grade one entry, escalating to Layer 2 only where Layer 1 is ambiguous.
 
     The order is: an entry naming no element (a whole-object link) passes; an entry FreeCAD
     marked missing or whose element no longer resolves is ``BROKEN``; a changed mapped name is
-    ``REPOINTED``; a witness moved beyond the element's own tolerance is ``REPOINTED``. An entry
-    surviving all four resolves and matches on both name and witness — the design's definition of
-    ambiguous — so Layer 2 grades it.
+    ``REPOINTED``; a witness moved beyond the element's own tolerance is ``REPOINTED`` unless
+    ``_follows_support`` excuses it. An entry surviving all four resolves and matches on name and
+    either matches on witness or moved with its support — the design's definition of ambiguous —
+    so Layer 2 grades it. ``support_shift`` is how the record's whole target shape moved on each
+    axis, or ``None`` when the target's element count of the entry's type changed or is unknown.
     """
     name = _entry_name(before)
     if not name:
@@ -690,7 +940,11 @@ def _grade_entry(doc: object, record: RefRecord, before: RefEntry, after: RefEnt
         )
 
     tolerance = _element_tolerance(element) if element is not None else _WITNESS_EPSILON
-    if _witness_moved(before["witness"], after["witness"], tolerance):
+    moved = _witness_moved(before["witness"], after["witness"], tolerance)
+    if moved and support_shift is not None and after["mapped"]:
+        target = doc.getObject(record["target"]) if record["target"] else None
+        after = {**after, "lineage_counter": _lineage_has_counter(target, after["mapped"])}
+    if moved and not _follows_support(before, after, support_shift, tolerance):
         return _finding(
             record,
             before,
@@ -707,16 +961,29 @@ def _grade_entry(doc: object, record: RefRecord, before: RefEntry, after: RefEnt
 
 
 def _grade_entries(
-    doc: object, record: RefRecord, before: list[RefEntry], after: list[RefEntry]
+    doc: object, record: RefRecord, baseline: RefRecord, live: RefRecord
 ) -> list[RefFinding]:
-    """Grade each ``(before, after)`` entry pair, or report a lone ``PASS`` when there are none."""
+    """Grade each ``(baseline, live)`` entry pair, or report a lone ``PASS`` when there are none.
+
+    ``baseline`` is the snapshot record, or the op-written one for an exempt record; it shares
+    ``record``'s owner, property and target.
+    """
+    before, after = baseline["entries"], live["entries"]
     if not after:
         return [
             _finding(
                 record, None, "PASS", 1, f"{record['owner']}.{record['prop']} names no element"
             )
         ]
-    return [_grade_entry(doc, record, b, a) for b, a in zip(before, after)]
+    support_shift = _axis_shifts(baseline["target_witness"], live["target_witness"])
+    counts_before, counts_after = baseline.get("target_counts"), live.get("target_counts")
+
+    def shift_for(entry: RefEntry) -> AxisShifts | None:
+        element_type = entry["witness"][0] if entry["witness"] else None
+        stable = _same_element_count(counts_before, counts_after, element_type)
+        return support_shift if stable else None
+
+    return [_grade_entry(doc, record, b, a, shift_for(b)) for b, a in zip(before, after)]
 
 
 def _grade_record(
@@ -782,7 +1049,7 @@ def _grade_record(
 
     intended = written is not None and _entry_values(live) == _entry_values(written)
     if intended:
-        return findings + _grade_entries(doc, record, written["entries"], live["entries"])
+        return findings + _grade_entries(doc, record, written, live)
 
     before_count = len(record["entries"])
     after_count = len(live["entries"])
@@ -803,14 +1070,16 @@ def _grade_record(
         )
         return findings
 
-    return findings + _grade_entries(doc, record, record["entries"], live["entries"])
+    return findings + _grade_entries(doc, record, record, live)
 
 
 def _reference_findings(
     doc: object,
     snapshot: list[RefRecord],
     live: list[RefRecord],
-    written: list[RefRecord],
+    written: list[RefRecord] | None,
+    deleted: frozenset[str] = frozenset(),
+    removed_bindings: Collection[tuple[str, str]] = (),
 ) -> list[RefFinding]:
     """Run the Layer-1/2 diff over every snapshotted record, skipping the entries Layer 0 reported.
 
@@ -821,17 +1090,50 @@ def _reference_findings(
 
     A record whose every entry is missing is skipped outright: Layer 0 has reported all of it, and
     grading the empty remainder would emit a spurious "names no element" PASS.
+
+    A record whose owner the op deleted on purpose (``deleted``) and that is gone from ``doc`` is
+    excused: the delete set is what the op wrote, in the sense of decision 014. The owner must be
+    in the set AND absent, so a delete that did not happen, or an owner that vanished any other
+    way, still grades ``BROKEN``.
     """
     live_by_key = _pair_records(snapshot, live)
-    written_by_key = _pair_records(snapshot, written)
+    written_by_key = _pair_records(snapshot, written or [])
 
     findings: list[RefFinding] = []
     for key, record in _keyed(snapshot).items():
         paired = live_by_key.get(key)
+        if (
+            paired is None
+            and written is not None
+            and key not in written_by_key
+            and (record["owner"], record["prop"]) in removed_bindings
+            and doc.getObject(record["owner"]) is not None
+        ):
+            findings.append(
+                _finding(
+                    record,
+                    None,
+                    "PASS",
+                    1,
+                    f"{record['owner']}.{record['prop']} was cleared by the op",
+                )
+            )
+            continue
         if paired is not None and any(entry["missing"] for entry in paired["entries"]):
             record, paired = _without_missing_entries(record, paired)
             if paired is None:
                 continue
+        if paired is None and record["owner"] in deleted and doc.getObject(record["owner"]) is None:
+            findings.append(
+                _finding(
+                    record,
+                    None,
+                    "PASS",
+                    1,
+                    f"{record['owner']} was deleted by the operation",
+                )
+            )
+            continue
         findings.extend(_grade_record(doc, record, paired, written_by_key.get(key)))
     return findings
 

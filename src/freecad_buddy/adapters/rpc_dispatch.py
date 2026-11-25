@@ -18,7 +18,7 @@ from typing import Callable
 from freecad_buddy.adapters.marshal import MarshalTimeout
 from freecad_buddy.contracts import ResultEnvelope, mirror_text
 from freecad_buddy.usecases import shim
-from freecad_buddy.usecases.documents import ValidationError
+from freecad_buddy.usecases.documents import CodedValidationError, ValidationError
 
 logger = logging.getLogger("freecad_buddy.dispatch")
 
@@ -80,6 +80,34 @@ def wrote_own_audit(envelope: ResultEnvelope) -> bool:
     return isinstance(content, dict) and isinstance(content.get("mutation"), dict)
 
 
+def exec_digests(envelope: ResultEnvelope) -> tuple[str | None, str | None]:
+    """The ``(fingerprint_before, fingerprint_after)`` digests a ``script_exec`` result carries.
+
+    ``script_exec`` writes no audit line itself (the dispatch boundary does), so its ``after`` line
+    reads both digests from the result. A result without them, such as a ``TIMEOUT`` envelope,
+    gives ``None`` for each.
+    """
+    content = envelope.get("structured_content")
+    if not isinstance(content, dict):
+        return None, None
+    before, after = content.get("fingerprint_before"), content.get("fingerprint_after")
+    return (
+        before if isinstance(before, str) else None,
+        after if isinstance(after, str) else None,
+    )
+
+
+def _refusal_code(exc: BaseException) -> str | None:
+    """The ``detail.code`` a project refusal names, or ``None`` for any other exception.
+
+    A stdlib or user exception may carry a ``code`` of any type (``OSError`` has an int), which
+    would break the envelope schema, so only ``CodedValidationError`` is read.
+    """
+    if isinstance(exc, CodedValidationError) and isinstance(exc.code, str) and exc.code:
+        return exc.code
+    return None
+
+
 def _error_envelope(status: str, exc: BaseException, *, unexpected: bool = False) -> ResultEnvelope:
     tb = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
     # A client error (INVALID_INPUT — unknown handle/object/path, bad param) is expected traffic,
@@ -93,7 +121,7 @@ def _error_envelope(status: str, exc: BaseException, *, unexpected: bool = False
     if unexpected:
         data["unexpected"] = True
     detail = {
-        "code": status,
+        "code": _refusal_code(exc) or status,
         "message": str(exc) or type(exc).__name__,
         "data": data,
     }

@@ -1,0 +1,6 @@
+label=a1-loft rc=0 elapsed=2s
+FEATURES_FILE=D:\Work\Personal\Sources\fcb-verify-13-18\src\freecad_buddy\usecases\features.py
+FAIL: test_Should_remove_the_frustum_volume_When_the_loft_is_subtractive (infc.test_feature_tools.LoftTest.test_Should_remove_the_frustum_volume_When_the_loft_is_subtractive)
+AssertionError: 15999.999999999996 != 15346.666666666666 within 3 places (653.3333333333303 difference)
+RESULT fail=1 error=0 run=46
+RED infc.test_feature_tools.LoftTest.test_Should_remove_the_frustum_volume_When_the_loft_is_subtractive

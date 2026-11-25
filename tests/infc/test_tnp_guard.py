@@ -10,12 +10,13 @@ import glob
 import os
 import shutil
 import unittest
+from unittest import mock
 
 import FreeCAD as App
 import Part
 import Sketcher
 
-from freecad_buddy.usecases import shim, tnp_guard, transaction
+from freecad_buddy.usecases import confirm, shim, sketches, tnp_guard, transaction
 from freecad_buddy.usecases.documents import DocumentRegistry, temp_dir
 from freecad_buddy.usecases.fingerprint import fingerprint
 
@@ -95,6 +96,26 @@ class _BodyFixture(unittest.TestCase):
         fillet.Radius = FILLET_RADIUS
         self.document.recompute()
         return fillet
+
+    def _rectangle(self, name, x_min, y_min, x_max, y_max, attach=None):
+        sketch = self.document.addObject("Sketcher::SketchObject", name)
+        self.plate.addObject(sketch)
+        if attach is not None:
+            sketch.AttachmentSupport = [(attach, "")]
+            sketch.MapMode = "FlatFace"
+        corners = [
+            (x_min, y_min, x_max, y_min),
+            (x_max, y_min, x_max, y_max),
+            (x_max, y_max, x_min, y_max),
+            (x_min, y_max, x_min, y_min),
+        ]
+        for x1, y1, x2, y2 in corners:
+            sketch.addGeometry(
+                Part.LineSegment(App.Vector(x1, y1, 0), App.Vector(x2, y2, 0)), False
+            )
+        for index in range(4):
+            sketch.addConstraint(Sketcher.Constraint("Coincident", index, 2, (index + 1) % 4, 1))
+        return sketch
 
     def _audit(self, snapshot, written=None):
         return tnp_guard.audit_references(self.document, snapshot, written)
@@ -969,3 +990,1239 @@ class MutationRollbackTest(_BodyFixture):
         ]
         self.assertEqual(flagged, [], "the op wrote the shorter list, so it is the intended target")
         self.assertEqual(envelope["status"], "OK")
+
+
+class ExpressionBindingTest(unittest.TestCase):
+    """An ``ExpressionEngine`` binding is a reference record keyed by its property path."""
+
+    BOUND_RECORD = "ExpressionEngine[Length]"
+    REMOVED = {("Box", BOUND_RECORD)}
+
+    def setUp(self):
+        self.document = App.newDocument("tnp_expression")
+        varset = self.document.addObject("App::VarSet", "Params")
+        varset.addProperty("App::PropertyLength", "width", "Parameters", "")
+        varset.width = 12.0
+        self.box = self.document.addObject("Part::Box", "Box")
+        self.box.setExpression("Length", "Params.width")
+        self.document.recompute()
+
+    def tearDown(self):
+        App.closeDocument(self.document.Name)
+
+    def _verdicts(self, audit):
+        return [f["verdict"] for f in audit["findings"] if f["prop"] == self.BOUND_RECORD]
+
+    def test_Should_pass_When_the_op_reports_it_removed_the_binding(self):
+        # Arrange
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.box.setExpression("Length", None)
+        written = tnp_guard.snapshot_references(self.document)
+        self.document.recompute()
+
+        # Act
+        audit = tnp_guard.audit_references(
+            self.document, snapshot, written, removed_bindings=self.REMOVED
+        )
+
+        # Assert
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual(self._verdicts(audit), ["PASS"])
+
+    def test_Should_flag_broken_When_the_op_removed_a_binding_without_reporting_it(self):
+        # Arrange
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.box.setExpression("Length", None)
+        written = tnp_guard.snapshot_references(self.document)
+        self.document.recompute()
+
+        # Act
+        audit = tnp_guard.audit_references(self.document, snapshot, written)
+
+        # Assert
+        self.assertEqual(self._verdicts(audit), ["BROKEN"])
+
+    def test_Should_flag_broken_When_a_binding_vanishes_after_the_op_wrote_it(self):
+        # Arrange
+        snapshot = tnp_guard.snapshot_references(self.document)
+        written = tnp_guard.snapshot_references(self.document)
+        self.box.setExpression("Length", None)
+        self.document.recompute()
+
+        # Act
+        audit = tnp_guard.audit_references(
+            self.document, snapshot, written, removed_bindings=self.REMOVED
+        )
+
+        # Assert
+        self.assertEqual(audit["status"], "FLAGGED")
+        self.assertEqual(self._verdicts(audit), ["BROKEN"])
+
+    def test_Should_flag_broken_When_no_written_reading_is_given(self):
+        # Arrange
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.box.setExpression("Length", None)
+        self.document.recompute()
+
+        # Act
+        audit = tnp_guard.audit_references(self.document, snapshot, removed_bindings=self.REMOVED)
+
+        # Assert
+        self.assertEqual(self._verdicts(audit), ["BROKEN"])
+
+    def test_Should_flag_broken_When_the_owner_of_the_binding_is_removed(self):
+        # Arrange
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.document.removeObject("Box")
+        written = tnp_guard.snapshot_references(self.document)
+        self.document.recompute()
+
+        # Act
+        audit = tnp_guard.audit_references(
+            self.document, snapshot, written, removed_bindings=self.REMOVED
+        )
+
+        # Assert
+        self.assertEqual(self._verdicts(audit), ["BROKEN"])
+
+    def test_Should_stay_clean_When_a_binding_is_added_or_replaced(self):
+        # Arrange
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.box.setExpression("Length", "Params.width * 2")
+        self.box.setExpression("Height", "Params.width")
+        written = tnp_guard.snapshot_references(self.document)
+        self.document.recompute()
+
+        # Act
+        audit = tnp_guard.audit_references(self.document, snapshot, written)
+
+        # Assert
+        self.assertEqual(audit["status"], "CLEAN")
+
+
+def _plane_name(shape, axis, value):
+    """The name of the face of ``shape`` that lies in the plane ``coordinate[axis] == value``."""
+    for index, face in enumerate(shape.Faces, start=1):
+        box = face.BoundBox
+        low = (box.XMin, box.YMin, box.ZMin)[axis]
+        high = (box.XMax, box.YMax, box.ZMax)[axis]
+        if abs(low - value) < 1e-6 and abs(high - value) < 1e-6:
+            return f"Face{index}"
+    raise AssertionError(f"no face lies at coordinate {axis} == {value}")
+
+
+class SupportFollowTest(_BodyFixture):
+    """A witness move that FreeCAD attributes to the same element riding its moved support."""
+
+    AXIS_X = 0
+    AXIS_Z = 2
+
+    def _attach_datum(self, face):
+        datum = self.document.addObject("PartDesign::Plane", "DatumPlane")
+        self.body.addObject(datum)
+        datum.AttachmentSupport = [(self.pad, (face,))]
+        datum.MapMode = "FlatFace"
+        self.document.recompute()
+        return datum
+
+    def _attach_datum_to_top_face(self):
+        return self._attach_datum(_plane_name(self.pad.Shape, self.AXIS_Z, PAD_LENGTH))
+
+    def _datum_findings(self, snapshot):
+        audit = self._audit(snapshot)
+        return audit, self._findings(audit, "DatumPlane", "AttachmentSupport")
+
+    def _datum_record(self, snapshot):
+        return next(r for r in snapshot if r["owner"] == "DatumPlane")
+
+    def _constrain_square(self):
+        """Pin the sketch square so its width is a driving dimension; return its index."""
+        for constraint in (
+            Sketcher.Constraint("Horizontal", 0),
+            Sketcher.Constraint("Vertical", 1),
+            Sketcher.Constraint("Horizontal", 2),
+            Sketcher.Constraint("Vertical", 3),
+            Sketcher.Constraint("Coincident", 0, 1, -1, 1),
+        ):
+            self.sketch.addConstraint(constraint)
+        width_index = self.sketch.addConstraint(
+            Sketcher.Constraint("DistanceX", 0, 1, 0, 2, SQUARE)
+        )
+        self.sketch.addConstraint(Sketcher.Constraint("DistanceY", 1, 1, 1, 2, SQUARE))
+        self.document.recompute()
+        return width_index
+
+    def _grow_pad(self):
+        self.pad.Length = PAD_LENGTH + 5.0
+        self.document.recompute()
+
+    def test_Should_pass_the_datum_When_pad_length_moves_the_face_it_is_attached_to(self):
+        # Arrange
+        datum = self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._grow_pad()
+
+        # Act
+        audit, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertAlmostEqual(datum.Placement.Base.z, PAD_LENGTH + 5.0, places=6)
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
+        self.assertIn("descends from the same source element", findings[0]["detail"])
+
+    def test_Should_pass_the_datum_When_a_sketch_width_change_moves_the_face(self):
+        # Arrange
+        width_index = self._constrain_square()
+        datum = self._attach_datum(_plane_name(self.pad.Shape, self.AXIS_X, SQUARE))
+        snapshot = tnp_guard.snapshot_references(self.document)
+        datum_x_before = datum.Placement.Base.x
+        self.sketch.setDatum(width_index, App.Units.Quantity(f"{SQUARE + 10.0} mm"))
+        self.document.recompute()
+
+        # Act
+        audit, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertGreater(self.pad.Shape.BoundBox.XMax, SQUARE + 1.0, "the face must have moved")
+        self.assertAlmostEqual(datum.Placement.Base.x, datum_x_before + 10.0, places=6)
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
+
+    def test_Should_pass_an_external_geometry_edge_When_pad_length_moves_it(self):
+        # Arrange
+        reference = self.document.addObject("Sketcher::SketchObject", "ExternalSketch")
+        self.body.addObject(reference)
+        reference.AttachmentSupport = [(self._origin_plane(), ("",))]
+        reference.MapMode = "FlatFace"
+        self.document.recompute()
+        top_edge = next(
+            f"Edge{index}"
+            for index, edge in enumerate(self.pad.Shape.Edges, start=1)
+            if abs(edge.BoundBox.ZMin - PAD_LENGTH) < 1e-6
+            and abs(edge.BoundBox.ZMax - PAD_LENGTH) < 1e-6
+        )
+        reference.addExternal(self.pad.Name, top_edge)
+        self.document.recompute()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._grow_pad()
+
+        # Act
+        audit = self._audit(snapshot)
+        findings = self._findings(audit, "ExternalSketch", "ExternalGeometry")
+
+        # Assert
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
+
+    def test_Should_pass_a_pad_profile_face_When_pad_length_moves_it(self):
+        # Arrange
+        top_face = _plane_name(self.pad.Shape, self.AXIS_Z, PAD_LENGTH)
+        second = self.document.addObject("PartDesign::Pad", "Pad2")
+        self.body.addObject(second)
+        second.Profile = (self.pad, [top_face])
+        second.Length = 3.0
+        self.document.recompute()
+        self.assertEqual(list(second.State), ["Up-to-date"])
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._grow_pad()
+
+        # Act
+        audit = self._audit(snapshot)
+        findings = self._findings(audit, "Pad2", "Profile")
+
+        # Assert
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
+
+    def test_Should_pass_the_moving_fillet_edge_and_still_break_renumbered_ones_When_pad_grows(
+        self,
+    ):
+        # Arrange
+        fillet = self._add_fillet()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._grow_pad()
+
+        # Act
+        audit = self._audit(snapshot)
+        findings = self._findings(audit, "Fillet", "Base")
+
+        # Assert
+        self.assertFalse(fillet.isValid(), "FreeCAD itself marks the renumbered fillet invalid")
+        moved = [f for f in findings if "Edge4" in f["detail"]]
+        self.assertEqual([(f["verdict"], f["layer"]) for f in moved], [("PASS", 2)])
+        broken = [f for f in findings if f["verdict"] == "BROKEN"]
+        self.assertTrue(broken, "FreeCAD renumbers Edge1 and Edge2; a real break must still report")
+        self.assertNotIn("REPOINTED", [f["verdict"] for f in findings])
+        self.assertEqual(audit["status"], "FLAGGED")
+
+    def test_Should_flag_repointed_When_the_support_element_count_changed(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        for record in snapshot:
+            record["target_counts"] = {"Face": 5, "Edge": 12, "Vertex": 8}
+        self._grow_pad()
+
+        # Act
+        audit, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([f["verdict"] for f in findings], ["REPOINTED"])
+        self.assertEqual(audit["status"], "FLAGGED")
+
+    def test_Should_pass_the_datum_When_the_support_element_count_is_unchanged(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        record = self._datum_record(snapshot)
+        self._grow_pad()
+
+        # Act
+        audit, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual(record["target_counts"], {"Face": 6, "Edge": 12, "Vertex": 8})
+        self.assertEqual([f["verdict"] for f in findings], ["PASS"])
+
+    def test_Should_flag_repointed_When_the_element_moved_farther_than_its_support(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        entry = self._datum_record(snapshot)["entries"][0]
+        entry["witness"] = (entry["witness"][0],) + tuple(v - 500.0 for v in entry["witness"][1:])
+        self._grow_pad()
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+        self.assertIn("witness moved", findings[0]["detail"])
+
+    def test_Should_flag_repointed_When_the_witness_moved_and_the_support_did_not(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        entry = self._datum_record(snapshot)["entries"][0]
+        entry["witness"] = (entry["witness"][0],) + tuple(v + 5.0 for v in entry["witness"][1:])
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+        self.assertIn("witness moved", findings[0]["detail"])
+
+    def test_Should_flag_repointed_When_the_mapped_name_changed_although_the_support_moved(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._datum_record(snapshot)["entries"][0]["mapped"] = ";planted;:Hff:7,F"
+        self._grow_pad()
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+        self.assertIn("different element", findings[0]["detail"])
+
+    def test_Should_flag_repointed_When_one_side_has_no_history_although_the_support_moved(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._datum_record(snapshot)["entries"][0]["history"] = None
+        self._grow_pad()
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+
+    def test_Should_flag_repointed_When_the_history_source_differs_although_the_support_moved(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._datum_record(snapshot)["entries"][0]["history"] = (0, "planted")
+        self._grow_pad()
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+
+    def test_Should_flag_repointed_When_the_support_witness_is_not_a_number(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        record = self._datum_record(snapshot)
+        support = record["target_witness"]
+        record["target_witness"] = support[:4] + (float("nan"),) + support[5:]
+        self._grow_pad()
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+
+    def test_Should_pass_the_datum_When_the_written_reading_is_taken_before_recompute(self):
+        # Arrange
+        datum = self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.pad.Length = PAD_LENGTH + 5.0
+        written = tnp_guard.snapshot_references(self.document)
+        self.document.recompute()
+
+        # Act
+        audit = self._audit(snapshot, written)
+        findings = self._findings(audit, datum.Name, "AttachmentSupport")
+
+        # Assert
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
+
+    def test_Should_record_the_whole_support_shape_witness_When_snapshotting_a_link(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+
+        # Act
+        snapshot = tnp_guard.snapshot_references(self.document)
+
+        # Assert
+        record = self._datum_record(snapshot)
+        self.assertEqual(record["target_witness"][0], "Solid")
+        self.assertEqual(record["target_witness"][6], PAD_LENGTH)
+
+    def test_Should_flag_repointed_When_the_element_moved_against_the_direction_of_its_support(
+        self,
+    ):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        entry = self._datum_record(snapshot)["entries"][0]
+        witness = list(entry["witness"])
+        # The face really rises 5 mm; a snapshot 10 mm higher makes the element appear to fall 5 mm.
+        witness[3] += 2 * 5.0
+        witness[6] += 2 * 5.0
+        entry["witness"] = tuple(witness)
+        self._grow_pad()
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+
+    def test_Should_flag_repointed_When_the_element_moved_along_an_axis_the_support_did_not(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        entry = self._datum_record(snapshot)["entries"][0]
+        witness = list(entry["witness"])
+        witness[1] -= 5.0
+        witness[4] -= 5.0
+        entry["witness"] = tuple(witness)
+        self._grow_pad()
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+
+    def test_Should_grade_against_the_written_support_When_the_op_wrote_the_reference(self):
+        # Arrange
+        datum = self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.pad.Length = PAD_LENGTH + 5.0
+        written = tnp_guard.snapshot_references(self.document)
+        record = self._datum_record(written)
+        support = record["target_witness"]
+        record["target_witness"] = support[:4] + (float("nan"),) + support[5:]
+        self.document.recompute()
+
+        # Act
+        findings = self._findings(self._audit(snapshot, written), datum.Name, "AttachmentSupport")
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+
+    def test_Should_pass_the_datum_When_the_pad_grows_toward_the_negative_side(self):
+        # Arrange
+        self.pad.Reversed = True
+        self.document.recompute()
+        datum = self._attach_datum(_plane_name(self.pad.Shape, self.AXIS_Z, -PAD_LENGTH))
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._grow_pad()
+
+        # Act
+        audit, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertAlmostEqual(datum.Placement.Base.z, -(PAD_LENGTH + 5.0), places=6)
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
+
+    def test_Should_return_no_witness_When_the_support_shape_cannot_be_read(self):
+        # Arrange
+        class _UnreadableShape:
+            @property
+            def Shape(self):
+                raise RuntimeError("shape unreadable")
+
+        # Act
+        witness = tnp_guard._support_witness(_UnreadableShape())
+
+        # Assert
+        self.assertIsNone(witness)
+
+    def test_Should_pass_the_datum_When_the_pad_shrinks(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.pad.Length = PAD_LENGTH - 5.0
+        self.document.recompute()
+
+        # Act
+        audit, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
+
+    def test_Should_pass_the_datum_When_a_midplane_pad_grows_on_both_sides(self):
+        # Arrange
+        self.pad.Midplane = True
+        self.document.recompute()
+        datum = self._attach_datum(_plane_name(self.pad.Shape, self.AXIS_Z, PAD_LENGTH / 2))
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._grow_pad()
+
+        # Act
+        audit, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertAlmostEqual(datum.Placement.Base.z, (PAD_LENGTH + 5.0) / 2, places=6)
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
+
+    def test_Should_keep_a_whole_object_link_record_When_its_target_shape_cannot_be_read(self):
+        # Arrange
+        class _Target:
+            Name = "Target"
+
+            @property
+            def Shape(self):
+                raise RuntimeError("shape unreadable")
+
+        target = _Target()
+
+        class _Owner:
+            Name = "Owner"
+            PropertiesList = ["Support"]
+            Support = (target, [""])
+
+            def getTypeIdOfProperty(self, prop):
+                return "App::PropertyLinkSub"
+
+        document = type("_OneOwnerDocument", (), {"Objects": [_Owner()]})()
+
+        # Act
+        records = tnp_guard.snapshot_references(document)
+
+        # Assert
+        self.assertEqual([(r["owner"], r["prop"]) for r in records], [("Owner", "Support")])
+        self.assertIsNone(records[0]["target_witness"])
+
+
+class AxisShiftsTest(unittest.TestCase):
+    BOX = ("Solid", 0.0, 0.0, 0.0, 20.0, 20.0, 10.0)
+
+    def test_Should_return_zero_shifts_When_both_witnesses_are_equal(self):
+        # Arrange
+        before = after = self.BOX
+
+        # Act
+        result = tnp_guard._axis_shifts(before, after)
+
+        # Assert
+        self.assertEqual(result, ((0.0, 0.0), (0.0, 0.0), (0.0, 0.0)))
+
+    def test_Should_return_the_signed_face_shifts_When_the_maximum_face_moved(self):
+        # Arrange
+        after = ("Solid", 0.0, 0.0, 0.0, 20.0, 20.0, 15.0)
+
+        # Act
+        result = tnp_guard._axis_shifts(self.BOX, after)
+
+        # Assert
+        self.assertEqual(result, ((0.0, 0.0), (0.0, 0.0), (0.0, 5.0)))
+
+    def test_Should_return_the_signed_face_shifts_When_only_the_minimum_face_moved(self):
+        # Arrange
+        after = ("Solid", 0.0, 0.0, -5.0, 20.0, 20.0, 10.0)
+
+        # Act
+        result = tnp_guard._axis_shifts(self.BOX, after)
+
+        # Assert
+        self.assertEqual(result, ((0.0, 0.0), (0.0, 0.0), (-5.0, 0.0)))
+
+    def test_Should_return_none_When_a_side_is_unreadable(self):
+        # Arrange
+        before, after = self.BOX, None
+
+        # Act
+        result = tnp_guard._axis_shifts(before, after)
+
+        # Assert
+        self.assertIsNone(result)
+
+    def test_Should_return_none_When_the_shape_type_changed(self):
+        # Arrange
+        after = ("Compound",) + self.BOX[1:]
+
+        # Act
+        result = tnp_guard._axis_shifts(self.BOX, after)
+
+        # Assert
+        self.assertIsNone(result)
+
+    def test_Should_return_none_When_a_component_is_not_finite(self):
+        # Arrange
+        not_a_number = ("Solid", float("nan")) + self.BOX[2:]
+        infinite = ("Solid", float("inf")) + self.BOX[2:]
+
+        # Act
+        results = [
+            tnp_guard._axis_shifts(self.BOX, not_a_number),
+            tnp_guard._axis_shifts(self.BOX, infinite),
+        ]
+
+        # Assert
+        self.assertEqual(results, [None, None])
+
+
+class FollowsSupportTest(unittest.TestCase):
+    WITNESS = ("Face", 0.0, 0.0, 10.0, 20.0, 20.0, 10.0)
+    HISTORY = (7, "g1;SKT")
+    GREW_UP_FIVE = ((0.0, 0.0), (0.0, 0.0), (0.0, 5.0))
+    GREW_DOWN_FIVE = ((0.0, 0.0), (0.0, 0.0), (-5.0, 0.0))
+    SHRANK_FIVE = ((0.0, 0.0), (0.0, 0.0), (0.0, -5.0))
+
+    def _entry(self, shift=(0.0, 0.0, 0.0), mapped=";a;", history=HISTORY):
+        dx, dy, dz = shift
+        witness = (
+            self.WITNESS[0],
+            self.WITNESS[1] + dx,
+            self.WITNESS[2] + dy,
+            self.WITNESS[3] + dz,
+            self.WITNESS[4] + dx,
+            self.WITNESS[5] + dy,
+            self.WITNESS[6] + dz,
+        )
+        return {
+            "mapped": mapped,
+            "indexed": "Face6",
+            "missing": False,
+            "witness": witness,
+            "history": history,
+        }
+
+    def test_Should_excuse_the_move_When_the_same_element_moved_with_its_support(self):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=(0.0, 0.0, 5.0))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertTrue(result)
+
+    def test_Should_excuse_the_move_When_the_support_grew_on_its_minimum_side(self):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=(0.0, 0.0, -5.0))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_DOWN_FIVE, 1e-7)
+
+        # Assert
+        self.assertTrue(result)
+
+    def test_Should_excuse_the_move_When_the_support_shrank(self):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=(0.0, 0.0, -5.0))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.SHRANK_FIVE, 1e-7)
+
+        # Assert
+        self.assertTrue(result)
+
+    def test_Should_not_excuse_the_move_When_the_support_did_not_change(self):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=(0.0, 0.0, 0.5))
+        unmoved = ((0.0, 0.0), (0.0, 0.0), (0.0, 0.0))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, unmoved, 1.0)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_the_support_shift_is_unknown(self):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=(0.0, 0.0, 5.0))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, None, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_the_element_moved_beyond_the_support(self):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=(0.0, 0.0, 6.0))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_it_runs_along_an_axis_the_support_did_not_move_on(
+        self,
+    ):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=(5.0, 0.0, 0.0))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_it_runs_against_the_direction_of_the_support(self):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=(0.0, 0.0, -5.0))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_neither_side_has_a_history(self):
+        # Arrange
+        before = self._entry(history=None)
+        after = self._entry(shift=(0.0, 0.0, 5.0), history=None)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_neither_side_has_a_mapped_name(self):
+        # Arrange
+        before = self._entry(mapped=None)
+        after = self._entry(shift=(0.0, 0.0, 5.0), mapped=None)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_the_history_source_differs(self):
+        # Arrange
+        before = self._entry()
+        after = self._entry(shift=(0.0, 0.0, 5.0), history=(8, "other"))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_the_history_source_name_carries_a_counter(self):
+        # Arrange
+        source = (1, "#60:3;:M3;CUT;:H1:8,E")
+        before = self._entry(history=source)
+        after = self._entry(shift=(0.0, 0.0, 5.0), history=source)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_the_lineage_holds_a_counter(self):
+        # Arrange
+        before = self._entry()
+        after = dict(self._entry(shift=(0.0, 0.0, 5.0)), lineage_counter=True)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_a_bare_name_has_split_siblings_before(self):
+        # Arrange
+        before = dict(self._entry(), split_siblings=True)
+        after = self._entry(shift=(0.0, 0.0, 5.0))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_a_bare_name_has_split_siblings_after(self):
+        # Arrange
+        before = self._entry()
+        after = dict(self._entry(shift=(0.0, 0.0, 5.0)), split_siblings=True)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_the_mapped_name_carries_a_positional_counter(self):
+        # Arrange
+        name = ";#60:3;:M3;CUT;:H1:8,E"
+        before = self._entry(mapped=name)
+        after = self._entry(shift=(0.0, 0.0, 5.0), mapped=name)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+
+class SplitSiblingTest(_BodyFixture):
+    """A bare ``;:U`` name is piece 1; it is positional only while indexed siblings exist."""
+
+    def _fillet_names(self):
+        fillet = self._add_fillet()
+        return fillet, {indexed: mapped for mapped, indexed in fillet.Shape.ElementMap.items()}
+
+    def _bare_element(self, fillet, names, with_siblings):
+        stems = tnp_guard._split_sibling_stems(fillet.Shape)
+        for indexed, mapped in names.items():
+            if ";:U;" in mapped and (mapped.split(";:U;")[0] in stems) == with_siblings:
+                return indexed
+        self.fail("the fillet carries no bare ;:U element with siblings=%s" % with_siblings)
+
+    def test_Should_mark_a_bare_name_When_indexed_siblings_share_its_stem(self):
+        # Arrange
+        fillet, names = self._fillet_names()
+        indexed = self._bare_element(fillet, names, with_siblings=True)
+
+        # Act
+        entry = tnp_guard._capture_entry(fillet, indexed)
+
+        # Assert
+        self.assertTrue(entry["split_siblings"], names[indexed])
+
+    def test_Should_not_mark_a_bare_name_When_no_indexed_sibling_shares_its_stem(self):
+        # Arrange
+        fillet, names = self._fillet_names()
+        indexed = self._bare_element(fillet, names, with_siblings=False)
+
+        # Act
+        entry = tnp_guard._capture_entry(fillet, indexed)
+
+        # Assert
+        self.assertFalse(entry["split_siblings"], names[indexed])
+
+    def test_Should_not_mark_a_pad_face_When_the_name_carries_the_fixed_index_zero(self):
+        # Arrange
+        top_face = _plane_name(self.pad.Shape, 2, PAD_LENGTH)
+
+        # Act
+        entry = tnp_guard._capture_entry(self.pad, top_face)
+
+        # Assert
+        self.assertNotIn("split_siblings", entry)
+
+    def test_Should_detect_siblings_When_the_stem_has_an_indexed_marker(self):
+        # Arrange
+        stems = frozenset(["#26:1"])
+        stems_from_shape = tnp_guard._split_sibling_stems(
+            type("_Shape", (), {"ElementMap": {"#26:1;:G2;XTR;:H1:7,F": "Face2"}})()
+        )
+
+        # Act
+        results = [
+            tnp_guard._has_split_siblings("#26:1;:U;FLT;:H1:7,E", stems),
+            tnp_guard._has_split_siblings("#26:2;:U;FLT;:H1:7,E", stems),
+            tnp_guard._has_split_siblings("#26:1;:G0;XTR;:H1:8,F", stems),
+            tnp_guard._has_split_siblings(None, stems),
+            tnp_guard._has_split_siblings("#26:1;:G;XTR;:H1:7,F", stems_from_shape),
+        ]
+
+        # Assert
+        self.assertEqual(results, [True, False, False, False, True])
+
+    def test_Should_cache_the_stems_per_target_name_When_two_targets_share_one_walk(self):
+        # Arrange
+        fillet, names = self._fillet_names()
+        indexed = self._bare_element(fillet, names, with_siblings=True)
+        shared = {}
+        pad_face_with_bare_marker = "Face1"
+
+        # Act
+        tnp_guard._capture_entry(self.pad, pad_face_with_bare_marker, shared)
+        entry = tnp_guard._capture_entry(fillet, indexed, shared)
+
+        # Assert
+        self.assertTrue(entry["split_siblings"])
+        self.assertEqual(sorted(shared), ["Fillet", "Pad"])
+
+
+class SplitPieceCounterTest(_BodyFixture):
+    """A positional piece counter in the mapped name never lets a move pass as support-following."""
+
+    PLATE_LENGTH = 40.0
+    PLATE_WIDTH = 10.0
+    PLATE_THICKNESS = 10.0
+    EDITED_LENGTH = 60.0
+
+    def _build_slotted_plate(self, pass_through=0):
+        """A plate whose length drives a groove pattern; the groove count changes with it.
+
+        ``pass_through`` bottom holes follow the pattern and leave its top elements unchanged, so
+        FreeCAD hashes the older mapped name and each history step shows one feature less.
+        """
+        self.plate = self.document.addObject("PartDesign::Body", "Plate")
+        xy_plane = next(f for f in self.plate.Origin.OriginFeatures if f.TypeId == "App::Plane")
+        sketch = self._rectangle("PlateSketch", 0, 0, self.PLATE_LENGTH, self.PLATE_WIDTH, xy_plane)
+        for constraint in (
+            Sketcher.Constraint("Horizontal", 0),
+            Sketcher.Constraint("Horizontal", 2),
+            Sketcher.Constraint("Vertical", 1),
+            Sketcher.Constraint("Vertical", 3),
+            Sketcher.Constraint("Coincident", 0, 1, -1, 1),
+        ):
+            sketch.addConstraint(constraint)
+        length_index = sketch.addConstraint(
+            Sketcher.Constraint("DistanceX", 0, 1, 0, 2, self.PLATE_LENGTH)
+        )
+        sketch.renameConstraint(length_index, "L")
+        sketch.addConstraint(Sketcher.Constraint("DistanceY", 1, 1, 1, 2, self.PLATE_WIDTH))
+        pad = self.document.addObject("PartDesign::Pad", "PlatePad")
+        self.plate.addObject(pad)
+        pad.Profile = sketch
+        pad.Length = self.PLATE_THICKNESS
+        self.document.recompute()
+        groove_sketch = self._rectangle(
+            "GrooveSketch",
+            8,
+            -1,
+            10,
+            self.PLATE_WIDTH + 1,
+            xy_plane,
+        )
+        groove_sketch.AttachmentOffset = App.Placement(
+            App.Vector(0, 0, self.PLATE_THICKNESS), App.Rotation()
+        )
+        groove = self.document.addObject("PartDesign::Pocket", "Groove")
+        self.plate.addObject(groove)
+        groove.Profile = groove_sketch
+        groove.Length = 2.0
+        self.document.recompute()
+        pattern = self.document.addObject("PartDesign::LinearPattern", "GroovePattern")
+        self.plate.addObject(pattern)
+        pattern.Originals = [groove]
+        pattern.Direction = (sketch, ["H_Axis"])
+        pattern.setExpression("Length", "PlateSketch.Constraints.L - 12 mm")
+        pattern.setExpression("Occurrences", "floor(PlateSketch.Constraints.L / 13 mm)")
+        self.document.recompute()
+        self.plate.Tip = pattern
+        last = pattern
+        for index in range(pass_through):
+            hole_sketch = self._rectangle(
+                f"HoleSketch{index}", 1 + 3 * index, 1, 2 + 3 * index, 2, xy_plane
+            )
+            hole = self.document.addObject("PartDesign::Pocket", f"Hole{index}")
+            self.plate.addObject(hole)
+            hole.Profile = hole_sketch
+            hole.Length = 1.0
+            hole.Reversed = True
+            self.document.recompute()
+            self.plate.Tip = hole
+            last = hole
+        return last
+
+    def _strip_edge(self, pattern):
+        """The top edge of the strip between the first and second groove (x 10 to 22)."""
+        return next(
+            f"Edge{index}"
+            for index, edge in enumerate(pattern.Shape.Edges, start=1)
+            if abs(edge.BoundBox.YMin - self.PLATE_WIDTH) < 1e-6
+            and abs(edge.BoundBox.ZMin - self.PLATE_THICKNESS) < 1e-6
+            and abs(edge.BoundBox.XMin - 10.0) < 1e-6
+            and abs(edge.BoundBox.XMax - 22.0) < 1e-6
+        )
+
+    def _datum_verdicts_after_length_edit(self, pass_through):
+        last = self._build_slotted_plate(pass_through)
+        edge = self._strip_edge(last)
+        datum = self.document.addObject("PartDesign::Point", "DatumPoint")
+        self.plate.addObject(datum)
+        datum.AttachmentSupport = [(last, (edge,))]
+        datum.MapMode = "CenterOfMass"
+        self.document.recompute()
+        posture = confirm.set_auto_approve(True)
+        self.addCleanup(confirm.set_auto_approve, posture)
+        envelope = sketches.sketch_set_datum(
+            self.registry,
+            doc=self.handle,
+            sketch="PlateSketch",
+            constraint="L",
+            value={"value": self.EDITED_LENGTH, "unit": "mm"},
+        )
+        audit = envelope["structured_content"]["mutation"]["post_verify"]["tnp_audit"]
+        findings = [f for f in audit["findings"] if f["owner"] == "DatumPoint"]
+        return envelope, audit, [f["verdict"] for f in findings]
+
+    def test_Should_flag_repointed_When_a_pattern_edit_changes_the_split_piece_count(self):
+        # Arrange
+        pass_through = 0
+
+        # Act
+        envelope, audit, verdicts = self._datum_verdicts_after_length_edit(pass_through)
+
+        # Assert
+        self.assertIn("REPOINTED", verdicts)
+        self.assertNotEqual(audit["status"], "CLEAN")
+        self.assertEqual(envelope["status"], "SPEC_FAILED")
+
+    def test_Should_flag_repointed_When_only_the_lineage_shows_the_counter(self):
+        # Arrange
+        pass_through = 2
+        always_same_count = mock.patch.object(tnp_guard, "_same_element_count", return_value=True)
+
+        # Act
+        with always_same_count:
+            envelope, audit, verdicts = self._datum_verdicts_after_length_edit(pass_through)
+
+        # Assert
+        self.assertIn("REPOINTED", verdicts)
+        self.assertEqual(envelope["status"], "SPEC_FAILED")
+
+    def test_Should_flag_repointed_When_the_counter_is_hidden_behind_two_pass_through_features(
+        self,
+    ):
+        # Arrange
+        pass_through = 2
+
+        # Act
+        envelope, audit, verdicts = self._datum_verdicts_after_length_edit(pass_through)
+
+        # Assert
+        self.assertIn("REPOINTED", verdicts)
+        self.assertNotEqual(audit["status"], "CLEAN")
+        self.assertEqual(envelope["status"], "SPEC_FAILED")
+
+
+class WitnessMeshTest(unittest.TestCase):
+    """The witness reads the exact geometry, never the display mesh a view may have built."""
+
+    def test_Should_read_the_exact_extreme_When_the_curved_face_was_tessellated(self):
+        # Arrange
+        cylinder = Part.makeCylinder(3.0, 15.0, App.Vector(10.0, 5.0, 0.0))
+        face = cylinder.Faces[0]
+        exact_witness = tnp_guard._witness(face)
+        face.tessellate(0.5)
+
+        # Act
+        witness = tnp_guard._witness(face)
+
+        # Assert
+        self.assertGreater(face.BoundBox.YMin, 2.0 + 1e-4, "tessellation must shift BoundBox")
+        self.assertEqual(witness, exact_witness)
+        self.assertAlmostEqual(witness[2], 2.0, places=9)
+
+
+class PatternGridTest(_BodyFixture):
+    """A pattern instance index renumbers when the column count changes."""
+
+    EDITED_LENGTH = 100.0
+
+    def _build_grid(self):
+        self.plate = self.document.addObject("PartDesign::Body", "Plate")
+        xy_plane = next(f for f in self.plate.Origin.OriginFeatures if f.TypeId == "App::Plane")
+        sketch = self._rectangle("PlateSketch", 0, 0, 60, 24, xy_plane)
+        for constraint in (
+            Sketcher.Constraint("Horizontal", 0),
+            Sketcher.Constraint("Horizontal", 2),
+            Sketcher.Constraint("Vertical", 1),
+            Sketcher.Constraint("Vertical", 3),
+            Sketcher.Constraint("Coincident", 0, 1, -1, 1),
+        ):
+            sketch.addConstraint(constraint)
+        length_index = sketch.addConstraint(Sketcher.Constraint("DistanceX", 0, 1, 0, 2, 60.0))
+        sketch.renameConstraint(length_index, "L")
+        width_index = sketch.addConstraint(Sketcher.Constraint("DistanceY", 1, 1, 1, 2, 24.0))
+        sketch.setExpression(f"Constraints[{width_index}]", "Constraints.L * 0.4")
+        pad = self.document.addObject("PartDesign::Pad", "PlatePad")
+        self.plate.addObject(pad)
+        pad.Profile = sketch
+        pad.Length = 5.0
+        self.document.recompute()
+        boss_sketch = self._rectangle("BossSketch", 3, 17, 7, 21, xy_plane)
+        boss_sketch.AttachmentOffset = App.Placement(App.Vector(0, 0, 5), App.Rotation())
+        boss = self.document.addObject("PartDesign::Pad", "Boss")
+        self.plate.addObject(boss)
+        boss.Profile = boss_sketch
+        boss.Length = 3.0
+        self.document.recompute()
+        grid = self.document.addObject("PartDesign::LinearPattern", "Grid")
+        self.plate.addObject(grid)
+        grid.Originals = [boss]
+        grid.Direction = (sketch, ["V_Axis"])
+        grid.Reversed = True
+        grid.Mode = "Spacing"
+        grid.Offset = 10
+        grid.Occurrences = 2
+        grid.Direction2 = (sketch, ["H_Axis"])
+        grid.Mode2 = "Spacing"
+        grid.Offset2 = 13
+        grid.setExpression("Occurrences2", "PlateSketch.Constraints.L / 20 mm")
+        self.document.recompute()
+        grid.Spacings2 = [-1.0] * (grid.Occurrences2 - 1)
+        self.document.recompute()
+        self.plate.Tip = grid
+        return grid
+
+    def test_Should_flag_repointed_When_a_grid_column_count_renumbers_the_instances(self):
+        # Arrange
+        grid = self._build_grid()
+        shape = grid.Shape
+        target = next(
+            f"Face{index}"
+            for index, face in enumerate(shape.Faces, start=1)
+            if abs(face.BoundBox.ZMin - 8.0) < 1e-6
+            and abs(face.BoundBox.ZMax - 8.0) < 1e-6
+            and ";_3;" in shape.getElementMappedName(f"Face{index}")
+        )
+        datum = self.document.addObject("PartDesign::Point", "BossPoint")
+        self.plate.addObject(datum)
+        datum.AttachmentSupport = [(grid, (target,))]
+        datum.MapMode = "CenterOfMass"
+        self.document.recompute()
+        posture = confirm.set_auto_approve(True)
+        self.addCleanup(confirm.set_auto_approve, posture)
+
+        # Act
+        envelope = sketches.sketch_set_datum(
+            self.registry,
+            doc=self.handle,
+            sketch="PlateSketch",
+            constraint="L",
+            value={"value": self.EDITED_LENGTH, "unit": "mm"},
+        )
+
+        # Assert
+        audit = envelope["structured_content"]["mutation"]["post_verify"]["tnp_audit"]
+        findings = [f for f in audit["findings"] if f["owner"] == "BossPoint"]
+        self.assertIn("REPOINTED", [f["verdict"] for f in findings])
+        self.assertEqual(envelope["status"], "SPEC_FAILED")
+
+
+class SameElementCountTest(unittest.TestCase):
+    COUNTS = {"Face": 6, "Edge": 12, "Vertex": 8}
+
+    def test_Should_accept_the_move_When_the_count_of_the_element_type_is_equal(self):
+        # Arrange
+        after = {"Face": 6, "Edge": 14, "Vertex": 9}
+
+        # Act
+        result = tnp_guard._same_element_count(self.COUNTS, after, "Face")
+
+        # Assert
+        self.assertTrue(result)
+
+    def test_Should_refuse_the_move_When_the_count_of_the_element_type_changed(self):
+        # Arrange
+        after = {"Face": 10, "Edge": 12, "Vertex": 8}
+
+        # Act
+        result = tnp_guard._same_element_count(self.COUNTS, after, "Face")
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_refuse_the_move_When_a_count_is_unreadable_or_the_type_is_not_counted(self):
+        # Arrange
+        cases = [
+            (None, self.COUNTS, "Face"),
+            (self.COUNTS, None, "Face"),
+            (self.COUNTS, self.COUNTS, "Solid"),
+        ]
+
+        # Act
+        results = [tnp_guard._same_element_count(b, a, t) for b, a, t in cases]
+
+        # Assert
+        self.assertEqual(results, [False, False, False])
+
+
+class PositionalCounterTest(unittest.TestCase):
+    def test_Should_detect_the_counter_When_the_name_carries_a_FreeCAD_split_marker(self):
+        # Arrange
+        names = [
+            "#60:3;:M3;CUT;:Hcc3:8,E",
+            "#60;:M;CUT;:Hcc3:8,E",
+            "g1;:G2;XTR;:Hcc3:8,F",
+            "g1;:G#73;CUT;:Hcc3:a,V",
+            "g1;:MG;FLT;:Hcc3:8,F",
+            "g1;:MG4;FLT;:Hcc3:8,F",
+            "g1;:U2;:Hcc3:8,V",
+            "g1;:U3;FLT;:Hcc3:8,E",
+            "g1;D1a2;:Hcc3:8,F",
+            "g1;:G10#64;CUT;:Hcc3:c,E",
+            "g1;:U12;FLT;:Hcc3:8,E",
+            "g1;:G0#5;CUT;:Hcc3:a,F",
+            "g1;:G00#5;CUT;:Hcc3:a,F",
+            "g1;K2;:Hcc3:8,F",
+            "g1;:I4;:Hcc3:8,F",
+            "#24:1;:G0;XTR;:Hac3:8,F;_3;:H:3,F;:Hac4,F",
+            "#24:1;:G0;XTR;:Hac3:8,F;:H,F;:Hac4,F",
+        ]
+
+        # Act
+        results = [tnp_guard._has_positional_counter(name) for name in names]
+
+        # Assert
+        self.assertEqual(results, [True] * len(names))
+
+    def test_Should_not_detect_a_counter_When_the_name_has_only_tag_and_operation_markers(self):
+        # Arrange
+        names = [
+            "g1;SKT;:Hcc3:8,F",
+            "#60;:H1a:8,F;XTR;:Hcc5,F",
+            "g12;:L;FLT;:T5,E",
+            "g1;:G0;XTR;:Hcc3:8,F",
+            "g1;:G00;XTR;:Hcc3:8,F",
+            "g1;:G;XTR;:Hcc3:8,F",
+            "g1;:U;XTR;:Hcc3:8,E",
+            "g1;:X2;:C3,F",
+            "g1;D1ax;:Hcc3:8,F",
+            "",
+        ]
+
+        # Act
+        results = [tnp_guard._has_positional_counter(name) for name in names]
+
+        # Assert
+        self.assertEqual(results, [False] * len(names))

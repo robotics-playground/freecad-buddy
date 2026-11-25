@@ -81,9 +81,9 @@ convert it into a deterministic check:
   (`query_placement`)
 - lid / child / occurrence looks offset → check the frame delta (`query_placement`)
 - gusset / boss / standoff / rib looks floating → check solid count, labels, and
-  contact distance (`query_mass_properties`, `query_dependencies`)
+  contact distance (`query_mass_properties`, `query_interference` `min_distance`)
 - cavity / bore / blind hole looks wrong → section view, then measure wall
-  thickness, depth, or through-condition
+  thickness (`query_section`), depth, or through-condition
 - repeated pattern looks uneven → measure pattern centers or angular spacing
 
 The measurement is the result; the render only told you where to point it.

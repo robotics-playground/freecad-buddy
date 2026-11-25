@@ -52,6 +52,7 @@ EXPECTED_DOCUMENT_TOOLS = {
     "document_list",
     "document_recompute",
     "document_undo",
+    "document_object_delete",
 }
 
 EXPECTED_QUERY_TOOLS = {
@@ -60,6 +61,7 @@ EXPECTED_QUERY_TOOLS = {
     "query_mass_properties",
     "query_interference",
     "query_section",
+    "query_parameters",
     "query_dependencies",
     "query_sketch_info",
     "query_placement",
@@ -95,6 +97,8 @@ EXPECTED_FEATURE_TOOLS = {
     "feature_pad",
     "feature_pocket",
     "feature_revolve",
+    "feature_loft",
+    "feature_sweep",
     "feature_hole",
     "feature_fillet",
     "feature_chamfer",
@@ -102,6 +106,8 @@ EXPECTED_FEATURE_TOOLS = {
     "feature_mirror",
     "feature_datum",
     "feature_set_parameters",
+    "feature_parameters_define",
+    "feature_set_expression",
     "feature_body_create",
 }
 
@@ -990,7 +996,7 @@ def _catalog_with_short_exec(monkeypatch, exec_body):
 
 def test_script_exec_overrunning_its_budget_times_out_via_the_real_catalog(monkeypatch, release):
     registry = _catalog_with_short_exec(
-        monkeypatch, lambda _registry, _doc, _code: release.wait(30.0)
+        monkeypatch, lambda _registry, _doc, _code, _recompute: release.wait(30.0)
     )
     started = time.monotonic()
 
@@ -1015,7 +1021,7 @@ def test_only_script_exec_runs_off_the_main_thread(monkeypatch):
     )
     registry = _catalog_with_short_exec(
         monkeypatch,
-        lambda _registry, _doc, _code: {
+        lambda _registry, _doc, _code, _recompute: {
             "thread": seen.setdefault("script_exec", threading.get_ident())
         },
     )
@@ -1298,7 +1304,7 @@ def test_should_pass_the_live_display_precision_to_the_oracle_when_headless_veri
 
     seen = {}
 
-    def stl_oracle(path, expected_volume, volume_band, decimals):
+    def stl_oracle(path, expected_volume, volume_band, decimals, facet_counts=None):
         seen["decimals"] = decimals
         return {"oracle": "trimesh_stl", "checks": [], "ok": True}
 
@@ -1316,7 +1322,7 @@ def test_should_pass_the_live_display_precision_to_the_oracle_when_headless_veri
     monkeypatch.setattr(
         export_oracle.StdlibStlOracle,
         "check",
-        lambda _self, _path: {"oracle": "stdlib_stl", "checks": [], "ok": True},
+        lambda _self, _path, _facet_counts=None: {"oracle": "stdlib_stl", "checks": [], "ok": True},
     )
     monkeypatch.setattr(export_verdict, "assemble_export_verdict", lambda *_a: {"status": "OK"})
     handler = tool_catalog._mesh_verify_handler(DocumentRegistry(), None, None, "stl")
@@ -1478,3 +1484,226 @@ def test_Should_advertise_the_section_input_bounds_When_the_catalog_is_read():
         points["properties"]["max_points"]["minimum"],
         points["properties"]["max_points"]["maximum"],
     ) == (2, 5000)
+
+
+def _mesh_self_read(**extra):
+    return {
+        "structured_content": {
+            "source": {"volume": 1000.0, "is_mm": True},
+            "volume_band": 0.5,
+            "path": "part.file",
+            "banner": {},
+            **extra,
+        }
+    }
+
+
+def _stub_oracles(monkeypatch, seen):
+    from freecad_buddy.adapters import export_oracle, export_verdict
+
+    def mesh3mf_oracle(path, is_mm, volume, band, decimals, objects=None):
+        seen["objects"] = objects
+        return {"oracle": "lib3mf", "checks": [], "ok": True}
+
+    def stl_oracle(path, volume, band, decimals, facet_counts=None):
+        seen["stl_counts"] = facet_counts
+        return {"oracle": "trimesh_stl", "checks": [], "ok": True}
+
+    def stdlib_check(_self, _path, facet_counts=None):
+        seen["stdlib_counts"] = facet_counts
+        return {"oracle": "stdlib_stl", "checks": [], "ok": True}
+
+    monkeypatch.setattr(export_oracle, "mesh3mf_oracle", mesh3mf_oracle)
+    monkeypatch.setattr(export_oracle, "stl_oracle", stl_oracle)
+    monkeypatch.setattr(export_oracle.StdlibStlOracle, "check", stdlib_check)
+    monkeypatch.setattr(export_verdict, "assemble_export_verdict", lambda *_a: {"status": "OK"})
+
+
+def test_Should_pass_the_recorded_objects_to_the_oracle_When_the_catalog_verifies_a_3mf(
+    monkeypatch,
+):
+    # Arrange
+    from freecad_buddy.hosts import tool_catalog
+
+    seen = {}
+    objects = [{"name": "A", "label": "Alpha", "volume": 1000.0, "band": 0.5}]
+    self_read = _mesh_self_read(objects=objects)
+    monkeypatch.setattr(tool_catalog.exports, "export_self_read_3mf", lambda *_a, **_k: self_read)
+    _stub_oracles(monkeypatch, seen)
+    target = tool_catalog._mesh_verify_handler(DocumentRegistry(), None, None, "3mf")
+
+    # Act
+    target(doc="fcb-doc:D", export_id="e1")
+
+    # Assert
+    assert seen["objects"] == objects
+
+
+def test_Should_pass_the_facet_counts_to_both_oracles_When_the_catalog_verifies_an_stl(
+    monkeypatch,
+):
+    # Arrange
+    from freecad_buddy.hosts import tool_catalog
+
+    seen = {}
+    self_read = _mesh_self_read(facet_counts=[12, 12])
+    monkeypatch.setattr(tool_catalog.exports, "export_self_read_stl", lambda *_a, **_k: self_read)
+    _stub_oracles(monkeypatch, seen)
+    target = tool_catalog._mesh_verify_handler(DocumentRegistry(), None, None, "stl")
+
+    # Act
+    target(doc="fcb-doc:D", export_id="e1")
+
+    # Assert
+    assert seen["stl_counts"] == [12, 12]
+    assert seen["stdlib_counts"] == [12, 12]
+
+
+def test_Should_pass_no_objects_to_the_oracle_When_a_single_object_3mf_is_verified(monkeypatch):
+    # Arrange
+    from freecad_buddy.hosts import tool_catalog
+
+    seen = {}
+    self_read = _mesh_self_read()
+    monkeypatch.setattr(tool_catalog.exports, "export_self_read_3mf", lambda *_a, **_k: self_read)
+    _stub_oracles(monkeypatch, seen)
+    target = tool_catalog._mesh_verify_handler(DocumentRegistry(), None, None, "3mf")
+
+    # Act
+    target(doc="fcb-doc:D", export_id="e1")
+
+    # Assert
+    assert seen["objects"] is None
+
+
+class _SelfReadClient:
+    """A stand-in RPC client that answers the self-read call with a fixed envelope."""
+
+    def __init__(self, structured):
+        self._structured = structured
+
+    def call(self, _method, _params):
+        return {"status": "OK", "structured_content": self._structured}
+
+
+def test_Should_pass_the_recorded_objects_to_the_oracle_When_the_proxy_verifies_a_3mf(monkeypatch):
+    # Arrange
+    import threading
+
+    from freecad_buddy.hosts import rpc_proxy
+
+    seen = {}
+    objects = [{"name": "A", "label": "Alpha", "volume": 1000.0, "band": 0.5}]
+    client = _SelfReadClient(_mesh_self_read(objects=objects)["structured_content"])
+    _stub_oracles(monkeypatch, seen)
+    target = rpc_proxy._mesh_verify_proxy_handler(client, threading.Lock(), "verify_export_3mf")
+
+    # Act
+    target(doc="fcb-doc:D", export_id="e1")
+
+    # Assert
+    assert seen["objects"] == objects
+
+
+def test_Should_pass_the_facet_counts_to_both_oracles_When_the_proxy_verifies_an_stl(monkeypatch):
+    # Arrange
+    import threading
+
+    from freecad_buddy.hosts import rpc_proxy
+
+    seen = {}
+    client = _SelfReadClient(_mesh_self_read(facet_counts=[12, 12])["structured_content"])
+    _stub_oracles(monkeypatch, seen)
+    target = rpc_proxy._mesh_verify_proxy_handler(client, threading.Lock(), "verify_export_stl")
+
+    # Act
+    target(doc="fcb-doc:D", export_id="e1")
+
+    # Assert
+    assert seen["stl_counts"] == [12, 12]
+    assert seen["stdlib_counts"] == [12, 12]
+
+
+def test_Should_write_both_digests_on_the_after_line_When_script_exec_returns_them(tmp_path):
+    # Arrange
+    audit_path = tmp_path / "audit.jsonl"
+    registry = MethodRegistry()
+    registry.register(
+        RpcMethod(
+            name=SCRIPT_EXEC_SPEC.name,
+            handler=lambda **_p: {
+                "schema": "fcb.result-envelope/1",
+                "status": "OK",
+                "detail": None,
+                "structured_content": {
+                    "fingerprint_before": "a" * 64,
+                    "fingerprint_after": "b" * 64,
+                },
+                "text": "ok",
+            },
+            mutating=SCRIPT_EXEC_SPEC.mutating,
+            audit_event=SCRIPT_EXEC_SPEC.audit_event,
+        )
+    )
+    server = build_server(registry, Capabilities(script_exec=True), AuditSink(audit_path))
+
+    # Act
+    _call_tool_via_server(server, "script_exec", {"doc": "fcb-doc:a", "code": "1+1"})
+
+    # Assert
+    lines = [json.loads(line) for line in audit_path.read_text(encoding="utf-8").splitlines()]
+    after = [line for line in lines if line.get("verify_verdict") == "OK"][-1]
+    assert after["fingerprint_before"] == "a" * 64
+    assert after["fingerprint_after"] == "b" * 64
+
+
+def test_Should_advertise_recompute_as_an_optional_boolean_When_script_exec_is_listed():
+    # Arrange
+    registry = _registry(Capabilities(script_exec=True))
+
+    # Act
+    tool = next(
+        t
+        for t in registered_tools(registry, Capabilities(script_exec=True))
+        if t.name == "script_exec"
+    )
+
+    # Assert
+    assert tool.inputSchema["properties"]["recompute"]["type"] == "boolean"
+    assert "recompute" not in tool.inputSchema["required"]
+
+
+def test_Should_accept_recompute_false_When_script_exec_is_called_through_the_server(tmp_path):
+    # Arrange
+    seen = {}
+    registry = MethodRegistry()
+    registry.register(
+        RpcMethod(
+            name=SCRIPT_EXEC_SPEC.name,
+            handler=lambda **params: (
+                seen.update(params)
+                or {
+                    "schema": "fcb.result-envelope/1",
+                    "status": "OK",
+                    "detail": None,
+                    "structured_content": {},
+                    "text": "ok",
+                }
+            ),
+            input_schema=SCRIPT_EXEC_SPEC.input_schema,
+            mutating=SCRIPT_EXEC_SPEC.mutating,
+            audit_event=SCRIPT_EXEC_SPEC.audit_event,
+        )
+    )
+    server = build_server(
+        registry, Capabilities(script_exec=True), AuditSink(tmp_path / "audit.jsonl")
+    )
+
+    # Act
+    result = _call_tool_via_server(
+        server, "script_exec", {"doc": "fcb-doc:a", "code": "1", "recompute": False}
+    )
+
+    # Assert
+    assert result.isError is False
+    assert seen["recompute"] is False

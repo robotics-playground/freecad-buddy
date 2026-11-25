@@ -1,0 +1,88 @@
+{
+ "elapsed_s": 0.221,
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "mutation": {
+    "schema": "fcb.mutation/2",
+    "fingerprint_before": {
+     "digest": "b48d72056b247f46d998102dec177ed51f3a408418363a824959013cda537e21",
+     "serializer": "exportBinary"
+    },
+    "fingerprint_after": {
+     "digest": "0fcf115cda05306a4fb882b31fd0b56ac54a21848ed15a1c2d0fdd75a9d06550",
+     "serializer": "exportBinary"
+    },
+    "changed": [
+     {
+      "name": "Body",
+      "volume": 3600.0,
+      "area": 1620.0,
+      "com": [
+       23.0,
+       4.0,
+       7.5
+      ]
+     },
+     {
+      "name": "Pad",
+      "volume": 3600.0,
+      "area": 1620.0,
+      "com": [
+       23.0,
+       4.0,
+       7.5
+      ]
+     },
+     {
+      "name": "Profile",
+      "volume": 0.0,
+      "area": 0.0,
+      "com": [
+       23.0,
+       4.0,
+       0.0
+      ]
+     }
+    ],
+    "post_verify": {
+     "recompute_clean": true,
+     "is_valid": true,
+     "fully_constrained": null,
+     "tnp_audit": {
+      "status": "CLEAN",
+      "element_map_version": "15.70200.5",
+      "counts": {
+       "PASS": 6
+      },
+      "findings": []
+     },
+     "passed": true,
+     "explanation": null
+    },
+    "rolled_back": false,
+    "rollback_proven": null,
+    "touched": [
+     "Params"
+    ]
+   },
+   "varset": "Params",
+   "added": [],
+   "updated": [
+    "width",
+    "height",
+    "shift"
+   ]
+  },
+  "text": "Mutation committed; fingerprint 0fcf115cda05.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+  "framing": {
+   "fits": false,
+   "ratio": 1.34,
+   "checked": "computed",
+   "stale_reason": null
+  }
+ }
+}

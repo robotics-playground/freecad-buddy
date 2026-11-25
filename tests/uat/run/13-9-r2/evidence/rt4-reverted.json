@@ -1,0 +1,74 @@
+{
+ "_envelopes": {
+  "oserror_int_code": {
+   "schema": "fcb.result-envelope/1",
+   "status": "RECOMPUTE_ERROR",
+   "detail": {
+    "code": "RECOMPUTE_ERROR",
+    "message": "[Errno 5] access denied",
+    "data": {
+     "exception": "OSError",
+     "traceback": "Traceback (most recent call last):\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 152, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\hosts\\tool_catalog.py\", line 1112, in <lambda>\n    lambda **params: script_exec_uc.script_exec(\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\usecases\\script_exec.py\", line 53, in script_exec\n    handle = registry.with_document(doc, _run)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\usecases\\documents.py\", line 429, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\usecases\\script_exec.py\", line 44, in _run\n    exec(code, namespace)  # noqa: S102 - raw exec is the tool's purpose\n    ^^^^^^^^^^^^^^^^^^^^^\n  File \"<string>\", line 1, in <module>\nOSError: [Errno 5] access denied\n",
+     "unexpected": true
+    }
+   },
+   "structured_content": {},
+   "text": "",
+   "display_decimals": 2
+  },
+  "code_method": {
+   "schema": "fcb.result-envelope/1",
+   "status": "RECOMPUTE_ERROR",
+   "detail": {
+    "code": "<bound method E.code of E('boom')>",
+    "message": "boom",
+    "data": {
+     "exception": "E",
+     "traceback": "Traceback (most recent call last):\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 152, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\hosts\\tool_catalog.py\", line 1112, in <lambda>\n    lambda **params: script_exec_uc.script_exec(\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\usecases\\script_exec.py\", line 53, in script_exec\n    handle = registry.with_document(doc, _run)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\usecases\\documents.py\", line 429, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\usecases\\script_exec.py\", line 44, in _run\n    exec(code, namespace)  # noqa: S102 - raw exec is the tool's purpose\n    ^^^^^^^^^^^^^^^^^^^^^\n  File \"<string>\", line 4, in <module>\nE: boom\n",
+     "unexpected": true
+    }
+   },
+   "structured_content": {},
+   "text": "",
+   "display_decimals": 2
+  },
+  "int_code_attr": {
+   "schema": "fcb.result-envelope/1",
+   "status": "RECOMPUTE_ERROR",
+   "detail": {
+    "code": 404,
+    "message": "nf",
+    "data": {
+     "exception": "E",
+     "traceback": "Traceback (most recent call last):\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 152, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\hosts\\tool_catalog.py\", line 1112, in <lambda>\n    lambda **params: script_exec_uc.script_exec(\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\usecases\\script_exec.py\", line 53, in script_exec\n    handle = registry.with_document(doc, _run)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\usecases\\documents.py\", line 429, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\Work\\Personal\\Sources\\fcb-verify-13-9\\src\\freecad_buddy\\usecases\\script_exec.py\", line 44, in _run\n    exec(code, namespace)  # noqa: S102 - raw exec is the tool's purpose\n    ^^^^^^^^^^^^^^^^^^^^^\n  File \"<string>\", line 3, in <module>\nE: nf\n",
+     "unexpected": true
+    }
+   },
+   "structured_content": {},
+   "text": "",
+   "display_decimals": 2
+  }
+ },
+ "oserror_int_code": {
+  "status": "RECOMPUTE_ERROR",
+  "detail_code": "RECOMPUTE_ERROR",
+  "code_type": "str",
+  "json_ok": true,
+  "message": "[Errno 5] access denied"
+ },
+ "code_method": {
+  "status": "RECOMPUTE_ERROR",
+  "detail_code": "<bound method E.code of E('boom')>",
+  "code_type": "method",
+  "json_ok": false,
+  "message": "boom"
+ },
+ "int_code_attr": {
+  "status": "RECOMPUTE_ERROR",
+  "detail_code": 404,
+  "code_type": "int",
+  "json_ok": true,
+  "message": "nf"
+ },
+ "_schema": "jsonschema not importable under freecadcmd"
+}

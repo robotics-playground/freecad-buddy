@@ -1,0 +1,68 @@
+........................................................................ [  3%]
+........................................................................ [  6%]
+........................................................................ [ 10%]
+........................................................................ [ 13%]
+........................................................................ [ 17%]
+........................................................................ [ 20%]
+........................................................................ [ 23%]
+........................................................................ [ 27%]
+........................................................................ [ 30%]
+........................................................................ [ 34%]
+........................................................................ [ 37%]
+........................................................................ [ 40%]
+........................................................................ [ 44%]
+........................................................................ [ 47%]
+........................................................................ [ 51%]
+.................F......ssss............................................ [ 54%]
+........................................................................ [ 57%]
+........................................................................ [ 61%]
+...................................ss................................... [ 64%]
+........................................................................ [ 68%]
+........................................................................ [ 71%]
+........................................................................ [ 74%]
+........................................................................ [ 78%]
+........................................................................ [ 81%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 91%]
+........................................................................ [ 95%]
+........................................................................ [ 98%]
+...........................                                              [100%]
+================================== FAILURES ===================================
+_ test_should_time_out_within_a_second_of_the_budget_when_a_body_holds_the_gil _
+
+gil_worker = (<freecad_buddy.hosts.headless.entry.WorkerClient object at 0x000002D25D995D10>, WindowsPath('C:/Users/thuan/AppData/Local/Temp/pytest-of-thuan/pytest-496/test_should_time_out_within_a_0/served.log'))
+
+    def test_should_time_out_within_a_second_of_the_budget_when_a_body_holds_the_gil(gil_worker):
+        # Arrange
+        target, _served_path = gil_worker
+        params = {"doc": DOC, "seconds": 3.0}
+    
+        # Act
+        envelope, elapsed_s = _timed(lambda: target.call("slow_read", params))
+    
+        # Assert
+        assert envelope["status"] == "TIMEOUT"
+        assert envelope["detail"]["data"] == {"marshal_timeout": True, "maybe_still_running": True}
+>       assert BUDGET_S <= elapsed_s < BUDGET_S + 1.0
+E       assert 0.5 <= 0.49737090000417084
+
+tests\external\test_headless_two_process.py:419: AssertionError
+============================== warnings summary ===============================
+tests\external\test_gui_external_identity.py:14
+  D:\Work\Personal\Sources\fcb-verify-13-18\tests\external\test_gui_external_identity.py:14: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient
+
+tests/external/test_export_fault_score.py::test_oracle_verifiers_are_scored
+tests/external/test_export_fault_score.py::test_each_oracle_verifier_meets_bars
+tests/external/test_export_fault_score.py::test_every_planted_defect_detected_and_control_passes
+tests/external/test_export_fault_score.py::test_committed_suites_clear_the_planted_floor
+tests/external/test_export_oracle.py::test_mesh3mf_oracle_passes_clean_and_catches_lies
+  D:\Work\Personal\Sources\fcb-verify-13-18\.venv\Lib\site-packages\trimesh\triangles.py:302: RuntimeWarning: invalid value encountered in divide
+    center_mass = integrated[1:4] / volume
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/external/test_headless_two_process.py::test_should_time_out_within_a_second_of_the_budget_when_a_body_holds_the_gil
+1 failed, 2108 passed, 6 skipped, 6 warnings in 184.53s (0:03:04)
+exit=1

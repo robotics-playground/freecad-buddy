@@ -81,10 +81,10 @@ assertions:
   suite: g2/fault-injection/
   validator_sha: "b417250ab76e782b096d05d4eb6148bcd5621c633d280ea9a503ef31e6ad5f9c"
   last_run:
-    run_id: g2-2026-11-24-1
+    run_id: g2-2026-11-25-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-11-24
+    date: 2026-11-25
     wilson_ci:
       rate: 1.0
       low: 0.6756
@@ -94,12 +94,12 @@ assertions:
 
 audit_references:
   suite: g2/fault-injection/
-  validator_sha: "a1de7077c2ad7ab91e07f26b8851620024d3bd1d7e89950c929d6e069340cc5a"
+  validator_sha: "694f354c3fb6d20555a32ef27c8dbbe64e1029297448abfe6fe1cbf32cca04eb"
   last_run:
-    run_id: g2-2026-11-24-1
+    run_id: g2-2026-11-25-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-11-24
+    date: 2026-11-25
     skipped_cases: 4
     wilson_ci:
       rate: 1.0
@@ -112,10 +112,10 @@ fingerprint:
   suite: g2/fault-injection/
   validator_sha: "a80e01b3702bd6a493890f957c3d6dfdff3eed4c14050e697c08b0d9a9598096"
   last_run:
-    run_id: g2-2026-11-24-1
+    run_id: g2-2026-11-25-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-11-24
+    date: 2026-11-25
     not_scored: "no fault case targets this validator"
     wilson_ci:
       rate: 0.0
@@ -126,12 +126,12 @@ fingerprint:
 
 run_mutation:
   suite: g2/fault-injection/
-  validator_sha: "e9566f4af5864be5107ad48c2665280690355fbc886fdacd0b24dd902804cf62"
+  validator_sha: "393e415dc57c48ec0da3f2fdefde666c238dc94b90fb3b7706962686bdff477e"
   last_run:
-    run_id: g2-2026-11-24-1
+    run_id: g2-2026-11-25-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-11-24
+    date: 2026-11-25
     not_scored: "no driveable planted defect: 2 clean control(s) ran and 2 planted case(s) were skipped, so sensitivity is unmeasured rather than zero"
     skipped_cases: 2
     wilson_ci:
@@ -145,10 +145,10 @@ verify_sketch:
   suite: g2/fault-injection/
   validator_sha: "76f9bc2adff2eba5d14c7541db838042017028af7477e24323a4d64b7f50c278"
   last_run:
-    run_id: g2-2026-11-24-1
+    run_id: g2-2026-11-25-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-11-24
+    date: 2026-11-25
     not_scored: "no fault case targets this validator"
     wilson_ci:
       rate: 0.0

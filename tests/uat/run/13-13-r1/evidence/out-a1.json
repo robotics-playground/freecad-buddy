@@ -1,0 +1,153 @@
+[
+ {
+  "name": "create",
+  "tool": "document_create",
+  "args": {
+   "label": "V1313Core"
+  },
+  "seconds": 2.272,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+    "name": "V1313Core",
+    "label": "V1313Core"
+   },
+   "text": "doc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\nlabel: V1313Core\nname: V1313Core"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\",\"name\":\"V1313Core\",\"label\":\"V1313Core\"},\"text\":\"doc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\\nlabel: V1313Core\\nname: V1313Core\"}"
+  ]
+ },
+ {
+  "name": "mkbox",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "code": "b = doc.addObject('Part::Box', 'Box')\nresult = b.Name"
+  },
+  "seconds": 1.976,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+    "stdout": "",
+    "value_repr": "'Box'",
+    "fingerprint_before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "fingerprint_after": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+    "changed": [
+     {
+      "name": "Box",
+      "volume": 1000.0,
+      "area": 600.0,
+      "com": [
+       5.0,
+       5.0,
+       5.0
+      ]
+     }
+    ],
+    "new_errors": [],
+    "undo_steps": 1
+   },
+   "text": "changed: [1 items]\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\nfingerprint_after: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\nfingerprint_before: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\nnew_errors: [0 items]\nstdout: \nundo_steps: 1\nvalue_repr: 'Box'\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\",\"stdout\":\"\",\"value_repr\":\"'Box'\",\"fingerprint_before\":\"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\",\"fingerprint_after\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"changed\":[{\"name\":\"Box\",\"volume\":1000.0,\"area\":600.0,\"com\":[5.0,5.0,5.0]}],\"new_errors\":[],\"undo_steps\":1},\"text\":\"changed: [1 items]\\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\\nfingerprint_after: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\\nfingerprint_before: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 1\\nvalue_repr: 'Box'\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.41,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "name": "write",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "code": "doc.getObject('Box').Length = 25"
+  },
+  "seconds": 0.138,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_before": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+    "fingerprint_after": "273eefd0a4f2e060cacedd9c4050567065d20ba737c2dff3fb146ce4f53856e0",
+    "changed": [
+     {
+      "name": "Box",
+      "volume": 2500.0,
+      "area": 1200.0,
+      "com": [
+       12.5,
+       5.0,
+       5.0
+      ]
+     }
+    ],
+    "new_errors": [],
+    "undo_steps": 1
+   },
+   "text": "changed: [1 items]\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\nfingerprint_after: 273eefd0a4f2e060cacedd9c4050567065d20ba737c2dff3fb146ce4f53856e0\nfingerprint_before: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\nnew_errors: [0 items]\nstdout: \nundo_steps: 1\nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 3.4,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\",\"stdout\":\"\",\"value_repr\":null,\"fingerprint_before\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"fingerprint_after\":\"273eefd0a4f2e060cacedd9c4050567065d20ba737c2dff3fb146ce4f53856e0\",\"changed\":[{\"name\":\"Box\",\"volume\":2500.0,\"area\":1200.0,\"com\":[12.5,5.0,5.0]}],\"new_errors\":[],\"undo_steps\":1},\"text\":\"changed: [1 items]\\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\\nfingerprint_after: 273eefd0a4f2e060cacedd9c4050567065d20ba737c2dff3fb146ce4f53856e0\\nfingerprint_before: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 1\\nvalue_repr: None\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":3.4,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "name": "names1",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "recompute": false,
+   "code": "result = list(doc.UndoNames)"
+  },
+  "seconds": 0.083,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+    "stdout": "",
+    "value_repr": "[\"script_exec doc.getObject('Box').Length = 25\", \"script_exec b = doc.addObject('Part::Box', 'Box')\"]",
+    "fingerprint_before": "273eefd0a4f2e060cacedd9c4050567065d20ba737c2dff3fb146ce4f53856e0",
+    "fingerprint_after": "273eefd0a4f2e060cacedd9c4050567065d20ba737c2dff3fb146ce4f53856e0",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\nfingerprint_after: 273eefd0a4f2e060cacedd9c4050567065d20ba737c2dff3fb146ce4f53856e0\nfingerprint_before: 273eefd0a4f2e060cacedd9c4050567065d20ba737c2dff3fb146ce4f53856e0\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: <101 chars>\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 3.4,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\",\"stdout\":\"\",\"value_repr\":\"[\\\"script_exec doc.getObject('Box').Length = 25\\\", \\\"script_exec b = doc.addObject('Part::Box', 'Box')\\\"]\",\"fingerprint_before\":\"273eefd0a4f2e060cacedd9c4050567065d20ba737c2dff3fb146ce4f53856e0\",\"fingerprint_after\":\"273eefd0a4f2e060cacedd9c4050567065d20ba737c2dff3fb146ce4f53856e0\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\\nfingerprint_after: 273eefd0a4f2e060cacedd9c4050567065d20ba737c2dff3fb146ce4f53856e0\\nfingerprint_before: 273eefd0a4f2e060cacedd9c4050567065d20ba737c2dff3fb146ce4f53856e0\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: <101 chars>\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":3.4,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ }
+]

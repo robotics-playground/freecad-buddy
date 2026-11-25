@@ -1,0 +1,26 @@
+{
+ "tool": "script_exec",
+ "args": {
+  "doc": "fcb-doc:dYgwCWXxb154oXxBatWDhg",
+  "code": "import FreeCADGui as Gui\ng = Gui.getDocument(doc.Name)\nb = doc.getObject(\"Body\")\nresult = {\"objects\": {o.Name: o.Visibility for o in doc.Objects if o.TypeId.startswith((\"PartDesign::Pad\", \"Sketcher\"))},\n          \"tip\": b.Tip.Name if b.Tip else None, \"UndoCount\": doc.UndoCount, \"RedoCount\": doc.RedoCount}\n"
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "doc": "fcb-doc:dYgwCWXxb154oXxBatWDhg",
+   "stdout": "",
+   "value_repr": "{'objects': {'SkA': True, 'SkB': True, 'PadA': False}, 'tip': 'PadA', 'UndoCount': 8, 'RedoCount': 0}",
+   "fingerprint_after": null
+  },
+  "text": "doc: fcb-doc:dYgwCWXxb154oXxBatWDhg\nfingerprint_after: None\nstdout: \nvalue_repr: <101 chars>",
+  "framing": {
+   "fits": true,
+   "ratio": 0.54,
+   "checked": "computed",
+   "stale_reason": null
+  }
+ }
+}

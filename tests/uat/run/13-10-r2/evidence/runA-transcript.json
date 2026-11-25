@@ -1,0 +1,3468 @@
+[
+ {
+  "step": "list",
+  "count": 52,
+  "has_set_expression": true,
+  "has_define": true,
+  "has_query": true,
+  "has_script_exec": true
+ },
+ {
+  "step": "create",
+  "tool": "document_create",
+  "args": {
+   "label": "CAP2_Expr"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 1.143,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+    "name": "CAP2_Expr",
+    "label": "CAP2_Expr"
+   },
+   "text": "doc: fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ\nlabel: CAP2_Expr\nname: CAP2_Expr"
+  },
+  "text": null
+ },
+ {
+  "step": "define",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "width",
+     "type": "length",
+     "value": {
+      "value": 20,
+      "unit": "mm"
+     }
+    },
+    {
+     "name": "depth",
+     "type": "length",
+     "value": {
+      "value": 8,
+      "unit": "mm"
+     }
+    },
+    {
+     "name": "height",
+     "type": "length",
+     "value": {
+      "value": 10,
+      "unit": "mm"
+     }
+    },
+    {
+     "name": "lift",
+     "type": "length",
+     "value": {
+      "value": 0,
+      "unit": "mm"
+     }
+    },
+    {
+     "name": "datum_z",
+     "type": "length",
+     "value": {
+      "value": 5,
+      "unit": "mm"
+     }
+    }
+   ]
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.306,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "changed": [],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Params"
+     ]
+    },
+    "varset": "Params",
+    "added": [
+     "width",
+     "depth",
+     "height",
+     "lift",
+     "datum_z"
+    ],
+    "updated": [],
+    "unchanged": [],
+    "undo_steps": 1
+   },
+   "text": "Mutation committed; fingerprint 4f53cda18c2b.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "body",
+  "tool": "feature_body_create",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "name": "Body"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.137,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Body"
+     ]
+    },
+    "feature": "Body",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Body",
+     "readable": false
+    }
+   },
+   "text": "Mutation committed; fingerprint 283569b3f782.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "sketch",
+  "tool": "sketch_create",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "name": "Profile",
+   "plane": "XY",
+   "body": "Body"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.288,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "02d4b20e41785786d5c3602ca032a2ce27023331bc87c63aabdc9cafe589434c",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Profile",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Profile"
+     ]
+    },
+    "sketch": "Profile",
+    "sketch_state": {
+     "schema": "fcb.sketch-state/1",
+     "sketch": "Profile",
+     "readable": true,
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 0,
+     "constraint_count": 0,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    }
+   },
+   "text": "Mutation committed; fingerprint 02d4b20e4178.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "geometry",
+  "tool": "sketch_add_geometry",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "sketch": "Profile",
+   "geometry": [
+    {
+     "kind": "line_segment",
+     "start": [
+      0,
+      0
+     ],
+     "end": [
+      20,
+      0
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      20,
+      0
+     ],
+     "end": [
+      20,
+      8
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      20,
+      8
+     ],
+     "end": [
+      0,
+      8
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      0,
+      8
+     ],
+     "end": [
+      0,
+      0
+     ]
+    }
+   ],
+   "constraints": [
+    {
+     "type": "Coincident",
+     "first": 0,
+     "first_pos": 2,
+     "second": 1,
+     "second_pos": 1
+    },
+    {
+     "type": "Coincident",
+     "first": 1,
+     "first_pos": 2,
+     "second": 2,
+     "second_pos": 1
+    },
+    {
+     "type": "Coincident",
+     "first": 2,
+     "first_pos": 2,
+     "second": 3,
+     "second_pos": 1
+    },
+    {
+     "type": "Coincident",
+     "first": 3,
+     "first_pos": 2,
+     "second": 0,
+     "second_pos": 1
+    },
+    {
+     "type": "Horizontal",
+     "first": 0
+    },
+    {
+     "type": "Horizontal",
+     "first": 2
+    },
+    {
+     "type": "Vertical",
+     "first": 1
+    },
+    {
+     "type": "Vertical",
+     "first": 3
+    },
+    {
+     "type": "Coincident",
+     "first": 0,
+     "first_pos": 1,
+     "second": -1,
+     "second_pos": 1
+    },
+    {
+     "type": "DistanceX",
+     "first": 0,
+     "first_pos": 1,
+     "second": 0,
+     "second_pos": 2,
+     "value": {
+      "value": 20,
+      "unit": "mm"
+     },
+     "name": "width"
+    },
+    {
+     "type": "DistanceY",
+     "first": 1,
+     "first_pos": 1,
+     "second": 1,
+     "second_pos": 2,
+     "value": {
+      "value": 8,
+      "unit": "mm"
+     },
+     "name": "depth"
+    }
+   ]
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.446,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "02d4b20e41785786d5c3602ca032a2ce27023331bc87c63aabdc9cafe589434c",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "e565558b9f69c6f6a32aa017157751887a8b92b805f05d3d2f4bf543f254c89c",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Profile",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        10.0,
+        4.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Profile"
+     ]
+    },
+    "sketch": "Profile",
+    "sketch_state": {
+     "schema": "fcb.sketch-state/1",
+     "sketch": "Profile",
+     "readable": true,
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 4,
+     "constraint_count": 11,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    },
+    "geo_ids": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "constraint_ids": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   "text": "Mutation committed; fingerprint e565558b9f69.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "pad",
+  "tool": "feature_pad",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "body": "Body",
+   "profile": "Profile",
+   "name": "Pad",
+   "length": {
+    "value": 10,
+    "unit": "mm"
+   }
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.342,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "e565558b9f69c6f6a32aa017157751887a8b92b805f05d3d2f4bf543f254c89c",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "1baa94c5944f284381549749fc1f0b585b6a5105e54d108ae4c00cfbbe475a21",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 1600.0,
+       "area": 880.0,
+       "com": [
+        10.0,
+        4.0,
+        5.0
+       ]
+      },
+      {
+       "name": "Pad",
+       "volume": 1600.0,
+       "area": 880.0,
+       "com": [
+        10.0,
+        4.0,
+        5.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Pad",
+      "Body"
+     ]
+    },
+    "feature": "Pad",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Pad",
+     "readable": true,
+     "body": "Body",
+     "is_tip": true,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 6,
+      "edge_count": 12,
+      "vertex_count": 8,
+      "is_valid": true,
+      "volume": 1600.0,
+      "area": 880.0,
+      "bbox": [
+       20.0,
+       8.0,
+       10.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint 1baa94c5944f.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "tree",
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.064,
+  "result": {},
+  "text": [
+   "OK: 12 objects, 2 shown.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\nframing: does not fit, ratio 2.72, computed\nv [VARSET] Params\nv [BODY] Body (+2)"
+  ]
+ },
+ {
+  "step": "probe_XY_Plane",
+  "tool": "query_object",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "object": "XY_Plane"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.023,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "XY_Plane",
+    "label": "XY-plane",
+    "type": "App::Plane",
+    "properties": {
+     "ExpressionEngine": [],
+     "Label": "XY-plane",
+     "Label2": "",
+     "Placement": "Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]",
+     "Role": "XY_Plane",
+     "Visibility": true,
+     "_ElementMapVersion": ""
+    },
+    "error": null
+   },
+   "text": "error: None\nlabel: XY-plane\nname: XY_Plane\nproperties: {7 fields}\ntype: App::Plane\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "datum",
+  "tool": "feature_datum",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "body": "Body",
+   "name": "Datum",
+   "kind": "plane",
+   "attachment": {
+    "kind": "mapped_name",
+    "object": "XY_Plane"
+   },
+   "offset": {
+    "value": 5,
+    "unit": "mm"
+   }
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.333,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "1baa94c5944f284381549749fc1f0b585b6a5105e54d108ae4c00cfbbe475a21",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "19b021085fbefa608c25197d978240c6d3f05d1f417b3fc1d7fdfa9550cbed82",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Datum",
+       "volume": 1.3333333333333333e+101,
+       "area": 8e+100,
+       "com": [
+        -5e+99,
+        -5e+99,
+        5.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "PASS": 1
+       },
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Datum",
+      "Body"
+     ]
+    },
+    "feature": "Datum",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Datum",
+     "readable": true,
+     "body": "",
+     "is_tip": false,
+     "shape_summary": {
+      "solid_count": 0,
+      "face_count": 1,
+      "edge_count": 0,
+      "vertex_count": 0,
+      "is_valid": true,
+      "volume": 1.3333333333333333e+101,
+      "area": 8e+100,
+      "bbox": [
+       2e+100,
+       2e+100,
+       0.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint 19b021085fbe.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "query0",
+  "tool": "query_parameters",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.059,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "varsets": [
+     {
+      "object": "Params",
+      "label": "Params",
+      "parameters": [
+       {
+        "name": "datum_z",
+        "type": "length",
+        "value": 5.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "depth",
+        "type": "length",
+        "value": 8.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "height",
+        "type": "length",
+        "value": 10.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "lift",
+        "type": "length",
+        "value": 0.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "width",
+        "type": "length",
+        "value": 20.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       }
+      ]
+     }
+    ],
+    "spreadsheets": [],
+    "bindings": [],
+    "totals": {
+     "varset_parameters": 5,
+     "spreadsheet_parameters": 0,
+     "bindings": 0
+    },
+    "truncated": false
+   },
+   "text": "5 VarSet parameter(s) in 1 VarSet(s), 0 spreadsheet parameter(s), 0 binding(s).\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "mass0",
+  "tool": "query_mass_properties",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "object": "Pad"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.073,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Pad",
+    "solid": true,
+    "volume": {
+     "value": 1600.0,
+     "unit": "mm^3"
+    },
+    "area": {
+     "value": 880.0,
+     "unit": "mm^2"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 20.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 8.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 10.0,
+      "unit": "mm"
+     }
+    },
+    "com": {
+     "x": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "y": {
+      "value": 4.0,
+      "unit": "mm"
+     },
+     "z": {
+      "value": 5.0,
+      "unit": "mm"
+     }
+    },
+    "counts": {
+     "faces": 6,
+     "edges": 12,
+     "vertices": 8,
+     "solids": 1
+    },
+    "is_valid": true
+   },
+   "text": "Pad: volume 1600.0 mm^3 (solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "bind",
+  "tool": "feature_set_expression",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expressions": [
+    {
+     "object": "Profile",
+     "path": ".Constraints.width",
+     "expression": "Params.width"
+    },
+    {
+     "object": "Profile",
+     "path": ".Constraints.depth",
+     "expression": "Params.depth"
+    },
+    {
+     "object": "Pad",
+     "path": "Length",
+     "expression": "Params.height"
+    },
+    {
+     "object": "Datum",
+     "path": ".AttachmentOffset.Base.z",
+     "expression": "Params.datum_z"
+    }
+   ]
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.36,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "19b021085fbefa608c25197d978240c6d3f05d1f417b3fc1d7fdfa9550cbed82",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "17a701bced924d81937c66b58f7f8a9deaae76a02782fda47cc5b8a32fd1aefe",
+      "serializer": "exportBinary"
+     },
+     "changed": [],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "PASS": 2
+       },
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Profile",
+      "Pad",
+      "Datum"
+     ]
+    },
+    "bound": [
+     {
+      "object": "Profile",
+      "path": ".Constraints.width",
+      "value": {
+       "value": 20.0,
+       "unit": "mm"
+      }
+     },
+     {
+      "object": "Profile",
+      "path": ".Constraints.depth",
+      "value": {
+       "value": 8.0,
+       "unit": "mm"
+      }
+     },
+     {
+      "object": "Pad",
+      "path": "Length",
+      "value": {
+       "value": 10.0,
+       "unit": "mm"
+      }
+     },
+     {
+      "object": "Datum",
+      "path": ".AttachmentOffset.Base.z",
+      "value": {
+       "value": 5.0,
+       "unit": "mm"
+      }
+     }
+    ],
+    "cleared": [],
+    "unchanged": [],
+    "undo_steps": 1
+   },
+   "text": "Mutation committed; fingerprint 17a701bced92.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.23,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "query1",
+  "tool": "query_parameters",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.068,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "varsets": [
+     {
+      "object": "Params",
+      "label": "Params",
+      "parameters": [
+       {
+        "name": "datum_z",
+        "type": "length",
+        "value": 5.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "depth",
+        "type": "length",
+        "value": 8.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "height",
+        "type": "length",
+        "value": 10.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "lift",
+        "type": "length",
+        "value": 0.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "width",
+        "type": "length",
+        "value": 20.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       }
+      ]
+     }
+    ],
+    "spreadsheets": [],
+    "bindings": [
+     {
+      "object": "Datum",
+      "path": ".AttachmentOffset.Base.z",
+      "expression": "Params.datum_z"
+     },
+     {
+      "object": "Pad",
+      "path": "Length",
+      "expression": "Params.height"
+     },
+     {
+      "object": "Profile",
+      "path": ".Constraints.depth",
+      "expression": "Params.depth"
+     },
+     {
+      "object": "Profile",
+      "path": ".Constraints.width",
+      "expression": "Params.width"
+     }
+    ],
+    "totals": {
+     "varset_parameters": 5,
+     "spreadsheet_parameters": 0,
+     "bindings": 4
+    },
+    "truncated": false
+   },
+   "text": "5 VarSet parameter(s) in 1 VarSet(s), 0 spreadsheet parameter(s), 4 binding(s).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.23,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "mass1",
+  "tool": "query_mass_properties",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "object": "Pad"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.064,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Pad",
+    "solid": true,
+    "volume": {
+     "value": 1600.0,
+     "unit": "mm^3"
+    },
+    "area": {
+     "value": 880.0,
+     "unit": "mm^2"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 20.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 8.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 10.0,
+      "unit": "mm"
+     }
+    },
+    "com": {
+     "x": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "y": {
+      "value": 4.0,
+      "unit": "mm"
+     },
+     "z": {
+      "value": 5.0,
+      "unit": "mm"
+     }
+    },
+    "counts": {
+     "faces": 6,
+     "edges": 12,
+     "vertices": 8,
+     "solids": 1
+    },
+    "is_valid": true
+   },
+   "text": "Pad: volume 1600.0 mm^3 (solid), 6 faces, 12 edges.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.23,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "place1",
+  "tool": "query_placement",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "object": "Datum"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.017,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "object": "Datum",
+    "local": {
+     "position": {
+      "x": {
+       "value": 0.0,
+       "unit": "mm"
+      },
+      "y": {
+       "value": 0.0,
+       "unit": "mm"
+      },
+      "z": {
+       "value": 5.0,
+       "unit": "mm"
+      }
+     },
+     "axis": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 1.0
+     },
+     "angle": {
+      "value": 0.0,
+      "unit": "deg"
+     }
+    },
+    "global": {
+     "position": {
+      "x": {
+       "value": 0.0,
+       "unit": "mm"
+      },
+      "y": {
+       "value": 0.0,
+       "unit": "mm"
+      },
+      "z": {
+       "value": 5.0,
+       "unit": "mm"
+      }
+     },
+     "axis": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 1.0
+     },
+     "angle": {
+      "value": 0.0,
+      "unit": "deg"
+     }
+    }
+   },
+   "text": "Datum at (0.0, 0.0, 5.0) mm, rotated 0.0 deg.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.23,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "edit",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "width",
+     "type": "length",
+     "value": {
+      "value": 30,
+      "unit": "mm"
+     }
+    },
+    {
+     "name": "depth",
+     "type": "length",
+     "value": {
+      "value": 12,
+      "unit": "mm"
+     }
+    },
+    {
+     "name": "height",
+     "type": "length",
+     "value": {
+      "value": 15,
+      "unit": "mm"
+     }
+    },
+    {
+     "name": "lift",
+     "type": "length",
+     "value": {
+      "value": 4,
+      "unit": "mm"
+     }
+    },
+    {
+     "name": "datum_z",
+     "type": "length",
+     "value": {
+      "value": 9,
+      "unit": "mm"
+     }
+    }
+   ]
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.106,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "17a701bced924d81937c66b58f7f8a9deaae76a02782fda47cc5b8a32fd1aefe",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "b8016088d6e9aa0992efb56a958c7887d2a5b97ae62bd134b37123ac178d79d1",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 5400.0,
+       "area": 1980.0,
+       "com": [
+        15.0,
+        6.0,
+        7.5
+       ]
+      },
+      {
+       "name": "Datum",
+       "volume": 2.4000000000000002e+101,
+       "area": 8e+100,
+       "com": [
+        -5e+99,
+        -5e+99,
+        9.0
+       ]
+      },
+      {
+       "name": "Pad",
+       "volume": 5400.0,
+       "area": 1980.0,
+       "com": [
+        15.0,
+        6.0,
+        7.5
+       ]
+      },
+      {
+       "name": "Profile",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        15.0,
+        6.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "PASS": 6
+       },
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Params"
+     ]
+    },
+    "varset": "Params",
+    "added": [],
+    "updated": [
+     "width",
+     "depth",
+     "height",
+     "lift",
+     "datum_z"
+    ],
+    "unchanged": [],
+    "undo_steps": 1
+   },
+   "text": "Mutation committed; fingerprint b8016088d6e9.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.34,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "query2",
+  "tool": "query_parameters",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.068,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "varsets": [
+     {
+      "object": "Params",
+      "label": "Params",
+      "parameters": [
+       {
+        "name": "datum_z",
+        "type": "length",
+        "value": 9.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "depth",
+        "type": "length",
+        "value": 12.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "height",
+        "type": "length",
+        "value": 15.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "lift",
+        "type": "length",
+        "value": 4.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "width",
+        "type": "length",
+        "value": 30.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       }
+      ]
+     }
+    ],
+    "spreadsheets": [],
+    "bindings": [
+     {
+      "object": "Datum",
+      "path": ".AttachmentOffset.Base.z",
+      "expression": "Params.datum_z"
+     },
+     {
+      "object": "Pad",
+      "path": "Length",
+      "expression": "Params.height"
+     },
+     {
+      "object": "Profile",
+      "path": ".Constraints.depth",
+      "expression": "Params.depth"
+     },
+     {
+      "object": "Profile",
+      "path": ".Constraints.width",
+      "expression": "Params.width"
+     }
+    ],
+    "totals": {
+     "varset_parameters": 5,
+     "spreadsheet_parameters": 0,
+     "bindings": 4
+    },
+    "truncated": false
+   },
+   "text": "5 VarSet parameter(s) in 1 VarSet(s), 0 spreadsheet parameter(s), 4 binding(s).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.34,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "mass2",
+  "tool": "query_mass_properties",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "object": "Pad"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.068,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Pad",
+    "solid": true,
+    "volume": {
+     "value": 5400.0,
+     "unit": "mm^3"
+    },
+    "area": {
+     "value": 1980.0,
+     "unit": "mm^2"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 30.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 12.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 15.0,
+      "unit": "mm"
+     }
+    },
+    "com": {
+     "x": {
+      "value": 15.0,
+      "unit": "mm"
+     },
+     "y": {
+      "value": 6.0,
+      "unit": "mm"
+     },
+     "z": {
+      "value": 7.5,
+      "unit": "mm"
+     }
+    },
+    "counts": {
+     "faces": 6,
+     "edges": 12,
+     "vertices": 8,
+     "solids": 1
+    },
+    "is_valid": true
+   },
+   "text": "Pad: volume 5400.0 mm^3 (solid), 6 faces, 12 edges.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.34,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "place2",
+  "tool": "query_placement",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "object": "Datum"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.016,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "object": "Datum",
+    "local": {
+     "position": {
+      "x": {
+       "value": 0.0,
+       "unit": "mm"
+      },
+      "y": {
+       "value": 0.0,
+       "unit": "mm"
+      },
+      "z": {
+       "value": 9.0,
+       "unit": "mm"
+      }
+     },
+     "axis": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 1.0
+     },
+     "angle": {
+      "value": 0.0,
+      "unit": "deg"
+     }
+    },
+    "global": {
+     "position": {
+      "x": {
+       "value": 0.0,
+       "unit": "mm"
+      },
+      "y": {
+       "value": 0.0,
+       "unit": "mm"
+      },
+      "z": {
+       "value": 9.0,
+       "unit": "mm"
+      }
+     },
+     "axis": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 1.0
+     },
+     "angle": {
+      "value": 0.0,
+      "unit": "deg"
+     }
+    }
+   },
+   "text": "Datum at (0.0, 0.0, 9.0) mm, rotated 0.0 deg.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.34,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "sketch2",
+  "tool": "query_sketch_info",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "sketch": "Profile"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.061,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "sketch": "Profile",
+    "geometry": [
+     {
+      "index": 0,
+      "type": "LineSegment",
+      "construction": false
+     },
+     {
+      "index": 1,
+      "type": "LineSegment",
+      "construction": false
+     },
+     {
+      "index": 2,
+      "type": "LineSegment",
+      "construction": false
+     },
+     {
+      "index": 3,
+      "type": "LineSegment",
+      "construction": false
+     }
+    ],
+    "constraints": [
+     {
+      "id": 1,
+      "type": "Coincident",
+      "name": "",
+      "driving": true,
+      "value": {
+       "value": 0.0,
+       "unit": null
+      }
+     },
+     {
+      "id": 2,
+      "type": "Coincident",
+      "name": "",
+      "driving": true,
+      "value": {
+       "value": 0.0,
+       "unit": null
+      }
+     },
+     {
+      "id": 3,
+      "type": "Coincident",
+      "name": "",
+      "driving": true,
+      "value": {
+       "value": 0.0,
+       "unit": null
+      }
+     },
+     {
+      "id": 4,
+      "type": "Coincident",
+      "name": "",
+      "driving": true,
+      "value": {
+       "value": 0.0,
+       "unit": null
+      }
+     },
+     {
+      "id": 5,
+      "type": "Horizontal",
+      "name": "",
+      "driving": true,
+      "value": {
+       "value": 0.0,
+       "unit": null
+      }
+     },
+     {
+      "id": 6,
+      "type": "Horizontal",
+      "name": "",
+      "driving": true,
+      "value": {
+       "value": 0.0,
+       "unit": null
+      }
+     },
+     {
+      "id": 7,
+      "type": "Vertical",
+      "name": "",
+      "driving": true,
+      "value": {
+       "value": 0.0,
+       "unit": null
+      }
+     },
+     {
+      "id": 8,
+      "type": "Vertical",
+      "name": "",
+      "driving": true,
+      "value": {
+       "value": 0.0,
+       "unit": null
+      }
+     },
+     {
+      "id": 9,
+      "type": "Coincident",
+      "name": "",
+      "driving": true,
+      "value": {
+       "value": 0.0,
+       "unit": null
+      }
+     },
+     {
+      "id": 10,
+      "type": "DistanceX",
+      "name": "width",
+      "driving": true,
+      "value": {
+       "value": 30.0,
+       "unit": "mm"
+      }
+     },
+     {
+      "id": 11,
+      "type": "DistanceY",
+      "name": "depth",
+      "driving": true,
+      "value": {
+       "value": 12.0,
+       "unit": "mm"
+      }
+     }
+    ]
+   },
+   "text": "Profile: 4 geo, 11 constraint(s).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.34,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "fit2",
+  "tool": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.107,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "fitted": true,
+    "document": "CAP2_Expr",
+    "camera_recorded": true
+   },
+   "text": "fitted the live viewport to 'CAP2_Expr'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.96,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "noop",
+  "tool": "feature_set_expression",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expressions": [
+    {
+     "object": "Profile",
+     "path": ".Constraints.width",
+     "expression": "Params.width"
+    },
+    {
+     "object": "Profile",
+     "path": ".Constraints.depth",
+     "expression": "Params.depth"
+    }
+   ]
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.11,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "bound": [],
+    "cleared": [],
+    "unchanged": [
+     {
+      "object": "Profile",
+      "path": ".Constraints.width",
+      "value": {
+       "value": 30.0,
+       "unit": "mm"
+      }
+     },
+     {
+      "object": "Profile",
+      "path": ".Constraints.depth",
+      "value": {
+       "value": 12.0,
+       "unit": "mm"
+      }
+     }
+    ],
+    "undo_steps": 0
+   },
+   "text": "2 expression(s) already as requested; no undo step recorded, so document_undo would revert an earlier step.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.32,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "equivalent",
+  "tool": "feature_set_expression",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expressions": [
+    {
+     "object": "Pad",
+     "path": "Length",
+     "expression": " Params.height"
+    }
+   ]
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.038,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "b8016088d6e9aa0992efb56a958c7887d2a5b97ae62bd134b37123ac178d79d1",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "b8016088d6e9aa0992efb56a958c7887d2a5b97ae62bd134b37123ac178d79d1",
+      "serializer": "exportBinary"
+     },
+     "changed": [],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "PASS": 6
+       },
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": []
+    },
+    "bound": [],
+    "cleared": [],
+    "unchanged": [
+     {
+      "object": "Pad",
+      "path": "Length",
+      "value": {
+       "value": 15.0,
+       "unit": "mm"
+      }
+     }
+    ],
+    "undo_steps": 0
+   },
+   "text": "Mutation committed; fingerprint b8016088d6e9.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.32,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "define_noop",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "width",
+     "type": "length",
+     "value": {
+      "value": 30,
+      "unit": "mm"
+     }
+    }
+   ]
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.061,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "varset": "Params",
+    "added": [],
+    "updated": [],
+    "unchanged": [
+     "width"
+    ],
+    "undo_steps": 0
+   },
+   "text": "Params: 1 parameter(s) already hold the values; no undo step recorded, so document_undo would revert an earlier step.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.32,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "refuse_unattached",
+  "tool": "feature_set_expression",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expressions": [
+    {
+     "object": "Profile",
+     "path": ".AttachmentOffset.Base.z",
+     "expression": "Params.lift"
+    }
+   ]
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.065,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "expression.unsupported_property",
+    "message": "expressions[0]: Profile is not attached, so FreeCAD hides and ignores its AttachmentOffset (AttachExtension.cpp); attach it first",
+    "data": {
+     "exception": "ExpressionRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1879, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 587, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2738, in feature_set_expression\n    unchanged_rows = registry.with_document(doc, rows_when_nothing_changes)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 432, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2733, in rows_when_nothing_changes\n    specs = check(document)\n            ^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2729, in check\n    _check_expression_target(document, spec, f\"expressions[{index}]\")\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2580, in _check_expression_target\n    raise ExpressionRefusal(\nfreecad_buddy.usecases.features.ExpressionRefusal: expressions[0]: Profile is not attached, so FreeCAD hides and ignores its AttachmentOffset (AttachExtension.cpp); attach it first\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  },
+  "text": null
+ },
+ {
+  "step": "refuse_range",
+  "tool": "feature_set_expression",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expressions": [
+    {
+     "object": "Pad",
+     "path": "Length",
+     "expression": "sum(A1:ZZ16384) + 1 mm"
+    }
+   ]
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.014,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "expression.range_unsupported",
+    "message": "expressions[0].expression holds a cell range such as A1:B2, which FreeCAD evaluates cell by cell and can hold the call for minutes; read single cells",
+    "data": {
+     "exception": "ExpressionRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1879, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 587, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2738, in feature_set_expression\n    unchanged_rows = registry.with_document(doc, rows_when_nothing_changes)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 432, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2733, in rows_when_nothing_changes\n    specs = check(document)\n            ^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2727, in check\n    specs = _expression_specs(expressions)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2426, in _expression_specs\n    specs = [_expression_spec(raw, index) for index, raw in enumerate(expressions)]\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2426, in <listcomp>\n    specs = [_expression_spec(raw, index) for index, raw in enumerate(expressions)]\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2383, in _expression_spec\n    _check_expression_text(text, where)\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2411, in _check_expression_text\n    raise ExpressionRefusal(\nfreecad_buddy.usecases.features.ExpressionRefusal: expressions[0].expression holds a cell range such as A1:B2, which FreeCAD evaluates cell by cell and can hold the call for minutes; read single cells\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  },
+  "text": null
+ },
+ {
+  "step": "refuse_negative",
+  "tool": "feature_set_expression",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expressions": [
+    {
+     "object": "Pad",
+     "path": "Length",
+     "expression": "-5 mm"
+    }
+   ]
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.012,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "expression.value_out_of_range",
+    "message": "expressions[0]: Pad 'Length': -5.0 is outside what a App::PropertyLength accepts",
+    "data": {
+     "exception": "ExpressionRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1879, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 587, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2738, in feature_set_expression\n    unchanged_rows = registry.with_document(doc, rows_when_nothing_changes)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 432, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2733, in rows_when_nothing_changes\n    specs = check(document)\n            ^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2729, in check\n    _check_expression_target(document, spec, f\"expressions[{index}]\")\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2605, in _check_expression_target\n    raise ExpressionRefusal(problem[0], f\"{where}: {obj.Name} {path!r}: {problem[1]}\")\nfreecad_buddy.usecases.features.ExpressionRefusal: expressions[0]: Pad 'Length': -5.0 is outside what a App::PropertyLength accepts\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  },
+  "text": null
+ },
+ {
+  "step": "refuse_shape",
+  "tool": "feature_set_expression",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expressions": [
+    {
+     "object": "Pad",
+     "path": ".Shape.Volume",
+     "expression": "1"
+    }
+   ]
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.068,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "expression.unsupported_property",
+    "message": "expressions[0]: Pad 'Shape' is a shape; bind a property that drives it",
+    "data": {
+     "exception": "ExpressionRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1879, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 587, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2738, in feature_set_expression\n    unchanged_rows = registry.with_document(doc, rows_when_nothing_changes)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 432, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2733, in rows_when_nothing_changes\n    specs = check(document)\n            ^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2729, in check\n    _check_expression_target(document, spec, f\"expressions[{index}]\")\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2586, in _check_expression_target\n    raise ExpressionRefusal(\nfreecad_buddy.usecases.features.ExpressionRefusal: expressions[0]: Pad 'Shape' is a shape; bind a property that drives it\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  },
+  "text": null
+ },
+ {
+  "step": "refuse_unit",
+  "tool": "feature_set_expression",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expressions": [
+    {
+     "object": "Pad",
+     "path": "Length",
+     "expression": "5 deg"
+    }
+   ]
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.013,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "expression.unit_mismatch",
+    "message": "expressions[0]: Pad 'Length': the expression evaluates to 5.0 deg, which does not match the dimension of the property's value 15.0 mm",
+    "data": {
+     "exception": "ExpressionRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1879, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 587, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2738, in feature_set_expression\n    unchanged_rows = registry.with_document(doc, rows_when_nothing_changes)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 432, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2733, in rows_when_nothing_changes\n    specs = check(document)\n            ^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2729, in check\n    _check_expression_target(document, spec, f\"expressions[{index}]\")\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2605, in _check_expression_target\n    raise ExpressionRefusal(problem[0], f\"{where}: {obj.Name} {path!r}: {problem[1]}\")\nfreecad_buddy.usecases.features.ExpressionRefusal: expressions[0]: Pad 'Length': the expression evaluates to 5.0 deg, which does not match the dimension of the property's value 15.0 mm\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  },
+  "text": null
+ },
+ {
+  "step": "refuse_inf",
+  "tool": "feature_set_expression",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expressions": [
+    {
+     "object": "Pad",
+     "path": "Length",
+     "expression": "1 mm / 0"
+    }
+   ]
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.013,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "expression.not_finite",
+    "message": "expressions[0]: Pad 'Length': the expression evaluates to inf",
+    "data": {
+     "exception": "ExpressionRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1879, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 587, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2738, in feature_set_expression\n    unchanged_rows = registry.with_document(doc, rows_when_nothing_changes)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 432, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2733, in rows_when_nothing_changes\n    specs = check(document)\n            ^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2729, in check\n    _check_expression_target(document, spec, f\"expressions[{index}]\")\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2605, in _check_expression_target\n    raise ExpressionRefusal(problem[0], f\"{where}: {obj.Name} {path!r}: {problem[1]}\")\nfreecad_buddy.usecases.features.ExpressionRefusal: expressions[0]: Pad 'Length': the expression evaluates to inf\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  },
+  "text": null
+ },
+ {
+  "step": "refuse_dead_path",
+  "tool": "feature_set_expression",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expressions": [
+    {
+     "object": "Pad",
+     "path": "Length.x",
+     "expression": "Params.height"
+    }
+   ]
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.012,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "expression.invalid_path",
+    "message": "expressions[0]: Pad path 'Length.x' does not resolve: No attribute named 'x'",
+    "data": {
+     "exception": "ExpressionRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1879, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 587, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2738, in feature_set_expression\n    unchanged_rows = registry.with_document(doc, rows_when_nothing_changes)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 432, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2733, in rows_when_nothing_changes\n    specs = check(document)\n            ^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2729, in check\n    _check_expression_target(document, spec, f\"expressions[{index}]\")\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2565, in _check_expression_target\n    raise ExpressionRefusal(\nfreecad_buddy.usecases.features.ExpressionRefusal: expressions[0]: Pad path 'Length.x' does not resolve: No attribute named 'x'\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  },
+  "text": null
+ },
+ {
+  "step": "refuse_placement",
+  "tool": "feature_set_expression",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expressions": [
+    {
+     "object": "Datum",
+     "path": ".AttachmentOffset",
+     "expression": "Params.datum_z"
+    }
+   ]
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.062,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "expression.unsupported_property",
+    "message": "expressions[0]: Datum '.AttachmentOffset' holds a Placement, not a number, quantity or bool; bind a numeric leaf such as .Placement.Base.x",
+    "data": {
+     "exception": "ExpressionRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1879, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 587, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2738, in feature_set_expression\n    unchanged_rows = registry.with_document(doc, rows_when_nothing_changes)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 432, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2733, in rows_when_nothing_changes\n    specs = check(document)\n            ^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2729, in check\n    _check_expression_target(document, spec, f\"expressions[{index}]\")\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2569, in _check_expression_target\n    raise ExpressionRefusal(\nfreecad_buddy.usecases.features.ExpressionRefusal: expressions[0]: Datum '.AttachmentOffset' holds a Placement, not a number, quantity or bool; bind a numeric leaf such as .Placement.Base.x\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  },
+  "text": null
+ },
+ {
+  "step": "refuse_long",
+  "tool": "feature_set_expression",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expressions": [
+    {
+     "object": "Pad",
+     "path": "Length",
+     "expression": "1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1"
+    }
+   ]
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.06,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "expression.invalid_text",
+    "message": "expressions[0].expression has 1999 characters; the limit is 400 because FreeCAD ends the process on a very long chained expression",
+    "data": {
+     "exception": "ExpressionRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1879, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 587, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2738, in feature_set_expression\n    unchanged_rows = registry.with_document(doc, rows_when_nothing_changes)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 432, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2733, in rows_when_nothing_changes\n    specs = check(document)\n            ^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2727, in check\n    specs = _expression_specs(expressions)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2426, in _expression_specs\n    specs = [_expression_spec(raw, index) for index, raw in enumerate(expressions)]\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2426, in <listcomp>\n    specs = [_expression_spec(raw, index) for index, raw in enumerate(expressions)]\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2383, in _expression_spec\n    _check_expression_text(text, where)\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2398, in _check_expression_text\n    raise ExpressionRefusal(\nfreecad_buddy.usecases.features.ExpressionRefusal: expressions[0].expression has 1999 characters; the limit is 400 because FreeCAD ends the process on a very long chained expression\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  },
+  "text": null
+ },
+ {
+  "step": "cycle",
+  "tool": "feature_set_expression",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expressions": [
+    {
+     "object": "Pad",
+     "path": "Length",
+     "expression": "Pad.Length + 1 mm"
+    }
+   ]
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.092,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "RECOMPUTE_ERROR",
+   "detail": {
+    "code": "expression.cycle",
+    "message": "expressions[0] Pad Length: Length reference creates a cyclic dependency."
+   },
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "b8016088d6e9aa0992efb56a958c7887d2a5b97ae62bd134b37123ac178d79d1",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "b8016088d6e9aa0992efb56a958c7887d2a5b97ae62bd134b37123ac178d79d1",
+      "serializer": "exportBinary"
+     },
+     "changed": [],
+     "post_verify": {
+      "recompute_clean": false,
+      "is_valid": "not_measured",
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "UNSUPPORTED",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": false,
+      "explanation": "expressions[0] Pad Length: Length reference creates a cyclic dependency."
+     },
+     "rolled_back": true,
+     "rollback_proven": "rolled_back_verified",
+     "touched": []
+    }
+   },
+   "text": "Mutation rolled back (rolled_back_verified): expressions[0] Pad Length: Length reference creates a cyclic dependency."
+  },
+  "text": null
+ },
+ {
+  "step": "query3",
+  "tool": "query_parameters",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.026,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "varsets": [
+     {
+      "object": "Params",
+      "label": "Params",
+      "parameters": [
+       {
+        "name": "datum_z",
+        "type": "length",
+        "value": 9.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "depth",
+        "type": "length",
+        "value": 12.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "height",
+        "type": "length",
+        "value": 15.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "lift",
+        "type": "length",
+        "value": 4.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "width",
+        "type": "length",
+        "value": 30.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       }
+      ]
+     }
+    ],
+    "spreadsheets": [],
+    "bindings": [
+     {
+      "object": "Datum",
+      "path": ".AttachmentOffset.Base.z",
+      "expression": "Params.datum_z"
+     },
+     {
+      "object": "Pad",
+      "path": "Length",
+      "expression": "Params.height"
+     },
+     {
+      "object": "Profile",
+      "path": ".Constraints.depth",
+      "expression": "Params.depth"
+     },
+     {
+      "object": "Profile",
+      "path": ".Constraints.width",
+      "expression": "Params.width"
+     }
+    ],
+    "totals": {
+     "varset_parameters": 5,
+     "spreadsheet_parameters": 0,
+     "bindings": 4
+    },
+    "truncated": false
+   },
+   "text": "5 VarSet parameter(s) in 1 VarSet(s), 0 spreadsheet parameter(s), 4 binding(s).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.32,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "mass3",
+  "tool": "query_mass_properties",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "object": "Pad"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.075,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Pad",
+    "solid": true,
+    "volume": {
+     "value": 5400.0,
+     "unit": "mm^3"
+    },
+    "area": {
+     "value": 1980.0,
+     "unit": "mm^2"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 30.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 12.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 15.0,
+      "unit": "mm"
+     }
+    },
+    "com": {
+     "x": {
+      "value": 15.0,
+      "unit": "mm"
+     },
+     "y": {
+      "value": 6.0,
+      "unit": "mm"
+     },
+     "z": {
+      "value": 7.5,
+      "unit": "mm"
+     }
+    },
+    "counts": {
+     "faces": 6,
+     "edges": 12,
+     "vertices": 8,
+     "solids": 1
+    },
+    "is_valid": true
+   },
+   "text": "Pad: volume 5400.0 mm^3 (solid), 6 faces, 12 edges.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.32,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "committed",
+  "steps": [
+   "define",
+   "body",
+   "sketch",
+   "geometry",
+   "pad",
+   "datum",
+   "bind",
+   "edit"
+  ]
+ },
+ {
+  "step": "undo_edit",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expect_fingerprint": {
+    "digest": "17a701bced924d81937c66b58f7f8a9deaae76a02782fda47cc5b8a32fd1aefe",
+    "serializer": "exportBinary"
+   }
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.064,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+    "name": "CAP2_Expr",
+    "undone": "buddy: define parameters on Params",
+    "fingerprint_before": "b8016088d6e9aa0992efb56a958c7887d2a5b97ae62bd134b37123ac178d79d1",
+    "fingerprint_after": "17a701bced924d81937c66b58f7f8a9deaae76a02782fda47cc5b8a32fd1aefe",
+    "matches_pre_op": true,
+    "restored_objects": [
+     "Params",
+     "Body",
+     "Origin",
+     "X_Axis",
+     "Y_Axis",
+     "Z_Axis",
+     "XY_Plane",
+     "XZ_Plane",
+     "YZ_Plane",
+     "Origin001",
+     "Profile",
+     "Pad",
+     "Datum"
+    ],
+    "undo_count": 7,
+    "errors": []
+   },
+   "text": "Undid 'buddy: define parameters on Params' on CAP2_Expr: restored the pre-op state (b8016088d6e9 -> 17a701bced92).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.22,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "q_after_undo_edit",
+  "tool": "query_parameters",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.073,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "varsets": [
+     {
+      "object": "Params",
+      "label": "Params",
+      "parameters": [
+       {
+        "name": "datum_z",
+        "type": "length",
+        "value": 5.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "depth",
+        "type": "length",
+        "value": 8.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "height",
+        "type": "length",
+        "value": 10.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "lift",
+        "type": "length",
+        "value": 0.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "width",
+        "type": "length",
+        "value": 20.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       }
+      ]
+     }
+    ],
+    "spreadsheets": [],
+    "bindings": [
+     {
+      "object": "Datum",
+      "path": ".AttachmentOffset.Base.z",
+      "expression": "Params.datum_z"
+     },
+     {
+      "object": "Pad",
+      "path": "Length",
+      "expression": "Params.height"
+     },
+     {
+      "object": "Profile",
+      "path": ".Constraints.depth",
+      "expression": "Params.depth"
+     },
+     {
+      "object": "Profile",
+      "path": ".Constraints.width",
+      "expression": "Params.width"
+     }
+    ],
+    "totals": {
+     "varset_parameters": 5,
+     "spreadsheet_parameters": 0,
+     "bindings": 4
+    },
+    "truncated": false
+   },
+   "text": "5 VarSet parameter(s) in 1 VarSet(s), 0 spreadsheet parameter(s), 4 binding(s).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.22,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "m_after_undo_edit",
+  "tool": "query_mass_properties",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "object": "Pad"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.066,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Pad",
+    "solid": true,
+    "volume": {
+     "value": 1600.0,
+     "unit": "mm^3"
+    },
+    "area": {
+     "value": 880.0,
+     "unit": "mm^2"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 20.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 8.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 10.0,
+      "unit": "mm"
+     }
+    },
+    "com": {
+     "x": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "y": {
+      "value": 4.0,
+      "unit": "mm"
+     },
+     "z": {
+      "value": 5.0,
+      "unit": "mm"
+     }
+    },
+    "counts": {
+     "faces": 6,
+     "edges": 12,
+     "vertices": 8,
+     "solids": 1
+    },
+    "is_valid": true
+   },
+   "text": "Pad: volume 1600.0 mm^3 (solid), 6 faces, 12 edges.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.22,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "fit_after_undo_edit",
+  "tool": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.104,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "fitted": true,
+    "document": "CAP2_Expr",
+    "camera_recorded": true
+   },
+   "text": "fitted the live viewport to 'CAP2_Expr'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.94,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "undo_bind",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expect_fingerprint": {
+    "digest": "19b021085fbefa608c25197d978240c6d3f05d1f417b3fc1d7fdfa9550cbed82",
+    "serializer": "exportBinary"
+   }
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.043,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+    "name": "CAP2_Expr",
+    "undone": "buddy: set expressions 1",
+    "fingerprint_before": "17a701bced924d81937c66b58f7f8a9deaae76a02782fda47cc5b8a32fd1aefe",
+    "fingerprint_after": "17a701bced924d81937c66b58f7f8a9deaae76a02782fda47cc5b8a32fd1aefe",
+    "matches_pre_op": true,
+    "restored_objects": [
+     "Params",
+     "Body",
+     "Origin",
+     "X_Axis",
+     "Y_Axis",
+     "Z_Axis",
+     "XY_Plane",
+     "XZ_Plane",
+     "YZ_Plane",
+     "Origin001",
+     "Profile",
+     "Pad",
+     "Datum"
+    ],
+    "undo_count": 6,
+    "errors": []
+   },
+   "text": "Undid 'buddy: set expressions 1' on CAP2_Expr: restored the pre-op state (17a701bced92 -> 17a701bced92).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.23,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "q_after_undo_bind",
+  "tool": "query_parameters",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.017,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "varsets": [
+     {
+      "object": "Params",
+      "label": "Params",
+      "parameters": [
+       {
+        "name": "datum_z",
+        "type": "length",
+        "value": 5.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "depth",
+        "type": "length",
+        "value": 8.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "height",
+        "type": "length",
+        "value": 10.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "lift",
+        "type": "length",
+        "value": 0.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "width",
+        "type": "length",
+        "value": 20.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       }
+      ]
+     }
+    ],
+    "spreadsheets": [],
+    "bindings": [],
+    "totals": {
+     "varset_parameters": 5,
+     "spreadsheet_parameters": 0,
+     "bindings": 0
+    },
+    "truncated": false
+   },
+   "text": "5 VarSet parameter(s) in 1 VarSet(s), 0 spreadsheet parameter(s), 0 binding(s).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.23,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "m_after_undo_bind",
+  "tool": "query_mass_properties",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "object": "Pad"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.063,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Pad",
+    "solid": true,
+    "volume": {
+     "value": 1600.0,
+     "unit": "mm^3"
+    },
+    "area": {
+     "value": 880.0,
+     "unit": "mm^2"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 20.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 8.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 10.0,
+      "unit": "mm"
+     }
+    },
+    "com": {
+     "x": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "y": {
+      "value": 4.0,
+      "unit": "mm"
+     },
+     "z": {
+      "value": 5.0,
+      "unit": "mm"
+     }
+    },
+    "counts": {
+     "faces": 6,
+     "edges": 12,
+     "vertices": 8,
+     "solids": 1
+    },
+    "is_valid": true
+   },
+   "text": "Pad: volume 1600.0 mm^3 (solid), 6 faces, 12 edges.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.23,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "undo_datum",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expect_fingerprint": {
+    "digest": "1baa94c5944f284381549749fc1f0b585b6a5105e54d108ae4c00cfbbe475a21",
+    "serializer": "exportBinary"
+   }
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.029,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+    "name": "CAP2_Expr",
+    "undone": "buddy: datum Datum",
+    "fingerprint_before": "17a701bced924d81937c66b58f7f8a9deaae76a02782fda47cc5b8a32fd1aefe",
+    "fingerprint_after": "3c005b93f764485394aeedba8a764778285ac7510424c724cc9658c092fb60e9",
+    "matches_pre_op": true,
+    "restored_objects": [
+     "Params",
+     "Body",
+     "Origin",
+     "X_Axis",
+     "Y_Axis",
+     "Z_Axis",
+     "XY_Plane",
+     "XZ_Plane",
+     "YZ_Plane",
+     "Origin001",
+     "Profile",
+     "Pad"
+    ],
+    "undo_count": 5,
+    "errors": []
+   },
+   "text": "Undid 'buddy: datum Datum' on CAP2_Expr: restored the pre-op state (17a701bced92 -> 3c005b93f764).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.23,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "undo_pad",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expect_fingerprint": {
+    "digest": "e565558b9f69c6f6a32aa017157751887a8b92b805f05d3d2f4bf543f254c89c",
+    "serializer": "exportBinary"
+   }
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.072,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+    "name": "CAP2_Expr",
+    "undone": "buddy: feature_pad Pad",
+    "fingerprint_before": "3c005b93f764485394aeedba8a764778285ac7510424c724cc9658c092fb60e9",
+    "fingerprint_after": "c0435b380978aa592d294961196a14c8c877fd4fa759fb983cf2666e69d5efb1",
+    "matches_pre_op": true,
+    "restored_objects": [
+     "Params",
+     "Body",
+     "Origin",
+     "X_Axis",
+     "Y_Axis",
+     "Z_Axis",
+     "XY_Plane",
+     "XZ_Plane",
+     "YZ_Plane",
+     "Origin001",
+     "Profile"
+    ],
+    "undo_count": 4,
+    "errors": []
+   },
+   "text": "Undid 'buddy: feature_pad Pad' on CAP2_Expr: restored the pre-op state (3c005b93f764 -> c0435b380978).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.13,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "undo_geometry",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expect_fingerprint": {
+    "digest": "02d4b20e41785786d5c3602ca032a2ce27023331bc87c63aabdc9cafe589434c",
+    "serializer": "exportBinary"
+   }
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.029,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+    "name": "CAP2_Expr",
+    "undone": "buddy: add geometry to Profile",
+    "fingerprint_before": "c0435b380978aa592d294961196a14c8c877fd4fa759fb983cf2666e69d5efb1",
+    "fingerprint_after": "02d4b20e41785786d5c3602ca032a2ce27023331bc87c63aabdc9cafe589434c",
+    "matches_pre_op": true,
+    "restored_objects": [
+     "Params",
+     "Body",
+     "Origin",
+     "X_Axis",
+     "Y_Axis",
+     "Z_Axis",
+     "XY_Plane",
+     "XZ_Plane",
+     "YZ_Plane",
+     "Origin001",
+     "Profile"
+    ],
+    "undo_count": 3,
+    "errors": []
+   },
+   "text": "Undid 'buddy: add geometry to Profile' on CAP2_Expr: restored the pre-op state (c0435b380978 -> 02d4b20e4178).",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "undo_sketch",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expect_fingerprint": {
+    "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+    "serializer": "exportBinary"
+   }
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.073,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+    "name": "CAP2_Expr",
+    "undone": "buddy: create sketch Profile",
+    "fingerprint_before": "02d4b20e41785786d5c3602ca032a2ce27023331bc87c63aabdc9cafe589434c",
+    "fingerprint_after": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+    "matches_pre_op": true,
+    "restored_objects": [
+     "Params",
+     "Body",
+     "Origin",
+     "X_Axis",
+     "Y_Axis",
+     "Z_Axis",
+     "XY_Plane",
+     "XZ_Plane",
+     "YZ_Plane",
+     "Origin001"
+    ],
+    "undo_count": 2,
+    "errors": []
+   },
+   "text": "Undid 'buddy: create sketch Profile' on CAP2_Expr: restored the pre-op state (02d4b20e4178 -> 283569b3f782).",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "undo_body",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expect_fingerprint": {
+    "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "serializer": "exportBinary"
+   }
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.068,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+    "name": "CAP2_Expr",
+    "undone": "buddy: create body Body",
+    "fingerprint_before": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+    "fingerprint_after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "matches_pre_op": true,
+    "restored_objects": [
+     "Params"
+    ],
+    "undo_count": 1,
+    "errors": []
+   },
+   "text": "Undid 'buddy: create body Body' on CAP2_Expr: restored the pre-op state (283569b3f782 -> 4f53cda18c2b).",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "undo_define",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+   "expect_fingerprint": {
+    "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "serializer": "exportBinary"
+   }
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.067,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+    "name": "CAP2_Expr",
+    "undone": "buddy: define parameters on Params",
+    "fingerprint_before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "fingerprint_after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "matches_pre_op": true,
+    "restored_objects": [],
+    "undo_count": 0,
+    "errors": []
+   },
+   "text": "Undid 'buddy: define parameters on Params' on CAP2_Expr: restored the pre-op state (4f53cda18c2b -> 4f53cda18c2b).",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": null
+ },
+ {
+  "step": "tree_end",
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.107,
+  "result": {},
+  "text": [
+   "OK: 0 objects, 0 shown.\nframing: unknown, unavailable, no visible shape-bearing objects to measure\n"
+  ]
+ },
+ {
+  "step": "fit_end",
+  "tool": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ"
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.1,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "SPEC_FAILED",
+   "detail": {
+    "code": "view_fit.nothing_to_frame",
+    "message": "no visible object to frame; datum planes are infinite and are not measured"
+   },
+   "structured_content": {
+    "fitted": false,
+    "reason": "no visible object to frame; datum planes are infinite and are not measured"
+   },
+   "text": "no visible object to frame; datum planes are infinite and are not measured"
+  },
+  "text": null
+ },
+ {
+  "step": "close",
+  "tool": "document_close",
+  "args": {
+   "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.064,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ",
+    "name": "CAP2_Expr",
+    "closed": true
+   },
+   "text": "Closed CAP2_Expr (doc=fcb-doc:Z-gXafHMxS7PW-QxXzjQyQ)."
+  },
+  "text": null
+ }
+]

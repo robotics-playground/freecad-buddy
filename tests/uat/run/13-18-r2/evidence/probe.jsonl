@@ -1,0 +1,43 @@
+{"probe": "raw_closed", "n": 3, "kind": "circle", "ruled": false, "state": ["Touched", "Invalid"], "valid": false, "solids": 0, "volume": null, "bop": null}
+{"probe": "raw_closed", "n": 3, "kind": "circle", "ruled": true, "state": ["Up-to-date"], "valid": false, "solids": 1, "volume": 2611.87, "bop": null}
+{"probe": "raw_closed", "n": 3, "kind": "square", "ruled": false, "state": ["Up-to-date"], "valid": true, "solids": 1, "volume": 2209.31, "bop": "Error in Face: BOPAlgo SelfIntersect"}
+{"probe": "raw_closed", "n": 3, "kind": "square", "ruled": true, "state": ["Up-to-date"], "valid": false, "solids": 1, "volume": 1108.51, "bop": null}
+{"probe": "raw_closed", "n": 4, "kind": "circle", "ruled": false, "state": ["Touched", "Invalid"], "valid": false, "solids": 0, "volume": null, "bop": null}
+{"probe": "raw_closed", "n": 4, "kind": "circle", "ruled": true, "state": ["Up-to-date"], "valid": false, "solids": 1, "volume": 4021.23, "bop": null}
+{"probe": "raw_closed", "n": 4, "kind": "square", "ruled": false, "state": ["Up-to-date"], "valid": true, "solids": 1, "volume": 8668.78, "bop": "Error in Face: BOPAlgo SelfIntersect"}
+{"probe": "raw_closed", "n": 4, "kind": "square", "ruled": true, "state": ["Up-to-date"], "valid": false, "solids": 1, "volume": 5120.0, "bop": null}
+{"probe": "raw_closed", "n": 6, "kind": "circle", "ruled": false, "state": ["Touched", "Invalid"], "valid": false, "solids": 0, "volume": null, "bop": null}
+{"probe": "raw_closed", "n": 6, "kind": "circle", "ruled": true, "state": ["Up-to-date"], "valid": false, "solids": 1, "volume": 5223.74, "bop": null}
+{"probe": "raw_closed", "n": 6, "kind": "square", "ruled": false, "state": ["Up-to-date"], "valid": true, "solids": 1, "volume": 8104.35, "bop": "Error in Face: BOPAlgo SelfIntersect"}
+{"probe": "raw_closed", "n": 6, "kind": "square", "ruled": true, "state": ["Up-to-date"], "valid": false, "solids": 1, "volume": 6651.08, "bop": null}
+{"probe": "raw_closed", "n": 8, "kind": "circle", "ruled": false, "state": ["Touched", "Invalid"], "valid": false, "solids": 0, "volume": null, "bop": null}
+{"probe": "raw_closed", "n": 8, "kind": "circle", "ruled": true, "state": ["Up-to-date"], "valid": false, "solids": 1, "volume": 5686.88, "bop": null}
+{"probe": "raw_closed", "n": 8, "kind": "square", "ruled": false, "state": ["Up-to-date"], "valid": true, "solids": 1, "volume": 8041.29, "bop": true}
+{"probe": "raw_closed", "n": 8, "kind": "square", "ruled": true, "state": ["Up-to-date"], "valid": false, "solids": 1, "volume": 7240.77, "bop": null}
+{"probe": "raw_closed", "n": 12, "kind": "circle", "ruled": false, "state": ["Touched", "Invalid"], "valid": false, "solids": 0, "volume": null, "bop": null}
+{"probe": "raw_closed", "n": 12, "kind": "circle", "ruled": true, "state": ["Up-to-date"], "valid": false, "solids": 1, "volume": 6031.85, "bop": null}
+{"probe": "raw_closed", "n": 12, "kind": "square", "ruled": false, "state": ["Up-to-date"], "valid": true, "solids": 1, "volume": 8040.89, "bop": "Error in Face: BOPAlgo SelfIntersect"}
+{"probe": "raw_closed", "n": 12, "kind": "square", "ruled": true, "state": ["Up-to-date"], "valid": false, "solids": 1, "volume": 7680.0, "bop": null}
+{"probe": "tool_closed", "n": 4, "kind": "circle", "ruled": false, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted built no shape", "volume": null, "elapsed": 0.04}
+{"probe": "tool_closed", "n": 4, "kind": "circle", "ruled": true, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted built an invalid shape", "volume": null, "elapsed": 0.02}
+{"probe": "tool_closed", "n": 4, "kind": "square", "ruled": false, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted fails the shape check: BOP check found the following errors:\nError in Face: BOPAlgo SelfIntersect\n", "volume": null, "elapsed": 0.12}
+{"probe": "tool_closed", "n": 4, "kind": "square", "ruled": true, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted built an invalid shape", "volume": null, "elapsed": 0.05}
+{"probe": "tool_closed", "n": 6, "kind": "circle", "ruled": false, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted built no shape", "volume": null, "elapsed": 0.05}
+{"probe": "tool_closed", "n": 6, "kind": "circle", "ruled": true, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted built an invalid shape", "volume": null, "elapsed": 0.03}
+{"probe": "tool_closed", "n": 6, "kind": "square", "ruled": false, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted fails the shape check: BOP check found the following errors:\nError in Face: BOPAlgo SelfIntersect\n", "volume": null, "elapsed": 0.14}
+{"probe": "tool_closed", "n": 6, "kind": "square", "ruled": true, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted built an invalid shape", "volume": null, "elapsed": 0.07}
+{"probe": "tool_closed", "n": 8, "kind": "circle", "ruled": false, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted built no shape", "volume": null, "elapsed": 0.05}
+{"probe": "tool_closed", "n": 8, "kind": "circle", "ruled": true, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted built an invalid shape", "volume": null, "elapsed": 0.05}
+{"probe": "tool_closed", "n": 8, "kind": "square", "ruled": false, "status": "OK", "code": null, "message": "None", "volume": 8041.290997547496, "elapsed": 0.17}
+{"probe": "tool_closed", "n": 8, "kind": "square", "ruled": true, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted built an invalid shape", "volume": null, "elapsed": 0.08}
+{"probe": "tool_closed", "n": 12, "kind": "circle", "ruled": false, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted built no shape", "volume": null, "elapsed": 0.06}
+{"probe": "tool_closed", "n": 12, "kind": "circle", "ruled": true, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted built an invalid shape", "volume": null, "elapsed": 0.05}
+{"probe": "tool_closed", "n": 12, "kind": "square", "ruled": false, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted fails the shape check: BOP check found the following errors:\nError in Face: BOPAlgo SelfIntersect\n", "volume": null, "elapsed": 0.18}
+{"probe": "tool_closed", "n": 12, "kind": "square", "ruled": true, "status": "RECOMPUTE_ERROR", "code": "loft.invalid_result", "message": "Lofted built an invalid shape", "volume": null, "elapsed": 0.11}
+{"probe": "selfintersect", "profile": "circle", "mode": "standard", "status": "RECOMPUTE_ERROR", "code": "sweep.invalid_result", "is_valid": null, "solids": null, "volume": null, "bop": null}
+{"probe": "selfintersect", "profile": "circle", "mode": "frenet", "status": "RECOMPUTE_ERROR", "code": "sweep.invalid_result", "is_valid": null, "solids": null, "volume": null, "bop": null}
+{"probe": "selfintersect", "profile": "bspline", "mode": "standard", "status": "OK", "code": null, "is_valid": true, "solids": 1, "volume": 942.4802562405964, "bop": "Error in Face: BOPAlgo SelfIntersect"}
+{"probe": "selfintersect", "profile": "bspline", "mode": "frenet", "status": "OK", "code": null, "is_valid": true, "solids": 1, "volume": 942.4802562405964, "bop": "Error in Face: BOPAlgo SelfIntersect"}
+{"probe": "helix", "label": "Part::Helix pitch1 h120", "edges": 1, "poles": [3330], "status": "OK", "code": null, "elapsed": 1.15}
+{"probe": "helix", "label": "Part::Helix pitch1 h150", "edges": 1, "poles": [7165], "status": "OK", "code": null, "elapsed": 1.3}
+{"probe": "helix", "label": "makeHelix 500 turns", "edges": 1, "poles": [392], "status": "RECOMPUTE_ERROR", "code": "sweep.invalid_result", "elapsed": 0.04}

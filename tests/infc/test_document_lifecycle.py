@@ -106,7 +106,11 @@ class DocumentLifecycleTest(unittest.TestCase):
         methods = self._dispatch_with_save()
         envelope = methods.dispatch("document_save", {"doc": "fcb-doc:does-not-exist"})
         self.assertEqual(envelope["status"], "INVALID_INPUT")
-        self.assertIn("unknown", envelope["detail"]["message"])
+        self.assertEqual(
+            envelope["detail"]["message"],
+            "unknown or stale document handle: fcb-doc:does-not-exist; "
+            "call document_list for the current handles",
+        )
 
     def test_missing_handle_maps_to_invalid_input(self):
         methods = self._dispatch_with_save()
@@ -120,6 +124,11 @@ class DocumentLifecycleTest(unittest.TestCase):
         methods = self._dispatch_with_save()
         envelope = methods.dispatch("document_save", {"doc": handle})
         self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertEqual(
+            envelope["detail"]["message"],
+            f"unknown or stale document handle: {handle}; "
+            "call document_list for the current handles",
+        )
 
     def test_a_handle_to_a_document_closed_outside_the_registry_is_invalid_input(self):
         # The GUI's File > Close goes straight to closeDocument; the registry never sees it.
@@ -138,7 +147,11 @@ class DocumentLifecycleTest(unittest.TestCase):
         envelope = methods.dispatch("document_recompute", {"doc": handle})
 
         self.assertEqual(envelope["status"], "INVALID_INPUT")
-        self.assertIn(f"unknown or stale document handle: {handle}", envelope["detail"]["message"])
+        self.assertEqual(
+            envelope["detail"]["message"],
+            f"unknown or stale document handle: {handle}; "
+            "call document_list for the current handles",
+        )
         self.assertNotIn(handle, self.registry._by_handle, "the stale handle survived")
         self.assertNotIn(
             other, self.registry._by_handle, "an alias of the closed document survived"
