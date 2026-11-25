@@ -2356,3 +2356,10 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: review round 3 of Story 13-15 (edge lens probe); `_grade_entry` compares `before["mapped"] != after["mapped"]` as strings.
   blocker: resolving `#id` segments needs the document `StringHasher`, which this guard does not read.
   unblock: compare the mapped names with the hashed segments resolved, or compare the history source and a stable suffix instead.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-15-tnp-expected-reattachment.md`
+  summary: When an op recomputes inside the mutation bracket (`feature_fillet`, `feature_chamfer`, `features.py:1668`), `refs_written` (`transaction.py:732`) is read after that recompute, so `intended` (`tnp_guard.py:1050`) grades a pending edit's re-point `CLEAN`. Pre-existing, outside Story 13-15.
+  evidence: third red team of Story 13-15, probe `scratchpad/redteam-13-15c/probes/w1_inner_recompute.py` (`redteam-13-15-r3.md`, RT3-1).
+  blocker: the written baseline must be captured before the op's own recompute; that changes `transaction.py` and the AD-5 written-baseline rule, and re-scores the G2 validator hash.
+  unblock: a Story on the written-baseline capture.
+
