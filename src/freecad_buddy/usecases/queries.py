@@ -860,18 +860,13 @@ def _measure_interference(
         return None, None, True
     if volume:
         return volume, 0.0, False
-    # ``distToShape`` collects every contact solution and grows steeply with the contacts (a lid on
-    # a row of 100 unit boxes 13.6 s, on 200 boxes 108 s). When a section finds the boundaries
-    # meeting and the fuse proves the pair touches, the distance is 0 and ``distToShape`` is
-    # skipped (section 0.2 s and the whole pair 1.4 s for the 200 boxes). A section also finds
-    # boundaries across a real gap inside the shapes' tolerance (1.5e-7 mm, or 1e-3 mm on shapes
-    # with a tolerance of 1e-2), where the fuse proof fails and ``distToShape`` still runs. The
-    # section costs 0.01 s on two disjoint compounds of 360 faces (``distToShape`` 20 s).
-    fuse_proof = None
-    if _boundaries_meet(shape_a, shape_b):
-        fuse_proof = _fuse_proves_touching(shape_a, shape_b)
-        if fuse_proof:
-            return 0.0, 0.0, False
+    # ``distToShape`` collects every contact solution and its cost is not bounded: a lid on a row
+    # of 100 unit boxes takes 13.6 s and on 200 boxes 108 s (face product 7,200). A section plus the
+    # fuse proof could skip it for touching pairs, but across a small gap at an edge, a vertex or a
+    # curved surface the section finds the boundaries and the fuse keeps two solids whose volumes
+    # sum, so the proof reads contact for a real gap (edge gap 1.5e-7 mm, sphere gap 2e-7 mm, edge
+    # gap 1e-3 mm on shapes with a tolerance of 1e-2). Only ``distToShape`` tells those gaps from
+    # contact, so it runs for every trusted pair.
     try:
         distance = float(shape_a.distToShape(shape_b)[0])
     except Exception:  # noqa: BLE001 -- a failed distance leaves the overlap unproven
@@ -882,20 +877,9 @@ def _measure_interference(
         return 0.0, distance, False
     if not empty and distance is not None:
         return 0.0, distance, False
-    if fuse_proof is None and distance is not None:
-        fuse_proof = _fuse_proves_touching(shape_a, shape_b)
-    if distance is not None and fuse_proof:
+    if distance is not None and _fuse_proves_touching(shape_a, shape_b):
         return 0.0, distance, False
     return None, distance, True
-
-
-def _boundaries_meet(shape_a: object, shape_b: object) -> bool:
-    """Whether the section of the two shapes holds an edge or a vertex; ``False`` when it fails."""
-    try:
-        section = shape_a.section(shape_b)
-        return bool(section.Edges or section.Vertexes)
-    except Exception:  # noqa: BLE001 -- a failed section only sends the call to ``distToShape``
-        return False
 
 
 def _face_probe_point(face: object) -> tuple[object, object] | None:

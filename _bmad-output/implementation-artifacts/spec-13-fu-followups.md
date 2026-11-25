@@ -109,6 +109,13 @@ Round RT (leader triage T1-T7) and round 2 (lenses review-blind-hunter-r2-s13-fu
 | Curved probe raising on a valid contact (Blind) | low | reject | The result is the safe `boolean_failed` true |
 | subTest tearDown/setUp (Blind) | low | reject | Works; helper would add code |
 
+Round 3 (verifier-13-fu r2 D1, leader triage T1).
+
+| Finding | Verdict | Route | Evidence |
+| --- | --- | --- | --- |
+| Section shortcut read distance 0 across small real gaps at an edge, a vertex or a curved surface (D1) | medium | patch | Shortcut and `_boundaries_meet` removed; `distToShape` runs again for every trusted pair, the fuse only when it returns 1e-7 mm or less; edge 1.5e-7 mm, sphere 2e-7 mm and tolerance-1e-2 edge 1e-3 mm tests red first, shortcut-restored mutant red |
+| Cost of `distToShape` on a lid over many boxes unbounded again (RT-5) | medium | defer | `deferred-work.md` entry restored; T-2 and design state the cost |
+
 ## Design Notes
 
 Measured on FreeCAD 1.1.4, development host (scratch probes). Touch, volume sum minus fuse volume, relative: face, edge, vertex boxes 1e-16; at offset 1e5 and sizes 1 to 1,000 up to 1e-14; filleted box on box 3.5e-13; 64+64 boxes 1e-14. Noise grows with offset over size (box 0.01 at offset 1e6: 1.5e-10; BSpline loft on a plate: up to 1.1e-10). Overlap with empty `common`: 100 mm boxes at depth 1e-7 mm (1e-3 mm3) give 3.3e-10. Tolerance 1e-12: above analytic noise, below that overlap. Noisier touches stay unmeasured (safe side). Fuse cost: 0.35 s at 384 x 384 faces, against 19 s for `distToShape` on the same pair.

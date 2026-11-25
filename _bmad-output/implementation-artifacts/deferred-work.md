@@ -2341,7 +2341,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   unblock: measure the probe on pairs with a positive distance (with a cap on faces sampled) and decide whether to run it on every disjoint pair.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-fu-followups.md`
-  summary: A pair whose boundaries do not meet still pays the unbounded `distToShape` cost, which grows with the number of near solutions and not with the face product.
-  evidence: Lid on a row of unit boxes: 13.6 s at 100 boxes and 108 s at 200 boxes at face product 7,200 (red team RT-5). 13-fu skips `distToShape` when a section shows the boundaries meet (1.4 s for 200 boxes); a pair at a small positive gap with many near solutions was not measured.
-  blocker: no measured cost bound for `distToShape` with many near solutions; decision 45 documents long GIL-holding calls as a limit.
-  unblock: a measured bound, or the worker isolation decision (AD-27) that lets a timed call stop.
+  summary: `distToShape` runs for every trusted pair whose `common` gives no volume, and its cost grows with the number of contact solutions and not with the face product.
+  evidence: Lid on a row of unit boxes: 13.6 s at 100 boxes and 108 s at 200 boxes at face product 7,200 (red team RT-5). A section plus fuse proof skipped `distToShape` for touching pairs (1.4 s for 200 boxes) but read distance 0 across small real gaps at an edge, a vertex or a curved surface (verify-13-fu-r2 D1), so it was removed.
+  blocker: no measured cost bound for `distToShape` with many contact solutions; decision 45 documents long GIL-holding calls as a limit.
+  unblock: a bound that keeps the true distance, or the worker isolation decision (AD-27, decision 45) that lets a timed call stop.

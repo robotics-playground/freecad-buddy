@@ -875,67 +875,6 @@ class QueryInterferenceTest(unittest.TestCase):
         self.assertAlmostEqual(fused.Volume, summed, places=6)
         self.assertFalse(proves_touching)
 
-    def test_Should_skip_the_distance_kernel_When_the_section_shows_the_boundaries_meet(self):
-        # Arrange
-        distance_calls = []
-
-        class Section:
-            Edges = ("shared edge",)
-            Vertexes = ()
-
-        class Fused:
-            Volume = 2.0
-
-            @staticmethod
-            def isValid():
-                return True
-
-        class Shape(_FakeSolid):
-            def common(self, other):
-                raise RuntimeError("boolean failed")
-
-            def section(self, other):
-                return Section()
-
-            def distToShape(self, other):
-                distance_calls.append(other)
-                return (0.0, [], [])
-
-            def fuse(self, other):
-                return Fused()
-
-        # Act
-        result = queries._measure_interference(Shape(), Shape())
-
-        # Assert
-        self.assertEqual(result, (0.0, 0.0, False))
-        self.assertEqual(distance_calls, [])
-
-    def test_Should_measure_the_distance_When_the_section_is_empty_or_raises(self):
-        # Arrange
-        class Base(_FakeSolid):
-            def common(self, other):
-                raise RuntimeError("boolean failed")
-
-            def distToShape(self, other):
-                return (3.0, [], [])
-
-        class WithEmptySection(Base):
-            def section(self, other):
-                return _EmptySection()
-
-        class WithRaisingSection(Base):
-            def section(self, other):
-                raise RuntimeError("section failed")
-
-        for shape_type in (WithEmptySection, WithRaisingSection):
-            with self.subTest(shape=shape_type.__name__):
-                # Act
-                result = queries._measure_interference(shape_type(), shape_type())
-
-                # Assert
-                self.assertEqual(result, (0.0, 3.0, False))
-
     def test_Should_flag_a_failed_boolean_When_the_fuse_volume_is_above_the_sum(self):
         # Arrange
         class Fused:
@@ -963,27 +902,50 @@ class QueryInterferenceTest(unittest.TestCase):
         # Assert
         self.assertEqual(result, (None, 0.0, True))
 
-    def test_Should_report_the_gap_When_disjoint_solids_lie_inside_the_section_tolerance(self):
+    def test_Should_report_the_gap_When_disjoint_solids_lie_across_a_small_gap(self):
         # Arrange
+        edge_offset = lambda gap: App.Vector(10 + gap, 10 + gap, 0)  # noqa: E731
         cases = {
-            "gap just above the contact distance": (1.5e-7, None),
-            "loose shape tolerance": (1e-3, 1e-2),
+            "face gap just above the contact distance": (
+                lambda gap: Part.makeBox(10, 10, 10),
+                lambda gap: Part.makeBox(10, 10, 10, App.Vector(10 + gap, 0, 0)),
+                1.5e-7,
+                1.5e-7,
+                None,
+            ),
+            "edge gap just above the contact distance": (
+                lambda gap: Part.makeBox(10, 10, 10),
+                lambda gap: Part.makeBox(10, 10, 10, edge_offset(gap)),
+                1.5e-7,
+                1.5e-7 * math.sqrt(2),
+                None,
+            ),
+            "sphere gap just above the contact distance": (
+                lambda gap: Part.makeSphere(5),
+                lambda gap: Part.makeSphere(5, App.Vector(10 + gap, 0, 0)),
+                2e-7,
+                2e-7,
+                None,
+            ),
+            "edge gap with a loose shape tolerance": (
+                lambda gap: Part.makeBox(10, 10, 10),
+                lambda gap: Part.makeBox(10, 10, 10, edge_offset(gap)),
+                1e-3,
+                1e-3 * math.sqrt(2),
+                1e-2,
+            ),
         }
-        for label, (gap, tolerance) in cases.items():
+        for label, (make_first, make_second, gap, expected, tolerance) in cases.items():
             with self.subTest(case=label):
                 self.tearDown()
                 self.setUp()
-                first = Part.makeBox(10, 10, 10)
-                second = Part.makeBox(10, 10, 10, App.Vector(10 + gap, 0, 0))
+                first = make_first(gap)
+                second = make_second(gap)
                 if tolerance is not None:
                     first.fixTolerance(tolerance)
                     second.fixTolerance(tolerance)
                 self._add_shape("A", first)
                 self._add_shape("B", second)
-                self.assertTrue(
-                    queries._boundaries_meet(first.copy(), second.copy()),
-                    "the fixture needs a section that finds the boundaries",
-                )
 
                 # Act
                 envelope = self._measure(objects=["A", "B"])
@@ -992,7 +954,9 @@ class QueryInterferenceTest(unittest.TestCase):
                 record = envelope["structured_content"]["pairs"][0]
                 self.assertFalse(record["boolean_failed"])
                 self.assertEqual(record["common_volume"]["value"], 0.0)
-                self.assertAlmostEqual(record["min_distance"]["value"], gap, delta=gap * 0.01)
+                self.assertAlmostEqual(
+                    record["min_distance"]["value"], expected, delta=expected * 0.01
+                )
 
     def test_Should_report_zero_overlap_When_a_sphere_touches_a_box_at_a_point(self):
         # Arrange
