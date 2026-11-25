@@ -1,0 +1,42 @@
+[
+ {
+  "tool": "document_close",
+  "args": {
+   "doc": "fcb-doc:tD9tKKln7akn6r2VdH2Ipw"
+  },
+  "seconds": 0.238,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:tD9tKKln7akn6r2VdH2Ipw",
+    "name": "tc20_place",
+    "closed": true
+   },
+   "text": "Closed tc20_place (doc=fcb-doc:tD9tKKln7akn6r2VdH2Ipw)."
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:tD9tKKln7akn6r2VdH2Ipw\",\"name\":\"tc20_place\",\"closed\":true},\"text\":\"Closed tc20_place (doc=fcb-doc:tD9tKKln7akn6r2VdH2Ipw).\"}"
+  ]
+ },
+ {
+  "tool": "document_list",
+  "args": {},
+  "seconds": 0.059,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "documents": []
+   },
+   "text": "0 open document(s)."
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"documents\":[]},\"text\":\"0 open document(s).\"}"
+  ]
+ }
+]
