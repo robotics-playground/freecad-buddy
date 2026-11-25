@@ -7,11 +7,13 @@ Quality bar: quality-bar-13-15.md.
 | R1-1 | Q4, Q6 | medium (product) | blind ac46ce7983f872c54 / edge a6c640398f275a239 / gap ae06149357a2a30d3 | fixed-proven | bound ignored direction (5 mm X shift beside 5 mm Z support move excused); now per axis; mutant "one maximum" -> 1 red (builder) |
 | R1-2 | Q1, Q6 | medium (test gap) | r1 lenses | fixed-proven (r2 found it could not fail on a swap: R2-2) | written-baseline branch untested; 2 tests added (audit with written; feature_set_parameters end to end) |
 | R1-4 | Q6 | medium (test gap) | r1 lenses | fixed-proven | history-equality mutant survived; layer assertion + 3 unit cases; mutant now 4 red (builder) |
-| R5-1 | Q5, Q6 | high | r5 blind ab10f8369b8d24a17 + edge a67d4bffa3a56a461 (both reproduced) | fixed-unproven (no independent review of the fix) | two pass-through features hash the older name part, `;:M3` disappears from name and history source; datum x 16 -> 33 CLEAN; fix: refuse when any name in `getElementHistory(recursive=True)` carries a counter or the chain is unreadable; cost 0.022 -> 0.034 s |
+| RT2-1 | Q5, Q6 | high | redteam-13-15b | open (triage-13-15-rt2.md T1) | p13_grid_index.py: 2-direction LinearPattern grid, L 60 -> 100: OK/CLEAN, datum moves boss (3,7) -> (42,17); base SPEC_FAILED/REPOINTED; MultiTransform p14 same |
+| RT2-L1 | Q7 | low | redteam-13-15b | open (T2) | snapshot 0.641 s vs 0.081 s at base (80 features, 200 refs) |
+| R5-1 | Q5, Q6 | high | r5 blind ab10f8369b8d24a17 + edge a67d4bffa3a56a461 (both reproduced) | fixed-proven (redteam-13-15b: lineage across 1-4 pass-through features holds) | two pass-through features hash the older name part, `;:M3` disappears from name and history source; datum x 16 -> 33 CLEAN; fix: refuse when any name in `getElementHistory(recursive=True)` carries a counter or the chain is unreadable; cost 0.022 -> 0.034 s |
 | R5-2 | Q6 | medium (product) | r5 lenses | fixed | `;:G0#` form not detected |
 | R5-3 | Q6 | medium (test) x5 | r5 gap a2efbad7520524d06 | fixed | two-digit indexes, `;:G` sibling half, history-source check, cache key, `;D` lookahead |
 | R5-D | outside the bar | low x3 | r5 lenses | deferred (decision 017 residuals) | `;:L#id` lower-element hashing; `(...)` multi-source without hasher; no e2e sibling-refusal test |
-| D-1 | Q11 | medium (safe-side false positive, pre-existing) | verifier-13-15 | sent to builder-13-15b as T2 | GUI display-mesh BoundBox: curved-face datum REPOINTED after Length edit (tc-18-04b) |
+| D-1 | Q11 | medium (safe-side false positive, pre-existing) | verifier-13-15 | fixed (e7f9d717, WitnessMeshTest red first; GUI case to re-run in container) | GUI display-mesh BoundBox: curved-face datum REPOINTED after Length edit (tc-18-04b) |
 | RT-1 | Q5, Q6 | high | redteam-13-15 | fixed-proven (builder-13-15b: counter detector + lineage check; p6c test red first; detector-false mutant 3 red) | p6c_datum_point.py: story OK/CLEAN, datum x 16 -> 33; base SPEC_FAILED/REPOINTED |
 | R3-1 | outside the bar (residual of decision 40 (2)) | medium -> accepted residual (leader) | r3 blind abf6e79051bccc7c4 / edge a47b1fe47c6fc41c9 / gap a4ef51292407550fa | deferred | inward-tapered Pad Length edit: top-face datum REPOINTED (support box does not move); same verdict before the Story; safe side; decision 017 + deferred entry |
 | R3-2 | outside the bar (residual) | medium -> accepted residual (leader) | r3 lenses | deferred | Revolution.Angle end face, Pad.Reversed toggle: REPOINTED; same before the Story; safe side |
@@ -44,3 +46,6 @@ Red team reproduced a high after round 3. Three rounds are used and builder-13-1
 | r5 | 5115b2ac -> e82521c1 | blind ab10f8369b8d24a17, edge a67d4bffa3a56a461, gap a2efbad7520524d06 | 1 -> 0 (R5-1 fix unreviewed) | 2 | 1 high + 1 product medium (fixed in round) | 0 |
 
 The lineage fix for R5-1 has no independent review: leader dispatches a second, narrow red team on e82521c1 (justified: an unreviewed fix to a reproduced high), then verifier-13-15 re-runs.
+| RT2 | e7f9d717 | redteam-13-15b | 0 -> 1 (RT2-1 high) | 2 (R5-1, D-1) | 1 | 0 |
+
+Fourth real re-point through a naming form. Leader decision 48: close the class by a count guard (same element count before and after), plus the instance-index forms; one more narrow red team; if it reproduces another real re-point, stop and ask the user (fallback: drop the excuse, keep the exact-witness fix).
