@@ -1,0 +1,546 @@
+[
+ {
+  "tool": "document_list",
+  "args": {},
+  "seconds": 0.111,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "documents": []
+   },
+   "text": "0 open document(s)."
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"documents\":[]},\"text\":\"0 open document(s).\"}"
+  ]
+ },
+ {
+  "tool": "document_create",
+  "args": {
+   "label": "tc21_trust"
+  },
+  "seconds": 0.168,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:kyzaGTsHnq7ibIrLdnMoNA",
+    "name": "tc21_trust",
+    "label": "tc21_trust"
+   },
+   "text": "doc: fcb-doc:kyzaGTsHnq7ibIrLdnMoNA\nlabel: tc21_trust\nname: tc21_trust"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:kyzaGTsHnq7ibIrLdnMoNA\",\"name\":\"tc21_trust\",\"label\":\"tc21_trust\"},\"text\":\"doc: fcb-doc:kyzaGTsHnq7ibIrLdnMoNA\\nlabel: tc21_trust\\nname: tc21_trust\"}"
+  ]
+ },
+ {
+  "tool": "feature_part_primitive",
+  "args": {
+   "kind": "box",
+   "name": "A",
+   "length": {
+    "value": 10,
+    "unit": "mm"
+   },
+   "width": {
+    "value": 10,
+    "unit": "mm"
+   },
+   "height": {
+    "value": 10,
+    "unit": "mm"
+   },
+   "doc": "fcb-doc:kyzaGTsHnq7ibIrLdnMoNA"
+  },
+  "seconds": 0.122,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "eb218ddd3a918d00f0ed73ae837af36f25cc32a41c59200b8047b3ed02e67d6b",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "A",
+       "volume": 1000.0,
+       "area": 600.0,
+       "com": [
+        5.0,
+        5.0,
+        5.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "A"
+     ]
+    },
+    "feature": "A",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "A",
+     "readable": true,
+     "body": "",
+     "is_tip": false,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 6,
+      "edge_count": 12,
+      "vertex_count": 8,
+      "is_valid": true,
+      "volume": 1000.0,
+      "area": 600.0,
+      "bbox": [
+       10.0,
+       10.0,
+       10.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint eb218ddd3a91.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"eb218ddd3a918d00f0ed73ae837af36f25cc32a41c59200b8047b3ed02e67d6b\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"A\",\"volume\":1000.0,\"area\":600.0,\"com\":[5.0,5.0,5.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":null,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"A\"]},\"feature\":\"A\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"A\",\"readable\":true,\"body\":\"\",\"is_tip\":false,\"shape_summary\":{\"solid_count\":1,\"face_count\":6,\"edge_count\":12,\"vertex_count\":8,\"is_valid\":true,\"volume\":1000.0,\"area\":600.0,\"bbox\":[10.0,10.0,10.0]}}},\"text\":\"Mutation committed; fingerprint eb218ddd3a91.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.41,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "code": "import Part, Sketcher, FreeCAD as App\nV = App.Vector\nrev = doc.addObject('Part::Feature', 'Rev')\nbox = Part.makeBox(10, 10, 10, V(5, 0, 0))\nbox.reverse()\nrev.Shape = box\nbody = doc.addObject('PartDesign::Body', 'Body')\nsk = body.newObject('Sketcher::SketchObject', 'Profile')\nsk.AttachmentSupport = [(body.Origin.OriginFeatures[3], '')]\nsk.MapMode = 'FlatFace'\nfor i, (a, b) in enumerate([((0,0),(8,0)), ((8,0),(8,16)), ((8,16),(0,16)), ((0,16),(0,0))]):\n    sk.addGeometry(Part.LineSegment(V(a[0], a[1], 0), V(b[0], b[1], 0)))\nfor i in range(4):\n    sk.addConstraint(Sketcher.Constraint('Coincident', i, 2, (i + 1) % 4, 1))\ndoc.recompute()\npad = body.newObject('PartDesign::Pad', 'Pad')\npad.Profile = sk\npad.Length = 5\ndoc.recompute()\nresult = 'built'",
+   "doc": "fcb-doc:kyzaGTsHnq7ibIrLdnMoNA"
+  },
+  "seconds": 0.277,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:kyzaGTsHnq7ibIrLdnMoNA",
+    "stdout": "",
+    "value_repr": "'built'",
+    "fingerprint_before": "eb218ddd3a918d00f0ed73ae837af36f25cc32a41c59200b8047b3ed02e67d6b",
+    "fingerprint_after": "794221fbeaf622f53102fdd50acafb4015fef176100c63ef83ee6a77a78d7271",
+    "changed": [
+     {
+      "name": "Body",
+      "volume": 640.0,
+      "area": 496.0,
+      "com": [
+       4.0,
+       8.0,
+       2.5
+      ]
+     },
+     {
+      "name": "Pad",
+      "volume": 640.0,
+      "area": 496.0,
+      "com": [
+       4.0,
+       8.0,
+       2.5
+      ]
+     },
+     {
+      "name": "Profile",
+      "volume": 0.0,
+      "area": 0.0,
+      "com": [
+       4.0,
+       8.0,
+       0.0
+      ]
+     },
+     {
+      "name": "Rev",
+      "volume": -1000.0,
+      "area": 600.0,
+      "com": [
+       10.0,
+       5.0,
+       5.0
+      ]
+     }
+    ],
+    "new_errors": [],
+    "undo_steps": 1
+   },
+   "text": "changed: [4 items]\ndoc: fcb-doc:kyzaGTsHnq7ibIrLdnMoNA\nfingerprint_after: 794221fbeaf622f53102fdd50acafb4015fef176100c63ef83ee6a77a78d7271\nfingerprint_before: eb218ddd3a918d00f0ed73ae837af36f25cc32a41c59200b8047b3ed02e67d6b\nnew_errors: [0 items]\nstdout: \nundo_steps: 1\nvalue_repr: 'built'\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:kyzaGTsHnq7ibIrLdnMoNA\",\"stdout\":\"\",\"value_repr\":\"'built'\",\"fingerprint_before\":\"eb218ddd3a918d00f0ed73ae837af36f25cc32a41c59200b8047b3ed02e67d6b\",\"fingerprint_after\":\"794221fbeaf622f53102fdd50acafb4015fef176100c63ef83ee6a77a78d7271\",\"changed\":[{\"name\":\"Body\",\"volume\":640.0,\"area\":496.0,\"com\":[4.0,8.0,2.5]},{\"name\":\"Pad\",\"volume\":640.0,\"area\":496.0,\"com\":[4.0,8.0,2.5]},{\"name\":\"Profile\",\"volume\":0.0,\"area\":0.0,\"com\":[4.0,8.0,0.0]},{\"name\":\"Rev\",\"volume\":-1000.0,\"area\":600.0,\"com\":[10.0,5.0,5.0]}],\"new_errors\":[],\"undo_steps\":1},\"text\":\"changed: [4 items]\\ndoc: fcb-doc:kyzaGTsHnq7ibIrLdnMoNA\\nfingerprint_after: 794221fbeaf622f53102fdd50acafb4015fef176100c63ef83ee6a77a78d7271\\nfingerprint_before: eb218ddd3a918d00f0ed73ae837af36f25cc32a41c59200b8047b3ed02e67d6b\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 1\\nvalue_repr: 'built'\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "check": "given status",
+  "observed": [
+   "OK",
+   "OK"
+  ],
+  "expected": [
+   "OK",
+   "OK"
+  ]
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "code": "result = [doc.Rev.Shape.Volume < 0, doc.Pad.getParentGeoFeatureGroup().Name]",
+   "doc": "fcb-doc:kyzaGTsHnq7ibIrLdnMoNA"
+  },
+  "seconds": 0.101,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:kyzaGTsHnq7ibIrLdnMoNA",
+    "stdout": "",
+    "value_repr": "[True, 'Body']",
+    "fingerprint_before": "794221fbeaf622f53102fdd50acafb4015fef176100c63ef83ee6a77a78d7271",
+    "fingerprint_after": "794221fbeaf622f53102fdd50acafb4015fef176100c63ef83ee6a77a78d7271",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:kyzaGTsHnq7ibIrLdnMoNA\nfingerprint_after: 794221fbeaf622f53102fdd50acafb4015fef176100c63ef83ee6a77a78d7271\nfingerprint_before: 794221fbeaf622f53102fdd50acafb4015fef176100c63ef83ee6a77a78d7271\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: [True, 'Body']\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:kyzaGTsHnq7ibIrLdnMoNA\",\"stdout\":\"\",\"value_repr\":\"[True, 'Body']\",\"fingerprint_before\":\"794221fbeaf622f53102fdd50acafb4015fef176100c63ef83ee6a77a78d7271\",\"fingerprint_after\":\"794221fbeaf622f53102fdd50acafb4015fef176100c63ef83ee6a77a78d7271\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:kyzaGTsHnq7ibIrLdnMoNA\\nfingerprint_after: 794221fbeaf622f53102fdd50acafb4015fef176100c63ef83ee6a77a78d7271\\nfingerprint_before: 794221fbeaf622f53102fdd50acafb4015fef176100c63ef83ee6a77a78d7271\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: [True, 'Body']\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "check": "given check",
+  "observed": [
+   true,
+   "Body"
+  ],
+  "expected": [
+   true,
+   "Body"
+  ]
+ },
+ {
+  "tool": "feature_part_boolean",
+  "args": {
+   "operation": "cut",
+   "base": "A",
+   "tools": [
+    "Rev"
+   ],
+   "name": "BadCut",
+   "doc": "fcb-doc:kyzaGTsHnq7ibIrLdnMoNA"
+  },
+  "seconds": 0.132,
+  "isError": true,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "part_boolean.untrusted_shape",
+    "message": "Rev cannot be used in a boolean: a solid has a volume of 0 or less (reversed or degenerate); FreeCAD returns wrong volumes or an empty result for such a shape",
+    "data": {
+     "exception": "PartToolRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 171, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 2088, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 618, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 4402, in feature_part_boolean\n    return _feature_mutation(\n           ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 447, in _feature_mutation\n    _, envelope = registry.with_document(doc, call)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 432, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 412, in call\n    precheck(document)\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 4364, in precheck\n    _check_part_boolean_inputs(*_part_boolean_inputs(document, base, tools))\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 4284, in _check_part_boolean_inputs\n    raise PartToolRefusal(\nfreecad_buddy.usecases.features.PartToolRefusal: Rev cannot be used in a boolean: a solid has a volume of 0 or less (reversed or degenerate); FreeCAD returns wrong volumes or an empty result for such a shape\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"part_boolean.untrusted_shape\",\"message\":\"Rev cannot be used in a boolean: a solid has a volume of 0 or less (reversed or degenerate); FreeCAD returns wrong volumes or an empty result for such a shape\",\"data\":{\"exception\":\"PartToolRefusal\",\"traceback\":\"Traceback (most recent call last):\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\\\", line 171, in _invoke\\n    return method.handler(**params)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 2088, in handler\\n    envelope = raw(**params)\\n               ^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 618, in <lambda>\\n    return lambda **p: fn(doc_registry, **p)\\n                       ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\\\", line 4402, in feature_part_boolean\\n    return _feature_mutation(\\n           ^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\\\", line 447, in _feature_mutation\\n    _, envelope = registry.with_document(doc, call)\\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\\\", line 432, in with_document\\n    return fn(handle, document)\\n           ^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\\\", line 412, in call\\n    precheck(document)\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\\\", line 4364, in precheck\\n    _check_part_boolean_inputs(*_part_boolean_inputs(document, base, tools))\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\\\", line 4284, in _check_part_boolean_inputs\\n    raise PartToolRefusal(\\nfreecad_buddy.usecases.features.PartToolRefusal: Rev cannot be used in a boolean: a solid has a volume of 0 or less (reversed or degenerate); FreeCAD returns wrong volumes or an empty result for such a shape\\n\"}},\"structured_content\":{},\"text\":\"\"}"
+  ]
+ },
+ {
+  "tool": "feature_part_boolean",
+  "args": {
+   "operation": "cut",
+   "base": "A",
+   "tools": [
+    "Pad"
+   ],
+   "name": "PadCut",
+   "doc": "fcb-doc:kyzaGTsHnq7ibIrLdnMoNA"
+  },
+  "seconds": 0.012,
+  "isError": true,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "part_boolean.not_top_level",
+    "message": "Pad sits inside Body; a boolean takes top-level objects (a Body itself is allowed, a Body feature is not)",
+    "data": {
+     "exception": "PartToolRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 171, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 2088, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 618, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 4402, in feature_part_boolean\n    return _feature_mutation(\n           ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 447, in _feature_mutation\n    _, envelope = registry.with_document(doc, call)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 432, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 412, in call\n    precheck(document)\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 4364, in precheck\n    _check_part_boolean_inputs(*_part_boolean_inputs(document, base, tools))\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 4246, in _check_part_boolean_inputs\n    raise PartToolRefusal(\nfreecad_buddy.usecases.features.PartToolRefusal: Pad sits inside Body; a boolean takes top-level objects (a Body itself is allowed, a Body feature is not)\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"part_boolean.not_top_level\",\"message\":\"Pad sits inside Body; a boolean takes top-level objects (a Body itself is allowed, a Body feature is not)\",\"data\":{\"exception\":\"PartToolRefusal\",\"traceback\":\"Traceback (most recent call last):\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\\\", line 171, in _invoke\\n    return method.handler(**params)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 2088, in handler\\n    envelope = raw(**params)\\n               ^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 618, in <lambda>\\n    return lambda **p: fn(doc_registry, **p)\\n                       ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\\\", line 4402, in feature_part_boolean\\n    return _feature_mutation(\\n           ^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\\\", line 447, in _feature_mutation\\n    _, envelope = registry.with_document(doc, call)\\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\\\", line 432, in with_document\\n    return fn(handle, document)\\n           ^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\\\", line 412, in call\\n    precheck(document)\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\\\", line 4364, in precheck\\n    _check_part_boolean_inputs(*_part_boolean_inputs(document, base, tools))\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\\\", line 4246, in _check_part_boolean_inputs\\n    raise PartToolRefusal(\\nfreecad_buddy.usecases.features.PartToolRefusal: Pad sits inside Body; a boolean takes top-level objects (a Body itself is allowed, a Body feature is not)\\n\"}},\"structured_content\":{},\"text\":\"\"}"
+  ]
+ },
+ {
+  "check": "reversed refused",
+  "observed": [
+   "INVALID_INPUT",
+   "part_boolean.untrusted_shape",
+   true,
+   true
+  ],
+  "expected": [
+   "INVALID_INPUT",
+   "part_boolean.untrusted_shape",
+   true,
+   true
+  ]
+ },
+ {
+  "check": "pad refused",
+  "observed": [
+   "INVALID_INPUT",
+   "part_boolean.not_top_level",
+   true,
+   true
+  ],
+  "expected": [
+   "INVALID_INPUT",
+   "part_boolean.not_top_level",
+   true,
+   true
+  ]
+ },
+ {
+  "tool": "feature_part_boolean",
+  "args": {
+   "operation": "cut",
+   "base": "Body",
+   "tools": [
+    "A"
+   ],
+   "name": "BodyCut",
+   "doc": "fcb-doc:kyzaGTsHnq7ibIrLdnMoNA"
+  },
+  "seconds": 0.125,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "794221fbeaf622f53102fdd50acafb4015fef176100c63ef83ee6a77a78d7271",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "4a18f9ef5e8ef628bc847772eb6f29bafb59c6f26655c8558b1e4d000b703a69",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "BodyCut",
+       "volume": 240.0,
+       "area": 236.0,
+       "com": [
+        4.0,
+        13.0,
+        2.5
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "PASS": 2
+       },
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "BodyCut"
+     ]
+    },
+    "feature": "BodyCut",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "BodyCut",
+     "readable": true,
+     "body": "",
+     "is_tip": false,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 6,
+      "edge_count": 12,
+      "vertex_count": 8,
+      "is_valid": true,
+      "volume": 240.0,
+      "area": 236.0,
+      "bbox": [
+       8.0,
+       6.0,
+       5.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint 4a18f9ef5e8e.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"794221fbeaf622f53102fdd50acafb4015fef176100c63ef83ee6a77a78d7271\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"4a18f9ef5e8ef628bc847772eb6f29bafb59c6f26655c8558b1e4d000b703a69\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"BodyCut\",\"volume\":240.0,\"area\":236.0,\"com\":[4.0,13.0,2.5]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":null,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{\"PASS\":2},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"BodyCut\"]},\"feature\":\"BodyCut\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"BodyCut\",\"readable\":true,\"body\":\"\",\"is_tip\":false,\"shape_summary\":{\"solid_count\":1,\"face_count\":6,\"edge_count\":12,\"vertex_count\":8,\"is_valid\":true,\"volume\":240.0,\"area\":236.0,\"bbox\":[8.0,6.0,5.0]}}},\"text\":\"Mutation committed; fingerprint 4a18f9ef5e8e.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "check": "Body accepted",
+  "observed": "OK",
+  "expected": "OK"
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "code": "result = [doc.getObject('BadCut'), doc.getObject('PadCut')]",
+   "doc": "fcb-doc:kyzaGTsHnq7ibIrLdnMoNA"
+  },
+  "seconds": 0.073,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:kyzaGTsHnq7ibIrLdnMoNA",
+    "stdout": "",
+    "value_repr": "[None, None]",
+    "fingerprint_before": "4a18f9ef5e8ef628bc847772eb6f29bafb59c6f26655c8558b1e4d000b703a69",
+    "fingerprint_after": "4a18f9ef5e8ef628bc847772eb6f29bafb59c6f26655c8558b1e4d000b703a69",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:kyzaGTsHnq7ibIrLdnMoNA\nfingerprint_after: 4a18f9ef5e8ef628bc847772eb6f29bafb59c6f26655c8558b1e4d000b703a69\nfingerprint_before: 4a18f9ef5e8ef628bc847772eb6f29bafb59c6f26655c8558b1e4d000b703a69\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: [None, None]\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:kyzaGTsHnq7ibIrLdnMoNA\",\"stdout\":\"\",\"value_repr\":\"[None, None]\",\"fingerprint_before\":\"4a18f9ef5e8ef628bc847772eb6f29bafb59c6f26655c8558b1e4d000b703a69\",\"fingerprint_after\":\"4a18f9ef5e8ef628bc847772eb6f29bafb59c6f26655c8558b1e4d000b703a69\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:kyzaGTsHnq7ibIrLdnMoNA\\nfingerprint_after: 4a18f9ef5e8ef628bc847772eb6f29bafb59c6f26655c8558b1e4d000b703a69\\nfingerprint_before: 4a18f9ef5e8ef628bc847772eb6f29bafb59c6f26655c8558b1e4d000b703a69\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: [None, None]\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "check": "no writes",
+  "observed": [
+   null,
+   null
+  ],
+  "expected": [
+   null,
+   null
+  ]
+ },
+ {
+  "tool": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:kyzaGTsHnq7ibIrLdnMoNA"
+  },
+  "seconds": 0.065,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "fitted": true,
+    "document": "tc21_trust",
+    "camera_recorded": true
+   },
+   "text": "fitted the live viewport to 'tc21_trust'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"fitted\":true,\"document\":\"tc21_trust\",\"camera_recorded\":true},\"text\":\"fitted the live viewport to 'tc21_trust'\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "shot": "tc-21-03-after",
+  "screenshot_file_path": "/repo/tests/uat/run/13-17-r1/evidence/tc-21-03-after.png",
+  "element_count": 661
+ }
+]
