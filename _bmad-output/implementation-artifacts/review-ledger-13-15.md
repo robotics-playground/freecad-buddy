@@ -7,6 +7,12 @@ Quality bar: quality-bar-13-15.md.
 | R1-1 | Q4, Q6 | medium (product) | blind ac46ce7983f872c54 / edge a6c640398f275a239 / gap ae06149357a2a30d3 | fixed-proven | bound ignored direction (5 mm X shift beside 5 mm Z support move excused); now per axis; mutant "one maximum" -> 1 red (builder) |
 | R1-2 | Q1, Q6 | medium (test gap) | r1 lenses | fixed-proven (r2 found it could not fail on a swap: R2-2) | written-baseline branch untested; 2 tests added (audit with written; feature_set_parameters end to end) |
 | R1-4 | Q6 | medium (test gap) | r1 lenses | fixed-proven | history-equality mutant survived; layer assertion + 3 unit cases; mutant now 4 red (builder) |
+| R5-1 | Q5, Q6 | high | r5 blind ab10f8369b8d24a17 + edge a67d4bffa3a56a461 (both reproduced) | fixed-unproven (no independent review of the fix) | two pass-through features hash the older name part, `;:M3` disappears from name and history source; datum x 16 -> 33 CLEAN; fix: refuse when any name in `getElementHistory(recursive=True)` carries a counter or the chain is unreadable; cost 0.022 -> 0.034 s |
+| R5-2 | Q6 | medium (product) | r5 lenses | fixed | `;:G0#` form not detected |
+| R5-3 | Q6 | medium (test) x5 | r5 gap a2efbad7520524d06 | fixed | two-digit indexes, `;:G` sibling half, history-source check, cache key, `;D` lookahead |
+| R5-D | outside the bar | low x3 | r5 lenses | deferred (decision 017 residuals) | `;:L#id` lower-element hashing; `(...)` multi-source without hasher; no e2e sibling-refusal test |
+| D-1 | Q11 | medium (safe-side false positive, pre-existing) | verifier-13-15 | sent to builder-13-15b as T2 | GUI display-mesh BoundBox: curved-face datum REPOINTED after Length edit (tc-18-04b) |
+| RT-1 | Q5, Q6 | high | redteam-13-15 | fixed-proven (builder-13-15b: counter detector + lineage check; p6c test red first; detector-false mutant 3 red) | p6c_datum_point.py: story OK/CLEAN, datum x 16 -> 33; base SPEC_FAILED/REPOINTED |
 | R3-1 | outside the bar (residual of decision 40 (2)) | medium -> accepted residual (leader) | r3 blind abf6e79051bccc7c4 / edge a47b1fe47c6fc41c9 / gap a4ef51292407550fa | deferred | inward-tapered Pad Length edit: top-face datum REPOINTED (support box does not move); same verdict before the Story; safe side; decision 017 + deferred entry |
 | R3-2 | outside the bar (residual) | medium -> accepted residual (leader) | r3 lenses | deferred | Revolution.Angle end face, Pad.Reversed toggle: REPOINTED; same before the Story; safe side |
 | R3-3 | outside the bar (residual) | medium -> accepted residual (leader) | r3 lenses | deferred | datum on vertical pad edge: mapped-name hash changes, outside the witness rule; same before the Story |
@@ -32,3 +38,9 @@ r2 had a product medium (R2-1); fix 57 product lines -> round 3 (last allowed ro
 | r3 | a835c153 -> fix 5115b2ac | blind abf6e79051bccc7c4, edge a47b1fe47c6fc41c9, gap a4ef51292407550fa | 2 -> 0 | 2 | 0 (3 residual false positives, pre-existing, safe side) | 0 |
 
 r3 passes: no high; the three mediums are false positives that existed before the Story (same verdict at base) and stay on the safe side (FLAGGED, never a missed re-point); leader classifies them as residuals inside decision 40 (2) boundary ("accept that an element ... stays REPOINTED"), deferred with entries. Round-3 product change 8 lines (docstring). Next: verifier-13-15 + redteam-13-15.
+| RT (r4) | 5115b2ac | redteam-13-15 | 0 -> 1 (RT-1 high) | 0 | 1 | 0 |
+
+Red team reproduced a high after round 3. Three rounds are used and builder-13-15 ran three fix rounds: hand off to a fresh builder (builder-13-15b) with this ledger and triage-13-15-rt.md; one more review round, then verifier + no second red team unless the fix is larger than a small patch.
+| r5 | 5115b2ac -> e82521c1 | blind ab10f8369b8d24a17, edge a67d4bffa3a56a461, gap a2efbad7520524d06 | 1 -> 0 (R5-1 fix unreviewed) | 2 | 1 high + 1 product medium (fixed in round) | 0 |
+
+The lineage fix for R5-1 has no independent review: leader dispatches a second, narrow red team on e82521c1 (justified: an unreviewed fix to a reproduced high), then verifier-13-15 re-runs.
