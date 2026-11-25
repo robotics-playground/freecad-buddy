@@ -2354,3 +2354,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `scripts/automation/usage_report.py` `FAILURE_CLASSES`; `tests/external/test_usage_report.py` pins the old class; a `Call` carries only the message, not `detail.code`.
   blocker: the report reads the message only, and a Python message has no fixed text to match.
   unblock: read `detail.code` into `Call` and add an `exec.python_error` class; relabel the `RECOMPUTE_ERROR` class.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-13-script-exec-bracket.md`
+  summary: (unverified, would be medium) Under a GUI command guard (`AutoTransaction`, nested event loop) `closeActiveTransaction(false)` is ignored, so the bracket's transaction could stay open after a `script_exec` call; the note would then say "earlier step" and the next change joins it.
+  evidence: review round 2 read `App/AutoTransaction.cpp:198` and `Application::setActiveTransaction`; not measured. The bridge normally runs `script_exec` from the pump, outside a command guard.
+  blocker: needs a GUI session that calls `script_exec` from inside a command.
+  unblock: a container UAT probe with a Python command that calls the bridge; then check `App.getActiveTransaction()` afterwards.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-13-script-exec-bracket.md`
+  summary: `script_exec` (as every bracket, `openTransaction` commits another caller's open application-level transaction) starts without refusing when a user or macro holds one, while `document_undo` refuses that state; and a script that sets `UndoMode 0` itself still gets the "earlier step" note instead of the undo-unavailable note.
+  evidence: review round 2 probes (`openTransaction("user edit")` then a read-only call: `user edit` committed). Both are FreeCAD semantics shared with `run_mutation`.
+  blocker: a refusal needs a decision on the mutation gate (decision owner: leader).
+  unblock: refuse or warn on `HasPendingTransaction` before the bracket for every bracketed tool, and re-read `UndoMode` after the script.

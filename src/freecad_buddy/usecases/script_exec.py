@@ -68,16 +68,15 @@ def _transaction_name(code: str) -> str:
 def _added_undo_steps(before: list[str], after: list[str]) -> int:
     """Count the entries the call added to the most-recent-first undo list.
 
-    A full stack drops its oldest entry for each new one, so the counts alone cannot tell. The
-    smallest ``k`` for which ``after[k:]`` is the leading part of ``before`` is the number added.
-    Repeated names on a full stack can make that undercount. A script that removed the newest
-    entries (``doc.undo()``) leaves ``after`` as the tail of ``before``: nothing was added.
+    Two alignments cover what a call can do. A full stack drops its oldest entry for each new
+    one, so ``after[k:]`` is the leading part of ``before``. A script that undid entries
+    (``doc.undo()``) and then recorded its own leaves ``after[k:]`` as the tail of ``before``.
+    The smaller ``k`` is the number added; repeated names can make the result too low.
     """
-    if len(after) < len(before) and after == before[len(before) - len(after) :]:
-        return 0
+    size = len(before)
     for added in range(len(after) + 1):
         remaining = after[added:]
-        if remaining == before[: len(remaining)]:
+        if remaining == before[: len(remaining)] or remaining == before[size - len(remaining) :]:
             return added
     return len(after)
 
@@ -111,6 +110,61 @@ def _script_namespace(document: object) -> dict:
     return namespace
 
 
+def _with_failure(
+    failure: tuple[str, Exception] | None, phase: str, exc: Exception
+) -> tuple[str, Exception]:
+    """``failure`` extended by a later failing ``phase``; the first phase keeps the name."""
+    if failure is None:
+        return phase, exc
+    first_phase, first = failure
+    combined = RuntimeError(f"{type(first).__name__}: {first}; {phase} also failed: {exc}")
+    return first_phase, combined
+
+
+def _observe(
+    document: object,
+    before: FingerprintRecord,
+    after: FingerprintRecord | None,
+    invalid_before: set[str],
+    names_before: list[str],
+) -> tuple[list, list[str], int | None, tuple[str, Exception] | None]:
+    """Read ``new_errors``, ``undo_steps`` and ``changed``; each read fails alone.
+
+    A read that raises gives ``None`` (``undo_steps``) or an empty list and the failure, so one
+    broken read never turns a recorded undo step into a reported zero.
+    """
+    failure: tuple[str, Exception] | None = None
+    new_errors: list[str] = []
+    undo_steps: int | None = None
+    changed: list = []
+    try:
+        invalid_after = {name for name, _status in invalid_objects(document)}
+        new_errors = sorted(invalid_after - invalid_before)
+    except Exception as exc:  # noqa: BLE001 - the script already ran; report, never raise
+        failure = failure or ("observe", exc)
+    try:
+        undo_steps = _added_undo_steps(names_before, list(document.UndoNames))
+    except Exception as exc:  # noqa: BLE001 - the script already ran; report, never raise
+        failure = failure or ("observe", exc)
+    try:
+        changed = result_projection.changed_objects(before, after, False)
+    except Exception as exc:  # noqa: BLE001 - the script already ran; report, never raise
+        failure = failure or ("observe", exc)
+    return changed, new_errors, undo_steps, failure
+
+
+def _setup_failed(phase: str, exc: Exception) -> ResultEnvelope:
+    """The result when a read before the script failed: nothing ran and nothing is open."""
+    message = f"{type(exc).__name__}: {exc}"
+    return {
+        "schema": "fcb.result-envelope/1",
+        "status": "SPEC_FAILED",
+        "detail": _error_detail("exec.bracket_failed", message, {"phase": phase}),
+        "structured_content": {},
+        "text": f"script not run: {phase} failed: {message}",
+    }
+
+
 def _close_bracket(
     document: object, recompute: bool
 ) -> tuple[FingerprintRecord | None, tuple[str, Exception] | None]:
@@ -125,13 +179,16 @@ def _close_bracket(
             document.recompute()
     except Exception as exc:  # noqa: BLE001 - the transaction must still close
         failure = ("recompute", exc)
-    # The commit runs after a failed recompute too: a transaction left open would take the name
+    # Both commits run whatever failed before them: a transaction left open would take the name
     # of the next change by any caller.
     try:
         document.commitTransaction()
+    except Exception as exc:  # noqa: BLE001 - the application-level close below must still run
+        failure = _with_failure(failure, "commit", exc)
+    try:
         shim.commit_active_transaction()
     except Exception as exc:  # noqa: BLE001 - the changes stay; report the phase
-        return None, failure or ("commit", exc)
+        failure = _with_failure(failure, "commit", exc)
     if failure is not None:
         return None, failure
     try:
@@ -146,19 +203,13 @@ def _run_bracket(handle: str, document: object, code: str, recompute: bool) -> R
     undo_enabled = shim.enable_undo(document)
     try:
         before = fingerprint(document)
+    except Exception as exc:  # noqa: BLE001 - nothing ran yet; report instead of raising
+        return _setup_failed("fingerprint_before", exc)
+    try:
         invalid_before = {name for name, _status in invalid_objects(document)}
         names_before = list(document.UndoNames)
     except Exception as exc:  # noqa: BLE001 - nothing ran yet; report instead of raising
-        message = f"{type(exc).__name__}: {exc}"
-        return {
-            "schema": "fcb.result-envelope/1",
-            "status": "SPEC_FAILED",
-            "detail": _error_detail(
-                "exec.bracket_failed", message, {"phase": "fingerprint_before"}
-            ),
-            "structured_content": {},
-            "text": f"script not run: fingerprint_before failed: {message}",
-        }
+        return _setup_failed("observe_before", exc)
     result_projection.remember(before)
 
     namespace = _script_namespace(document)
@@ -174,22 +225,22 @@ def _run_bracket(handle: str, document: object, code: str, recompute: bool) -> R
     after = None
     changed: list = []
     new_errors: list[str] = []
-    undo_steps = 0
+    undo_steps: int | None = 0
     bracket_failure: tuple[str, Exception] | None = None
     gone = _is_dead(document)
     if gone:
         # closeDocument clears the application-level transaction only when the document held its
         # own, so a script that closed its document before writing leaves the name open.
-        shim.commit_active_transaction()
+        try:
+            shim.commit_active_transaction()
+        except Exception as exc:  # noqa: BLE001 - the script already ran; report, never raise
+            bracket_failure = ("commit", exc)
     else:
         after, bracket_failure = _close_bracket(document, recompute)
-        try:
-            invalid_after = {name for name, _status in invalid_objects(document)}
-            new_errors = sorted(invalid_after - invalid_before)
-            undo_steps = _added_undo_steps(names_before, list(document.UndoNames))
-            changed = result_projection.changed_objects(before, after, False)
-        except Exception as exc:  # noqa: BLE001 - the script already ran; report, never raise
-            bracket_failure = bracket_failure or ("observe", exc)
+        changed, new_errors, undo_steps, observe_failure = _observe(
+            document, before, after, invalid_before, names_before
+        )
+        bracket_failure = bracket_failure or observe_failure
 
     value = namespace.get("result", _UNSET)
     structured = {
@@ -226,7 +277,7 @@ def _envelope(
     if script_error is not None:
         # The first frame is the bridge's own exec call; the last lines name the exception.
         frames = script_error.__traceback__
-        frames = frames.tb_next or frames if frames is not None else None
+        frames = frames.tb_next if frames is not None else None
         trace = "".join(traceback.format_exception(type(script_error), script_error, frames))
         message = f"{type(script_error).__name__}: {script_error}"
         data = {"exception": type(script_error).__name__, "traceback": trace[-_TRACEBACK_LIMIT:]}

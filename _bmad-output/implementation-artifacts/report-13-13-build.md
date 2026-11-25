@@ -48,3 +48,11 @@ Q15: live write then `document_undo`, `INVALID_INPUT` and bridge stays up, GUI u
 ## Files
 
 Source: `src/freecad_buddy/usecases/{script_exec,shim,framing}.py`, `hosts/tool_catalog.py`, `adapters/{rpc_dispatch,rpc_listener,mcp_server}.py`. Tests: `tests/infc/test_script_exec_bracket.py`, `tests/external/{test_rpc_listener,test_mcp_surface,test_framing_envelope,test_framing_contract}.py`. Skills: `freecad-scripting-idioms` (SKILL.md, gap-list), `code-cad-conversion` generator-kit. Design: spine AD-5 and AD-27, mcp-tools-design §5, verification-design §1.1.1, security-and-service §1, data-contracts, sequence-diagrams §8. UAT: TC-02, 03, 04, 05, 06, 08, 10, 12, 13 and four scenario JSON files.
+
+## Review round 2 (fix diff 7fb24f1d..296f11f9)
+
+Lenses (opus, high): Blind ac63858f9075cceee (9 findings), Edge a3d35b8def0d6ba58 (9), Gap a57eeae352a00d1da (2 + 3 other). Triage: spec `## Review Triage Log`, rows R2-1 to R2-12.
+- Medium, patched (tests red first): a failing `document.commitTransaction` left the transaction open and lost the second failure; `undo_steps` overcounted after `doc.undo()` on a deeper stack (round-1 fix was incomplete); one failed observe read reported `undo_steps` 0 with a false note.
+- Low, patched: pre-script read phase `observe_before`; closed-document commit guarded; tail-cut test now reaches 4000 characters; SyntaxError keeps no bridge frame; `observe` phase documented.
+- Deferred: `closeActiveTransaction` under a GUI command guard (maybe-false, UAT probe settles it); `openTransaction` committing another caller's open transaction and `UndoMode 0` set by the script. Rejected: commit-then-write note (spec case 5), nested call, hostile repr.
+- Gates after round 2: pytest tests/external 2117 passed, 6 skipped; freecadcmd Ran 1304 OK (skipped 1); bracket file 50 tests; AC5 timing 4.34 s; ruff, check_imports, check_status_vocab, gen_schemas --check, check_skill_shape clean.

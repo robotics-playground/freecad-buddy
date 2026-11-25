@@ -158,3 +158,20 @@ Round 1: Blind Hunter (15 findings), Edge Cases Hunter (12), Verification Gap Fi
 | 21 | UAT runner JSON scenarios stale: tc-02-06, tc-12-07, tc-09-17, tc-09-18 (Gap) | medium | patch | `recompute: false` added to two; the `build` status expectation is now `RECOMPUTE_ERROR` in two |
 | 22 | `usage_report.py` classifies `RECOMPUTE_ERROR` as a Python error (Gap) | low | defer | Needs `detail.code` in `Call`; recorded in `deferred-work.md` |
 | 23 | Verification-design claim "a commit at the end" after a recompute failure (Edge, claim) | low | patch | Closed by finding 1 |
+
+Round 2 (fix diff 7fb24f1d..296f11f9): Blind Hunter (9), Edge Cases Hunter (9), Verification Gap Finder (2 + 3 other).
+
+| # | Finding (lens) | Verdict | Route | Evidence |
+|---|----------------|---------|-------|----------|
+| R2-1 | `commitTransaction` raising skips the application-level close; both failures not reported (all three) | medium | patch | Probe: `getActiveTransaction()` stayed set. Both commits now run in their own `try`; `_with_failure` names both; two tests red first |
+| R2-2 | `_added_undo_steps` returns the stack length after `doc.undo()` plus a recorded entry (all three) | medium | patch | Round-1 fix did not reach the real flow (`[S,B,A]` from `[C,B,A]` gave 3). Smaller of the prefix and suffix alignments; infc test with two prior writes, three unit cases |
+| R2-3 | One failed observe read resets `undo_steps` to 0 with a false note (Blind, Edge) | medium | patch | `_observe` guards each read alone; `undo_steps` is null when unreadable; test red first |
+| R2-4 | Pre-script read failure labelled `fingerprint_before` (Blind, Edge) | low | patch | Phase `observe_before`; test updated |
+| R2-5 | Closed-document branch commit unguarded (Blind, Edge, Gap) | low | patch | Guarded; returns `RECOMPUTE_ERROR` phase `commit`; test |
+| R2-6 | Tail-cut traceback test never reaches 4000 characters; SyntaxError keeps the bridge frame (Gap, Edge) | low | patch | Test with 200 distinct frames pins length 4000 and the exception line; `tb_next` fallback removed; SyntaxError test |
+| R2-7 | `observe` phase undocumented for a script that did not raise (Blind, Edge, Gap) | low | patch | Added to mcp-tools-design §5 rule 4 |
+| R2-8 | `openTransaction` commits another caller's open transaction; `UndoMode 0` set by the script (Blind) | low | defer | FreeCAD semantics shared with `run_mutation`; needs a gate decision; entry added |
+| R2-9 | `closeActiveTransaction` ignored under a GUI command guard (Blind, Edge) | maybe-false (medium if true) | defer | Read from source, not measured; entry added with the UAT probe that settles it |
+| R2-10 | Script commits the bridge transaction then writes gets no note (Blind) | low | reject | Spec case 5: not detectable by design, documented |
+| R2-11 | Nested call from inside a script (Gap) | low | reject | Deadlocks on the registry lock until `TIMEOUT`; no state left open; same as before the change |
+| R2-12 | Hostile `__repr__`, `openTransaction` or namespace raising (Blind, Edge) | low | reject | `openTransaction` never raises for a string name (case 9); the rest needs a hostile object |

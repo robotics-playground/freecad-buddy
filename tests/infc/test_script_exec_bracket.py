@@ -353,6 +353,34 @@ class ErrorPathTest(_BracketFixture):
         self.assertTrue(trace.endswith("ZeroDivisionError: division by zero\n"))
         self.assertNotIn("script_exec.py", trace)
 
+    def test_Should_cut_to_the_tail_When_distinct_frames_make_the_traceback_exceed_the_limit(self):
+        # Arrange
+        lines = [f"def f{index}():\n    f{index + 1}()" for index in range(200)]
+        lines.append("def f200():\n    raise ValueError('deep')")
+        code = "\n".join(lines) + "\nf0()"
+
+        # Act
+        envelope = self.run_script(code)
+
+        # Assert
+        trace = envelope["detail"]["data"]["traceback"]
+        self.assertEqual(len(trace), 4000)
+        self.assertTrue(trace.endswith("ValueError: deep\n"))
+        self.assertNotIn("Traceback (most recent call last)", trace)
+
+    def test_Should_drop_the_bridge_frame_When_the_script_has_a_syntax_error(self):
+        # Arrange
+        code = "def ("
+
+        # Act
+        envelope = self.run_script(code)
+
+        # Assert
+        trace = envelope["detail"]["data"]["traceback"]
+        self.assertEqual(envelope["detail"]["code"], "exec.python_error")
+        self.assertIn("SyntaxError", trace)
+        self.assertNotIn("script_exec.py", trace)
+
     def test_Should_return_recompute_error_and_keep_the_change_When_a_script_invalidates_a_box(
         self,
     ):
@@ -469,7 +497,7 @@ class BracketFailureTest(_BracketFixture):
     def test_Should_return_recompute_error_When_the_recompute_phase_raises(self):
         # Arrange
         self.document.UndoMode = 1
-        document = _RecomputeRaises(self.document)
+        document = _RaisingDocument(self.document, "recompute")
 
         # Act
         envelope = script_exec_module._run_bracket(self.handle, document, "doc.Box.Width = 5", True)
@@ -545,7 +573,8 @@ class BracketFailureTest(_BracketFixture):
 
         # Assert
         self.assertEqual(envelope["status"], "SPEC_FAILED")
-        self.assertEqual(envelope["detail"]["data"]["phase"], "fingerprint_before")
+        self.assertEqual(envelope["detail"]["data"]["phase"], "observe_before")
+        self.assertIn("observe_before", envelope["text"])
         self.assertEqual(self.document.Box.Width, BOX_WIDTH)
 
     def test_Should_report_the_script_error_and_keep_the_changes_When_a_post_script_read_raises(
@@ -573,18 +602,96 @@ class BracketFailureTest(_BracketFixture):
         self.assertIn("undo is unavailable", envelope["text"])
         self.assertNotIn("would revert an earlier step", envelope["text"])
 
+    def test_Should_close_the_transaction_and_name_the_commit_When_the_document_commit_raises(self):
+        # Arrange
+        self.document.UndoMode = 1
+        document = _RaisingDocument(self.document, "commitTransaction")
 
-class _RecomputeRaises:
-    """A document proxy whose ``recompute`` raises; every other member is the real document's."""
+        # Act
+        envelope = script_exec_module._run_bracket(self.handle, document, "doc.Box.Width = 5", True)
+
+        # Assert
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR")
+        self.assertEqual(envelope["detail"]["data"]["phase"], "commit")
+        self.assertIsNone(App.getActiveTransaction())
+        self.assertFalse(self.document.HasPendingTransaction)
+
+    def test_Should_name_both_failures_When_the_recompute_and_the_commit_raise(self):
+        # Arrange
+        self.document.UndoMode = 1
+        document = _FailsRecomputeAndCommit(self.document)
+
+        # Act
+        with mock.patch.object(script_exec_module, "_any_touched", return_value=True):
+            envelope = script_exec_module._run_bracket(
+                self.handle, document, "doc.Box.Width = 5", True
+            )
+
+        # Assert
+        self.assertEqual(envelope["detail"]["data"]["phase"], "recompute")
+        self.assertIn("commitTransaction died", envelope["detail"]["message"])
+        self.assertIsNone(App.getActiveTransaction())
+
+    def test_Should_keep_undo_steps_and_skip_the_zero_note_When_a_post_script_read_raises(self):
+        # Arrange
+        real = script_exec_module.invalid_objects
+        calls = []
+
+        def second_call_raises(document):
+            calls.append(document)
+            if len(calls) == 2:
+                raise RuntimeError("isValid died")
+            return real(document)
+
+        with mock.patch.object(script_exec_module, "invalid_objects", second_call_raises):
+            # Act
+            envelope = self.run_script("doc.Box.Width = 5")
+
+        # Assert
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR")
+        self.assertEqual(self.structured(envelope)["undo_steps"], 1)
+        self.assertNotIn("undo_steps 0", envelope["text"])
+
+    def test_Should_return_an_envelope_When_the_script_closed_its_document_and_the_close_raises(
+        self,
+    ):
+        # Arrange
+        failing = mock.Mock(side_effect=RuntimeError("close died"))
+        with mock.patch.object(shim, "commit_active_transaction", failing):
+            # Act
+            envelope = self.run_script("FreeCAD.closeDocument(doc.Name)")
+
+        # Assert
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR")
+        self.assertEqual(envelope["detail"]["data"]["phase"], "commit")
+        self.assertIsNone(self.structured(envelope)["fingerprint_after"])
+
+
+class _RaisingDocument:
+    """A document proxy whose ``member`` raises; every other member is the real document's."""
+
+    def __init__(self, document, member):
+        self._document = document
+        self._member = member
+
+    def __getattr__(self, name):
+        if name == self._member:
+
+            def raises(*args, **kwargs):
+                raise RuntimeError(f"{name} died")
+
+            return raises
+        return getattr(self._document, name)
+
+
+class _FailsRecomputeAndCommit(_RaisingDocument):
+    """A document proxy whose ``recompute`` and ``commitTransaction`` both raise."""
 
     def __init__(self, document):
-        self._document = document
+        super().__init__(document, "commitTransaction")
 
     def recompute(self, *args, **kwargs):
         raise RuntimeError("recompute died")
-
-    def __getattr__(self, name):
-        return getattr(self._document, name)
 
 
 class UndoStackTest(_BracketFixture):
@@ -600,6 +707,38 @@ class UndoStackTest(_BracketFixture):
         # Assert
         self.assertEqual(stack_size, 20)
         self.assertEqual(self.structured(envelope)["undo_steps"], 1)
+
+    def test_Should_count_one_added_step_When_the_script_undoes_one_and_records_one(self):
+        # Arrange
+        self.run_script("doc.Box.Length = 11")
+        self.run_script("doc.Box.Height = 12")
+
+        # Act
+        envelope = self.run_script("doc.undo()")
+
+        # Assert
+        self.assertEqual(self.structured(envelope)["undo_steps"], 1)
+
+    def test_Should_count_one_added_step_When_the_head_was_replaced_and_the_tail_is_kept(self):
+        # Arrange
+        before = ["C", "B", "A"]
+
+        # Act
+        added = script_exec_module._added_undo_steps(before, ["S", "B", "A"])
+
+        # Assert
+        self.assertEqual(added, 1)
+
+    def test_Should_count_one_added_step_When_the_full_stack_dropped_its_oldest_entry(self):
+        # Arrange
+        before = [f"n{index}" for index in range(20)]
+        after = ["S", *before[:19]]
+
+        # Act
+        added = script_exec_module._added_undo_steps(before, after)
+
+        # Assert
+        self.assertEqual(added, 1)
 
     def test_Should_report_zero_added_When_the_newest_entries_were_removed(self):
         # Arrange
