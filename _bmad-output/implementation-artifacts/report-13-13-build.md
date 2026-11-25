@@ -60,3 +60,6 @@ Lenses (opus, high): Blind ac63858f9075cceee (9 findings), Edge a3d35b8def0d6ba5
 ## Round 3 batch (builder-13-13b)
 - T1 to T7 of `triage-13-13-r3.md` applied. Product change in `script_exec.py`: `_describe`, `_value_repr`, `_CombinedFailure`, `data.bracket_message`, conditional kept-changes note. Docs: design §5 rules 4 and 7, tool description.
 - Gates: freecadcmd Ran 1311 OK (skipped 1); bracket file 57 tests OK; ruff, check_imports, check_status_vocab, gen_schemas --check, check_skill_shape clean.
+
+## Red-team fix batch
+- RT-1 to RT-6 closed. Gates: freecadcmd Ran 1320 OK (skipped 1); tests/external 2117 passed, 6 skipped; ruff, check_imports, check_status_vocab, gen_schemas --check, check_skill_shape clean.

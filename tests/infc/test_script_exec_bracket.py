@@ -8,7 +8,10 @@ it pins. The FreeCAD behaviours the bracket relies on were measured in FreeCAD 1
 """
 
 import io
+import queue
 import sys
+import tempfile
+import threading
 import time
 import unittest
 from contextlib import redirect_stderr
@@ -786,7 +789,11 @@ class BracketFailureTest(_BracketFixture):
 
 
 class _RaisingDocument:
-    """A document proxy whose ``member`` raises; every other member is the real document's."""
+    """A document proxy whose ``member`` raises; every other member is the real document's.
+
+    The proxy defeats the ``enable_undo`` read-back, so a test using it runs with the document's
+    own undo mode.
+    """
 
     def __init__(self, document, member):
         self._document = document
@@ -825,6 +832,124 @@ class _FailsRecomputeAndCommit(_RaisingDocument):
 
     def recompute(self, *args, **kwargs):
         raise RuntimeError("recompute died")
+
+
+class HostileScriptObjectTest(_BracketFixture):
+    """Script-owned objects whose text conversion raises after the commit."""
+
+    def test_Should_return_ok_and_a_repr_note_When_the_result_repr_raises_a_base_exception(self):
+        for exit_type in ("SystemExit", "KeyboardInterrupt"):
+            with self.subTest(exit_type=exit_type):
+                # Arrange
+                code = (
+                    "class H:\n    def __repr__(self):\n"
+                    f"        raise {exit_type}(3)\n"
+                    "result = H()\ndoc.Box.Width = 5"
+                )
+
+                # Act
+                envelope = self.run_script(code)
+
+                # Assert
+                content = self.structured(envelope)
+                self.assertEqual(envelope["status"], "OK")
+                self.assertTrue(content["value_repr"].startswith("<repr failed: "))
+                self.assertIsNotNone(content["fingerprint_after"])
+                self.assertEqual(content["undo_steps"], 1)
+
+    def test_Should_return_invalid_input_When_the_script_error_str_raises_a_base_exception(self):
+        for exit_type in ("SystemExit", "KeyboardInterrupt"):
+            with self.subTest(exit_type=exit_type):
+                # Arrange
+                code = (
+                    "class Hostile(Exception):\n    def __str__(self):\n"
+                    f"        raise {exit_type}(3)\n"
+                    "doc.Box.Width = 5\nraise Hostile()"
+                )
+
+                # Act
+                envelope = self.run_script(code)
+
+                # Assert
+                self.assertEqual(envelope["status"], "INVALID_INPUT")
+                self.assertEqual(envelope["detail"]["message"], "Hostile: <str failed>")
+                self.assertTrue(
+                    envelope["detail"]["data"]["traceback"].endswith("<exception str() failed>\n")
+                )
+                self.assertEqual(self.document.Box.Width, 5)
+                self.assertIsNone(App.getActiveTransaction())
+
+    def test_Should_return_the_printed_text_When_the_script_closes_stdout(self):
+        # Arrange
+        code = "import sys\nprint('hello')\nsys.stdout.close()\ndoc.Box.Width = 5"
+
+        # Act
+        envelope = self.run_script(code)
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual(self.structured(envelope)["stdout"], "hello\n")
+        self.assertEqual(self.structured(envelope)["undo_steps"], 1)
+
+
+class UndoNoteTest(_BracketFixture):
+    def test_Should_report_null_undo_steps_and_a_note_When_the_stack_is_full_of_one_name(self):
+        # Arrange
+        code = "import Part\ndoc.Box.Width = doc.Box.Width.Value + 1"
+        for _ in range(21):
+            self.run_script(code)
+
+        # Act
+        envelope = self.run_script(code)
+
+        # Assert
+        self.assertEqual(self.undo_names(), ["script_exec import Part"] * 20)
+        self.assertEqual(envelope["status"], "OK")
+        self.assertIsNone(self.structured(envelope)["undo_steps"])
+        self.assertIn("count is unknown", envelope["text"])
+        self.assertNotIn("would revert an earlier step", envelope["text"])
+
+    def test_Should_note_that_document_undo_cannot_restore_When_the_script_calls_doc_undo(self):
+        # Arrange
+        self.run_script("doc.Box.Length = 11")
+        self.run_script("doc.Box.Height = 12")
+
+        # Act
+        envelope = self.run_script("doc.undo()")
+
+        # Assert
+        self.assertIn("the script undid steps itself", envelope["text"])
+
+    def test_Should_not_note_an_undo_by_the_script_When_the_script_only_writes(self):
+        # Arrange
+        self.run_script("doc.Box.Length = 11")
+
+        # Act
+        envelope = self.run_script("doc.Box.Height = 12")
+
+        # Assert
+        self.assertNotIn("undid steps", envelope["text"])
+
+    def test_Should_say_the_script_emptied_the_undo_list_When_it_calls_clear_undos(self):
+        # Arrange
+        self.run_script("doc.Box.Length = 11")
+
+        # Act
+        envelope = self.run_script("doc.clearUndos()")
+
+        # Assert
+        self.assertIn("switched undo off or emptied the undo list", envelope["text"])
+        self.assertNotIn("would revert an earlier step", envelope["text"])
+
+    def test_Should_say_the_script_switched_undo_off_When_it_sets_undo_mode_zero(self):
+        # Arrange
+        self.run_script("doc.Box.Length = 11")
+
+        # Act
+        envelope = self.run_script("doc.UndoMode = 0")
+
+        # Assert
+        self.assertIn("switched undo off or emptied the undo list", envelope["text"])
 
 
 class UndoStackTest(_BracketFixture):
@@ -1013,3 +1138,82 @@ class DispatchTest(_BracketFixture):
 
         # Assert
         self.assertIn("Touched", self.document.Box.State)
+
+
+class _MainThreadLike:
+    """One dedicated thread runs every submitted callable, like the Qt main thread."""
+
+    def __init__(self):
+        self._queue = queue.Queue()
+        threading.Thread(target=self._loop, daemon=True).start()
+
+    def _loop(self):
+        while True:
+            self._queue.get()()
+
+    def submit(self, function):
+        self._queue.put(function)
+
+
+class ListenerTest(_BracketFixture):
+    """The handler behind the real RPC listener: a post-commit exit must not stop serving."""
+
+    TOKEN = "bracket-token"
+
+    def setUp(self):
+        super().setUp()
+        from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
+        from freecad_buddy.adapters.rpc_listener import RpcListener
+        from freecad_buddy.hosts import tool_catalog
+
+        spec = tool_catalog.SCRIPT_EXEC_SPEC
+        methods = MethodRegistry()
+        methods.register(
+            RpcMethod(
+                name=spec.name,
+                handler=spec.make_handler(self.registry, None, None, None, None),
+                input_schema=spec.input_schema,
+                description=spec.description,
+                timeout_s=spec.timeout_s,
+                mutating=spec.mutating,
+                audit_event=spec.audit_event,
+            )
+        )
+        self.listener = RpcListener(
+            methods,
+            Marshal(_MainThreadLike()),
+            self.TOKEN,
+            contract_version="1",
+            freecad_version="1.1.4",
+            capabilities={"gui": True},
+            appdata_dir=tempfile.mkdtemp(),
+        )
+        self.host, self.port = self.listener.start_threaded()
+
+    def tearDown(self):
+        self.listener.stop()
+        super().tearDown()
+
+    def call(self, code):
+        from freecad_buddy.adapters.rpc_client import RpcClient
+
+        client = RpcClient(endpoint={"host": self.host, "port": self.port, "token": self.TOKEN})
+        try:
+            return client.call("script_exec", {"doc": self.handle, "code": code})
+        finally:
+            client.close()
+
+    def test_Should_serve_the_next_call_When_the_result_repr_raises_system_exit(self):
+        # Arrange
+        hostile = (
+            "class H:\n    def __repr__(self):\n        raise SystemExit(3)\n"
+            "result = H()\ndoc.Box.Width = 5"
+        )
+
+        # Act
+        first = self.call(hostile)
+        second = self.call("result = 2")
+
+        # Assert
+        self.assertEqual(first["status"], "OK")
+        self.assertEqual(second["status"], "OK")

@@ -187,3 +187,14 @@ Round 2 (fix diff 7fb24f1d..296f11f9): Blind Hunter (9), Edge Cases Hunter (9), 
 | T5 (E3-2) | Bracket exception text lost when the script raised | low | patch | `data.bracket_message`; test red first |
 | T6 (E3-1, R3-L1) | `_added_undo_steps` can undercount and overcount | low | doc | Both limits in the docstring, `mcp-tools-design.md` §5 rule 4 and the tool description; algorithm unchanged |
 | T7 (R3-L2) | Tool description omitted a null `undo_steps` | low | doc | Added |
+
+### Red-team round
+
+| ID | Finding | Severity | Class | Outcome |
+| --- | --- | --- | --- | --- |
+| RT-1 | `__repr__` or `__str__` raising `SystemExit` after the commit ended the listener | high | patch | `_describe` and `_value_repr` catch `BaseException`; infc tests for both and `KeyboardInterrupt`, and a `ListenerTest` through the real `RpcListener` (red first). `traceback.format_exception` already survives a raising `__str__`, so it needs no guard |
+| RT-2 | Full stack of 20 identical names reported `undo_steps` 0 with a false note | medium | patch | `_added_undo_steps` gives null; note "count is unknown"; test red first |
+| RT-3 | `doc.undo()` in a script: `document_undo` cannot restore the pre-call state, no note | medium | patch | Note when entries of the earlier list are gone; description and design rule 4 state the exception; test red first |
+| RT-4 | `sys.stdout.close()` made the post-commit stdout read raise | low | patch | `_CapturedOutput.close` is a no-op; test red first |
+| RT-6 | Zero-step note false after `clearUndos` or `UndoMode` 0 | low | patch | Own note; two tests red first |
+| RT-5 | Test double defeats the `enable_undo` read-back | low | no fix | Comment in `_RaisingDocument` |

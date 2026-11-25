@@ -14,6 +14,7 @@ from __future__ import annotations
 import io
 import traceback
 from contextlib import redirect_stdout
+from dataclasses import dataclass, field
 
 from freecad_buddy.contracts import FingerprintRecord, ResultEnvelope, summary_text
 from freecad_buddy.usecases import result_projection, shim
@@ -31,6 +32,8 @@ _NAME_PREFIX = "script_exec"
 # Keeps the Undo list readable; FreeCAD stores any length unchanged.
 _NAME_SOURCE_LIMIT = 80
 _TRACEBACK_LIMIT = 4000
+# FreeCAD stops growing the undo list at its default limit, so a full list hides new entries.
+_FULL_UNDO_STACK = 20
 
 _UNDO_UNAVAILABLE_NOTE = (
     "undo is unavailable on this document: document_undo cannot revert this call"
@@ -38,6 +41,23 @@ _UNDO_UNAVAILABLE_NOTE = (
 _NO_UNDO_STEP_NOTE = (
     "undo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step"
 )
+_UNDO_CLEARED_NOTE = (
+    "undo_steps 0: the script switched undo off or emptied the undo list, so document_undo "
+    "cannot revert earlier steps"
+)
+_UNDO_UNKNOWN_NOTE = (
+    "undo_steps null: the undo list is full of identical entries, so the count is unknown"
+)
+_SCRIPT_UNDID_NOTE = (
+    "the script undid steps itself: document_undo cannot restore the state before this call"
+)
+
+
+class _CapturedOutput(io.StringIO):
+    """Script stdout that a script calling ``sys.stdout.close()`` cannot make unreadable."""
+
+    def close(self) -> None:
+        pass
 
 
 def script_exec(
@@ -65,17 +85,20 @@ def _transaction_name(code: str) -> str:
     return _NAME_PREFIX
 
 
-def _added_undo_steps(before: list[str], after: list[str]) -> int:
+def _added_undo_steps(before: list[str], after: list[str]) -> int | None:
     """Count the entries the call added to the most-recent-first undo list.
 
     Two alignments cover what a call can do. A full stack drops its oldest entry for each new
     one, so ``after[k:]`` is the leading part of ``before``. A script that undid entries
     (``doc.undo()``) and then recorded its own leaves ``after[k:]`` as the tail of ``before``.
-    The smaller ``k`` is the number added. Two limits follow from comparing names alone: repeated
-    names can make the result too low (a script that calls ``doc.undo()`` and whose first line
-    matches an earlier entry on a short stack), and a full stack of 20 entries can make it too
-    high (it reports 20 for a call that added 2).
+    The smaller ``k`` is the number added. Three limits follow from comparing names alone:
+    repeated names can make the result too low (a script that calls ``doc.undo()`` and whose
+    first line matches an earlier entry on a short stack), a full stack of 20 entries can make it
+    too high (it reports 20 for a call that added 2), and a full stack of one repeated name gives
+    ``None``, because a write and a read-only script leave the same list.
     """
+    if len(before) >= _FULL_UNDO_STACK and after == before and len(set(before)) == 1:
+        return None
     size = len(before)
     for added in range(len(after) + 1):
         remaining = after[added:]
@@ -90,7 +113,7 @@ def _describe(exc: BaseException) -> str:
         return str(exc)
     try:
         text = str(exc)
-    except Exception:  # noqa: BLE001 - a hostile __str__ must not break the envelope
+    except BaseException:  # noqa: BLE001 - a script-defined __str__ may raise SystemExit
         text = "<str failed>"
     return f"{type(exc).__name__}: {text}"
 
@@ -101,7 +124,7 @@ def _value_repr(value: object) -> tuple[str | None, str | None]:
         return None, None
     try:
         return repr(value), None
-    except Exception as exc:  # noqa: BLE001 - the change is committed; report, never raise
+    except BaseException as exc:  # noqa: BLE001 - a script-defined __repr__ may raise SystemExit
         text = f"<repr failed: {_describe(exc)}>"
         return text, f"result {type(value).__name__} has no repr: {_describe(exc)}"
 
@@ -150,18 +173,34 @@ def _with_failure(
     return first_phase, combined
 
 
+@dataclass
+class _Observation:
+    changed: list = field(default_factory=list)
+    new_errors: list[str] = field(default_factory=list)
+    undo_steps: int | None = None
+    script_undid_steps: bool = False
+    undo_disabled_by_script: bool = False
+    failure: tuple[str, Exception] | None = None
+
+
+def _undid_entries(before: list[str], after: list[str], added: int) -> bool:
+    """Whether ``after`` lost entries of ``before`` beyond the oldest ones a full stack drops."""
+    return after[added:] != before[: len(after) - added]
+
+
 def _observe(
     document: object,
     before: FingerprintRecord,
     after: FingerprintRecord | None,
     invalid_before: set[str],
     names_before: list[str],
-) -> tuple[list, list[str], int | None, tuple[str, Exception] | None]:
+) -> _Observation:
     """Read ``new_errors``, ``undo_steps`` and ``changed``; each read fails alone.
 
     A read that raises gives ``None`` (``undo_steps``) or an empty list and the failure, so one
     broken read never turns a recorded undo step into a reported zero.
     """
+    observation = _Observation()
     failure: tuple[str, Exception] | None = None
     new_errors: list[str] = []
     undo_steps: int | None = None
@@ -172,14 +211,24 @@ def _observe(
     except Exception as exc:  # noqa: BLE001 - the script already ran; report, never raise
         failure = failure or ("observe", exc)
     try:
-        undo_steps = _added_undo_steps(names_before, list(document.UndoNames))
+        names_after = list(document.UndoNames)
+        undo_steps = _added_undo_steps(names_before, names_after)
+        if undo_steps is not None:
+            observation.script_undid_steps = _undid_entries(names_before, names_after, undo_steps)
+        observation.undo_disabled_by_script = not document.UndoMode or (
+            bool(names_before) and not names_after
+        )
     except Exception as exc:  # noqa: BLE001 - the script already ran; report, never raise
         failure = failure or ("observe", exc)
     try:
         changed = result_projection.changed_objects(before, after, False)
     except Exception as exc:  # noqa: BLE001 - the script already ran; report, never raise
         failure = failure or ("observe", exc)
-    return changed, new_errors, undo_steps, failure
+    observation.changed = changed
+    observation.new_errors = new_errors
+    observation.undo_steps = undo_steps
+    observation.failure = failure
+    return observation
 
 
 def _setup_failed(phase: str, exc: Exception) -> ResultEnvelope:
@@ -242,7 +291,7 @@ def _run_bracket(handle: str, document: object, code: str, recompute: bool) -> R
     result_projection.remember(before)
 
     namespace = _script_namespace(document)
-    buffer = io.StringIO()
+    buffer = _CapturedOutput()
     document.openTransaction(_transaction_name(code))
     script_error: BaseException | None = None
     try:
@@ -255,6 +304,7 @@ def _run_bracket(handle: str, document: object, code: str, recompute: bool) -> R
     changed: list = []
     new_errors: list[str] = []
     undo_steps: int | None = 0
+    observation = _Observation()
     bracket_failure: tuple[str, Exception] | None = None
     gone = _is_dead(document)
     if gone:
@@ -266,10 +316,10 @@ def _run_bracket(handle: str, document: object, code: str, recompute: bool) -> R
             bracket_failure = ("commit", exc)
     else:
         after, bracket_failure = _close_bracket(document, recompute)
-        changed, new_errors, undo_steps, observe_failure = _observe(
-            document, before, after, invalid_before, names_before
-        )
-        bracket_failure = bracket_failure or observe_failure
+        observation = _observe(document, before, after, invalid_before, names_before)
+        changed, new_errors = observation.changed, observation.new_errors
+        undo_steps = observation.undo_steps
+        bracket_failure = bracket_failure or observation.failure
 
     value = namespace.get("result", _UNSET)
     value_repr, repr_note = _value_repr(value)
@@ -291,7 +341,13 @@ def _run_bracket(handle: str, document: object, code: str, recompute: bool) -> R
     elif not undo_enabled:
         notes.append(_UNDO_UNAVAILABLE_NOTE)
     elif undo_steps == 0:
-        notes.append(_NO_UNDO_STEP_NOTE)
+        notes.append(
+            _UNDO_CLEARED_NOTE if observation.undo_disabled_by_script else _NO_UNDO_STEP_NOTE
+        )
+    elif undo_steps is None and bracket_failure is None:
+        notes.append(_UNDO_UNKNOWN_NOTE)
+    if observation.script_undid_steps:
+        notes.append(_SCRIPT_UNDID_NOTE)
     if new_errors:
         notes.append(f"new invalid objects: {', '.join(new_errors)}")
     return _envelope(structured, script_error, bracket_failure, new_errors, notes)
