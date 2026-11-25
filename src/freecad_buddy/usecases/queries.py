@@ -687,6 +687,34 @@ _MAX_INTERFERENCE_OBJECTS = 20
 _MAX_INTERFERENCE_PAIRS = 100
 # OCC's own tolerance for "touching" (Precision::Confusion). A distance at or below it is contact.
 _CONTACT_DISTANCE_MM = 1e-7
+# Largest relative gap between the sum of two solid volumes and the volume of their fuse that still
+# proves the solids touch without overlap. ``Shape.common`` of two touching solids is empty, which
+# says nothing about overlap, so a valid fuse whose volume equals the sum is the proof. Measured on
+# FreeCAD 1.1.4 as (sum - fuse) / sum for touching pairs: face, edge and vertex contact of boxes
+# 1e-16; boxes of size 1 to 1,000 at offsets up to 1e5 mm and rotated, 1e-14 at most; a filleted
+# box on a box 3.5e-13; 64 boxes against 64 boxes 1e-14. The noise grows with offset over size (a
+# 0.01 mm box at offset 1e6 mm 1.5e-10; a BSpline loft on a plate up to 1.1e-10), and those pairs
+# stay unmeasured, which is the safe side. Two boxes of 100 mm overlapping by 1e-7 mm depth (1e-3
+# mm^3, ``common`` still empty) give 3.3e-10, so 1e-12 reads them as overlapping. The volume gap
+# of the fuse is two thirds of a sub-tolerance overlap (measured on boxes of 100 and 1,000 mm), so
+# an overlap of up to 1.5e-12 of the summed volume (3e-3 mm^3 for two boxes of 1,000 mm) reads as
+# touching; one of 1.2e-12 reads as touching and one of 2.25e-12 as failed.
+_TOUCH_VOLUME_REL_TOL = 1e-12
+# Nested solids defeat the fuse proof: a sphere of radius 10 (or 100) inside a sphere 1e-6 mm larger
+# and shifted 1e-6 mm gives an empty ``common`` and a fuse of two unmerged solids with the summed
+# volume. A point this deep under a face of one shape is classified against the other shape's
+# solids; strictly inside means the solids interpenetrate. Depths from 1e-8 mm to 1e-4 mm all find
+# the nested spheres; 1e-4 mm is far above the 1e-7 mm contact tolerance. A part thinner than that
+# gives no probe point and an overlap seen only by the other faces of a solid, or by faces after
+# the first eight, is not found. The sample fractions are tried in order until one lies in the
+# trimmed face.
+# One point per face for at most eight faces per solid and only against the solids whose bounding
+# box holds the point, because a classification costs a pass over the other solid: every face of a
+# touching row of 64 boxes against 64 boxes took 14.7 s, and a lid against 200 boxes 54.5 s. With
+# the cap the probe takes 0.15 s for the row and 0.17 s for the lid.
+_PROBE_DEPTH_MM = 1e-4
+_PROBE_FACES_PER_SOLID = 8
+_FACE_SAMPLE_FRACTIONS = (0.5, 0.25, 0.75, 0.1, 0.9)
 # Largest faces(a) x faces(b) accepted for one pair. Measured on the development host with two
 # interleaved box compounds one millimetre apart (the slowest geometry found, ``distToShape`` runs
 # because ``common`` finds no volume): 129,600 -> 9.5 s, 230,400 -> 17.8 s, 360,000 -> 29.4 s.
@@ -698,6 +726,8 @@ _MAX_PAIR_FACE_PRODUCT = 150_000
 # A call stops between pairs once this much time has passed. Worst case is this deadline plus one
 # pair at the per-pair limit (about 12 s on the development host: 129,600 -> 9.5 s, 230,400 ->
 # 17.8 s in the dense layout, and the limit is 150,000), which stays under the 60 s query budget.
+# The fuse cross-check of a touching pair adds little to that: 0.35 s at 384 x 384 faces (boxes in
+# rows and grids that touch), against 19 s for ``distToShape`` on the same pair.
 # Face counts are a poor cost proxy across layouts (87-face plates cost about 12 microseconds per
 # unit, dense boxes about 80), so the sum of a call is bounded by time, not by faces.
 _CALL_DEADLINE_SECONDS = 40.0
@@ -817,8 +847,8 @@ def _measure_interference(
     it is cheap, and a non-zero common volume proves a distance of 0. ``distToShape`` is the slow
     call on large compounds, so it runs only when ``common`` gives no volume. A ``common`` that
     raises or returns an empty compound is not proof of no overlap (a self-intersecting solid
-    returns empty at distance 0), so it is a failed boolean unless the distance is positive.
-    ``None`` means unmeasured.
+    returns empty at distance 0), so it is a failed boolean unless the distance is positive or the
+    fuse proves the solids touch (``_fuse_proves_touching``). ``None`` means unmeasured.
     """
     try:
         common = shape_a.common(shape_b)
@@ -830,6 +860,13 @@ def _measure_interference(
         return None, None, True
     if volume:
         return volume, 0.0, False
+    # ``distToShape`` collects every contact solution and its cost is not bounded: a lid on a row
+    # of 100 unit boxes takes 13.6 s and on 200 boxes 108 s (face product 7,200). A section plus the
+    # fuse proof could skip it for touching pairs, but across a small gap at an edge, a vertex or a
+    # curved surface the section finds the boundaries and the fuse keeps two solids whose volumes
+    # sum, so the proof reads contact for a real gap (edge gap 1.5e-7 mm, sphere gap 2e-7 mm, edge
+    # gap 1e-3 mm on shapes with a tolerance of 1e-2). Only ``distToShape`` tells those gaps from
+    # contact, so it runs for every trusted pair.
     try:
         distance = float(shape_a.distToShape(shape_b)[0])
     except Exception:  # noqa: BLE001 -- a failed distance leaves the overlap unproven
@@ -840,7 +877,77 @@ def _measure_interference(
         return 0.0, distance, False
     if not empty and distance is not None:
         return 0.0, distance, False
+    if distance is not None and _fuse_proves_touching(shape_a, shape_b):
+        return 0.0, distance, False
     return None, distance, True
+
+
+def _face_probe_point(face: object) -> tuple[object, object] | None:
+    """A point on ``face`` and its outward normal, or ``None`` when no sample lies in the face."""
+    u_min, u_max, v_min, v_max = face.ParameterRange
+    for fraction_u in _FACE_SAMPLE_FRACTIONS:
+        for fraction_v in _FACE_SAMPLE_FRACTIONS:
+            u = u_min + (u_max - u_min) * fraction_u
+            v = v_min + (v_max - v_min) * fraction_v
+            if face.isPartOfDomain(u, v):
+                return face.valueAt(u, v), face.normalAt(u, v)
+    return None
+
+
+def _point_inside_solid(solid: object, face: object) -> object | None:
+    """A point ``_PROBE_DEPTH_MM`` inside ``solid`` under ``face``, or ``None`` if none is found."""
+    probe = _face_probe_point(face)
+    if probe is None:
+        return None
+    point, normal = probe
+    for direction in (-1.0, 1.0):
+        inner = point + normal * (direction * _PROBE_DEPTH_MM)
+        if solid.isInside(inner, 0.0, False):
+            return inner
+    return None
+
+
+def _solids_interpenetrate(shape_a: object, shape_b: object) -> bool:
+    """Whether a point just inside a face of one shape lies strictly inside a solid of the other.
+
+    ``common`` and ``fuse`` share one intersection step, and on two nearly tangent surfaces it
+    can see no intersection, so a solid nested in another leaves ``common`` empty and the fuse
+    with both solids unmerged and the summed volume. The classification of a point is a separate
+    kernel call and finds the nesting.
+    """
+    for source, target in ((shape_a, shape_b), (shape_b, shape_a)):
+        target_solids = [(solid, solid.BoundBox) for solid in target.Solids]
+        for solid in source.Solids:
+            for face in solid.Faces[:_PROBE_FACES_PER_SOLID]:
+                inner = _point_inside_solid(solid, face)
+                if inner is None:
+                    continue
+                if any(
+                    box.isInside(inner) and other.isInside(inner, 0.0, False)
+                    for other, box in target_solids
+                ):
+                    return True
+    return False
+
+
+def _fuse_proves_touching(shape_a: object, shape_b: object) -> bool:
+    """Whether the solids' fuse is valid, has the summed volume and no solid lies in the other.
+
+    The fuse is the cross-check for an empty ``common`` at contact; a fuse that raises, is invalid
+    or loses volume proves nothing, and neither does a fuse that kept two nested solids apart.
+    """
+    try:
+        fused = shape_a.fuse(shape_b)
+        total = float(shape_a.Volume) + float(shape_b.Volume)
+        gap = total - float(fused.Volume)
+        return (
+            bool(fused.isValid())
+            and math.isfinite(gap)
+            and abs(gap) <= _TOUCH_VOLUME_REL_TOL * total
+            and not _solids_interpenetrate(shape_a, shape_b)
+        )
+    except Exception:  # noqa: BLE001 -- a fuse or probe the kernel cannot run leaves it unproven
+        return False
 
 
 def _refusal_envelope(code: str, message: str) -> ResultEnvelope:
@@ -888,8 +995,10 @@ def query_interference(
     ``i < j``) or ``pairs`` (1 to 100 ``[a, b]`` pairs). Each record is ``{a, b, common_volume,
     min_distance, boolean_failed}``. ``boolean_failed`` is true, and ``common_volume`` null, when
     either shape is not a valid solid-only shape with positive volume (``min_distance`` is then
-    null too), or when the boolean raised or returned nothing while the shapes touch or the
-    distance is unknown: an empty result must never read as no overlap. Reports numbers only,
+    null too), or when the boolean raised or returned nothing while the distance is unknown or the
+    shapes are in contact and their fuse does not prove they only touch: an empty result must never
+    read as no overlap. Solids in contact whose valid fuse has the summed volume read
+    ``common_volume`` 0 and ``boolean_failed`` false. Reports numbers only,
     never a verdict. Raises ``ValidationError`` for bad input, an unknown name, or an object with
     no shape, and returns ``INVALID_INPUT`` with code ``interference.too_complex`` for a pair above
     ``_MAX_PAIR_FACE_PRODUCT``, or for a call still measuring after ``_CALL_DEADLINE_SECONDS`` as

@@ -1,0 +1,15 @@
+diff --git a/tests/uat/testcases/TC-17-query-interference-touching.md b/tests/uat/testcases/TC-17-query-interference-touching.md
+index 40189895..7e046b7f 100644
+--- a/tests/uat/testcases/TC-17-query-interference-touching.md
++++ b/tests/uat/testcases/TC-17-query-interference-touching.md
+@@ -26,9 +26,7 @@ mcp script_exec { doc: <handle>, code: "import Part, FreeCAD as App\nV = App.Vec
+ ```
+ **And** FreeCAD's own kernel agrees the contact pairs touch — verify: `mcp script_exec { doc: <handle>, code: "a = doc.A.Shape\nresult = [abs(round(a.Volume + doc.getObject(n).Shape.Volume - a.fuse(doc.getObject(n).Shape).Volume, 9)) for n in ('Face', 'Edge', 'Vertex')]" }` returns `[0.0, 0.0, 0.0]` (`abs` folds the `-0.0` that FreeCAD 1.1.4 gives for the edge pair)  
+ **And** the `Big1/Big2` overlap leaves `common` empty — verify: `mcp script_exec { doc: <handle>, code: "c = doc.Big1.Shape.common(doc.Big2.Shape)\nresult = c.isNull() or not c.Volume" }` returns `True`  
+-**And** the `Ball/Shell` pair leaves `common` empty and the fuse unmerged — verify: `mcp script_exec { doc: <handle>, code: "c = doc.Ball.Shape.common(doc.Shell.Shape)
+-f = doc.Ball.Shape.fuse(doc.Shell.Shape)
+-result = [bool(c.isNull() or not c.Volume), len(f.Solids)]" }` returns `[true, 2]`  
++**And** the `Ball/Shell` pair leaves `common` empty and the fuse unmerged — verify: `mcp script_exec { doc: <handle>, code: "c = doc.Ball.Shape.common(doc.Shell.Shape)\nf = doc.Ball.Shape.fuse(doc.Shell.Shape)\nresult = [bool(c.isNull() or not c.Volume), len(f.Solids)]" }` returns `[True, 2]`  
+ **And** the before image is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`, then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-17-01-before.png"}' | "$FCB_CUA" get_window_state`  
+ 
+ **When** every pair is measured  

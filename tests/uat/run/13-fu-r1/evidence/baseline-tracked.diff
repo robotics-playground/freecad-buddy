@@ -1,0 +1,16 @@
+diff --git a/tests/uat/testcases/TC-17-query-interference-touching.md b/tests/uat/testcases/TC-17-query-interference-touching.md
+index 900bfa39..97e4e0f1 100644
+--- a/tests/uat/testcases/TC-17-query-interference-touching.md
++++ b/tests/uat/testcases/TC-17-query-interference-touching.md
+@@ -24,9 +24,8 @@ read by the agent, and the volumes read back with `script_exec` (FreeCAD's own `
+ ```
+ mcp script_exec { doc: <handle>, code: "import Part, FreeCAD as App\nV = App.Vector\ndef add(n, s):\n    o = doc.addObject('Part::Feature', n); o.Shape = s\nadd('A', Part.makeBox(10, 10, 10))\nadd('Face', Part.makeBox(10, 10, 10, V(10, 0, 0)))\nadd('Edge', Part.makeBox(10, 10, 10, V(10, 10, 0)))\nadd('Vertex', Part.makeBox(10, 10, 10, V(10, 10, 10)))\nadd('Big1', Part.makeBox(100, 100, 100, V(0, 100, 0)))\nadd('Big2', Part.makeBox(100, 100, 100, V(100 - 1e-7, 100, 0)))\ndoc.recompute()\nresult = 'built'" }
+ ```
+-**And** FreeCAD's own kernel agrees the contact pairs touch — verify: `mcp script_exec { doc: <handle>, code: "a = doc.A.Shape\nresult = [round(a.Volume + doc.getObject(n).Shape.Volume - a.fuse(doc.getObject(n).Shape).Volume, 9) for n in ('Face', 'Edge', 'Vertex')]" }` returns `[0.0, 0.0, 0.0]`  
+-**And** the `Big1/Big2` overlap leaves `common` empty — verify: `mcp script_exec { doc: <handle>, code: "c = doc.Big1.Shape.common(doc.Big2.Shape)
+-result = c.isNull() or not c.Volume" }` returns `true`  
++**And** FreeCAD's own kernel agrees the contact pairs touch — verify: `mcp script_exec { doc: <handle>, code: "a = doc.A.Shape\nresult = [abs(round(a.Volume + doc.getObject(n).Shape.Volume - a.fuse(doc.getObject(n).Shape).Volume, 9)) for n in ('Face', 'Edge', 'Vertex')]" }` returns `[0.0, 0.0, 0.0]` (`abs` folds the `-0.0` that FreeCAD 1.1.4 gives for the edge pair)  
++**And** the `Big1/Big2` overlap leaves `common` empty — verify: `mcp script_exec { doc: <handle>, code: "c = doc.Big1.Shape.common(doc.Big2.Shape)\nresult = c.isNull() or not c.Volume" }` returns `True`  
+ **And** the before image is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`, then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-17-01-before.png"}' | "$FCB_CUA" get_window_state`  
+ 
+ **When** every pair is measured  

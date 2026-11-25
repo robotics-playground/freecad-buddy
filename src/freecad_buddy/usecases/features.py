@@ -842,8 +842,8 @@ def feature_revolve(
 # (1,960,000) 20 s; two 1,000-gons (1,000,000) 5.7 s; two 1,400-gons 11 s; two 2,000-gons 24 s;
 # 40 sections of 200 edges (1,560,000) 4.6 s; 500 sections of 16 edges (128,000) 0.64 s. A
 # circle to an n-gon is the slowest layout, so the limit is set on it. Whole tool call at the
-# limit: circle to 1,000-gon 10.7 s; two 1,000-gons 8.0 s; 24 sections of 200 edges (920,000)
-# 5.2 s.
+# limit: circle to 1,000-gon 13.2 s; two 1,000-gons 10.6 s; 500 sections of 44-gons (966,064,
+# both limits, the slowest accepted loft) 13.7 s; 24 sections of 200 edges (920,000) 5.2 s.
 _LOFT_MAX_COST = 1_000_000
 # Sections are bounded on their own, because the tool call also spends time per section:
 # smooth loft of 100 circles 0.09 s, 500 circles 1.6 s, 1,500 circles 19 s.
@@ -852,7 +852,7 @@ _LOFT_MAX_SECTIONS = 500
 # any other curve); a spine edge counts 1 plus a tenth of its poles, rounded down. Recompute:
 # 100 profile edges along 100 spine lines (10,000) 5.8 s; 200 along 200 (40,000) 69 s; a circle
 # along 10,000 lines 32 s through the tool; 250 edges along a 25-turn helix of 392 poles (10,000)
-# 18 s. Whole tool call at the limit: a circle along 3,000 lines 4.1 s; 30 edges along 100 lines
+# 18 s. Whole tool call at the limit: a circle along 3,000 lines 9.3 s; 30 edges along 100 lines
 # 2.5 s; 8 edges along 375 lines 2.3 s; 35 edges along a 25-turn helix of 770 poles (2,730) 1.1 s.
 _SWEEP_MAX_COST = 3000
 _SWEEP_POLES_PER_UNIT = 10

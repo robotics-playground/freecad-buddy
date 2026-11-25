@@ -2326,9 +2326,22 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `_bmad-output/implementation-artifacts/verify-13-18.md` "Round 2"; `tests/uat/run/13-18-r2/`.
   blocker: the user stopped the run after Story 13-18; all three are low and within the 60 s budget.
   unblock: a small follow-up in the next run (one boundary test, two text corrections).
+  resolution: resolved by Story 13-fu: `SweepTest` boundary tests pin the limit at 3,000 (limits 10,000 and 2,999 turn them red); design `mcp-tools-design.md` closed-loft sentence and the `features.py` timing comments now match verify-13-18 round 2.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-18-loft-sweep.md`
   summary: A self-intersecting sweep built from a BSpline profile returns OK; the boolean self-intersection check is skipped for BSpline inputs because it did not finish in 50 s on a 3-face helix sweep (documented limit, residual R2-R1).
   evidence: `verify-13-18.md` "Round 2" R2-R1; design `mcp-tools-design.md` §3.7.4.
   blocker: no bounded-cost self-intersection check for BSpline results is known.
   unblock: a measured check with a time bound, or the AD-27 bridge-recovery decision (worker isolation would allow a timed check).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-fu-followups.md`
+  summary: `query_interference` reads two solids as disjoint, with a positive gap and `boolean_failed` false, when one lies inside the other and `common` is empty with a distance above 1e-7 mm.
+  evidence: Red team probe `p4_nested_tangent.py`: spheres of radius 10 and 10 + 5e-7, concentric, read `(0.0, 5e-7, False)` with a real overlap of 4,188.79 mm^3; a nested torus pair reads a gap of 1e-6. The branch is the pre-existing `distance > _CONTACT_DISTANCE_MM` return in `queries.py` (Story 13-7). The probe point check added in 13-fu runs only at contact distance.
+  blocker: the distance of a nested pair is itself a kernel misclassification; a classification probe on every disjoint pair costs a pass per face and that cost is unmeasured.
+  unblock: measure the probe on pairs with a positive distance (with a cap on faces sampled) and decide whether to run it on every disjoint pair.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-fu-followups.md`
+  summary: `distToShape` runs for every trusted pair whose `common` gives no volume, and its cost grows with the number of contact solutions and not with the face product.
+  evidence: Lid on a row of unit boxes: 13.6 s at 100 boxes and 108 s at 200 boxes at face product 7,200 (red team RT-5). A section plus fuse proof skipped `distToShape` for touching pairs (1.4 s for 200 boxes) but read distance 0 across small real gaps at an edge, a vertex or a curved surface (verify-13-fu-r2 D1), so it was removed.
+  blocker: no measured cost bound for `distToShape` with many contact solutions; decision 45 documents long GIL-holding calls as a limit.
+  unblock: a bound that keeps the true distance, or the worker isolation decision (AD-27, decision 45) that lets a timed call stop.

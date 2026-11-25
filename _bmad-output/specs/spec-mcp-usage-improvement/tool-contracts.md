@@ -82,13 +82,19 @@ is `{ "name", "shape": null }` and the call stays `OK`. The `object` path keeps 
 
 Exactly one of `objects` and `pairs`. `common_volume` uses `Shape.common`; `min_distance` uses
 `distToShape` and is 0 when the shapes touch or overlap. When `common` raises or returns an
-empty shape while `min_distance` is 0, `boolean_failed` is true and `common_volume` is null. An
-empty result must never read as "no overlap" (a measured false pass, usage-evidence.md).
+empty shape while `min_distance` is 0, a fuse cross-check runs: if the fuse is valid and its
+volume equals the sum of the two volumes within 1e-12 of that sum and no solid lies inside the
+other (a probe point just under a face of one shape is not strictly inside the other), the pair
+touches without overlap, `common_volume` is 0 and `boolean_failed` is false (Epic 13 decision 41). Otherwise
+`boolean_failed` is true and `common_volume` is null. An empty result must never read as "no
+overlap" (a measured false pass, usage-evidence.md) unless the fuse proves it. Known limit: an
+overlap of less than 1.5e-12 of the summed volume (3e-3 mm^3 for two boxes of 1,000 mm) can read
+as touching; for a small part against a large one the limit follows the large part.
 
 A pair is measured only when both shapes are valid solids with positive volume; otherwise
 `boolean_failed` is true and `common_volume` and `min_distance` are null (FreeCAD's `common` and
 `distToShape` are not reliable on invalid, reversed or non-solid shapes). `min_distance` is also
-null when `distToShape` raises. Cost bounds: a pair whose face counts multiply to more than
+null when `distToShape` raises. `distToShape` runs for every trusted pair whose `common` gives no volume and its cost is not bounded: it collects every contact solution (a lid on a row of 100 unit boxes 13.6 s, on 200 boxes 108 s, below the face-product limit). Cost bounds: a pair whose face counts multiply to more than
 150,000, or a call still running after 40 s between pairs, returns `INVALID_INPUT` with
 `detail.code` `interference.too_complex` and no partial result. Unknown name, self pair, or an
 object with no shape → `INVALID_INPUT`.
