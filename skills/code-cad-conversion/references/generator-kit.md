@@ -9,12 +9,13 @@ the live FreeCAD through `script_exec` (`doc` and `STAGE` injected) or headless 
 On the live document the parameter layer and the clearing use typed tools, and `script_exec`
 builds the parts, because no typed tool makes Part primitives:
 
-1. Clear a document this generator owns (skip an empty one): `document_object_delete` `{"objects": ["Params", "bracket"]}`
-   naming every object that `query_tree_summary` lists.
-2. Create every plain variable: `feature_parameters_define` `{"varset": "Params", "parameters":
-   [{"name": "PLATE_T", "type": "float", "value": 5.0}, {"name": "COUNTERSINK", "type": "bool",
-   "value": true}]}` (a call takes at most 100 parameters; use a type `float` for a unitless
-   source constant).
+1. Clear a document this generator owns (skip an empty one): `document_object_delete` `{"objects": ["Params", "Box", "Cut"]}`
+   naming every object Name (not Label) that `query_tree_summary` lists.
+2. Create every variable, plain and derived: `feature_parameters_define` `{"varset": "Params",
+   "parameters": [{"name": "PLATE_T", "type": "float", "value": 5.0}, {"name": "BOSS_H", "type":
+   "float", "value": 0}, {"name": "COUNTERSINK", "type": "bool", "value": true}]}` (a call takes
+   at most 100 parameters; use a type `float` for a unitless source constant; give a derived
+   variable any value, step 3 binds it).
 3. Bind each derived variable: `feature_set_expression` `{"expressions": [{"object": "Params",
    "path": "BOSS_H", "expression": "Params.PLATE_T + 7"}]}`.
 4. Run the generator once per stage with `script_exec`. Its `params()` reuses the variables that

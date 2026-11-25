@@ -62,7 +62,7 @@ it — otherwise none of these checks can run.
 - Measure **gap and overlap between parts** with `query_interference`
   `{"objects": ["Pin", "Housing"]}` (every pair; Bodies of one container).
   `min_distance` is the gap. `boolean_failed` true means *unmeasured*, never zero:
-  parts that touch give it with `min_distance` 0, so report "touching, overlap
+  parts that touch give it with `min_distance` near 0, so report "touching, overlap
   unmeasured" (`references/measuring-clearance-and-sections.md`).
 - Measure a **cut through a part** with `query_section`
   `{"object": "Body", "plane": {"normal": "z", "offset": {"value": 12.5, "unit": "mm"}}}`.

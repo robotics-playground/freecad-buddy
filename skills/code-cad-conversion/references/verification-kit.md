@@ -184,13 +184,15 @@ generator sets Labels: read each Name with `query_tree_summary`). Name a Body or
 feature inside it, and keep the objects in one container. It measures every pair;
 `{"pairs": [["Cut", "Cut001"]]}` measures chosen pairs. Pass: `common_volume` at most 0.05 mm3
 and `boolean_failed` false. `boolean_failed` true is unmeasured, never zero. With `min_distance` null a shape is not a valid
-solid: run `verify_shape` on both parts. With `min_distance` 0 and both parts valid, the parts
+solid: run `verify_shape` on both parts. With `min_distance` 0 (at most 1e-7 mm) and both parts valid, the parts
 touch and the overlap is unmeasured; `Shape.common()` returns the same empty result and reads 0,
 so it proves nothing. Measure the overlap through the fused volume (no typed tool does):
 
 ```python
 a, b = (doc.getObject(n).Shape for n in ("Cut", "Cut001"))
-result = round(a.Volume + b.Volume - a.fuse(b).Volume, 3)    # pass: <= 0.05 mm3
+f = a.fuse(b)
+assert f.isValid() and f.Solids, "fuse failed: overlap unmeasured"
+result = round(a.Volume + b.Volume - f.Volume, 3)    # pass: <= 0.05 mm3
 ```
 
 The result is 0 for parts that only touch and the overlap volume for parts that overlap. For
