@@ -1,0 +1,38 @@
+[
+ {
+  "name": "fail_gui",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+   "code": "print('visible stdout')\nraise RuntimeError('gui notification probe')"
+  },
+  "seconds": 0.114,
+  "isError": true,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "exec.python_error",
+    "message": "RuntimeError: gui notification probe",
+    "data": {
+     "exception": "RuntimeError",
+     "traceback": "Traceback (most recent call last):\n  File \"<string>\", line 2, in <module>\nRuntimeError: gui notification probe\n"
+    }
+   },
+   "structured_content": {
+    "doc": "fcb-doc:z6A11dS_mT4o4HHJ9KCAYg",
+    "stdout": "visible stdout\n",
+    "value_repr": null,
+    "fingerprint_before": "4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26",
+    "fingerprint_after": "4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\nfingerprint_after: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\nfingerprint_before: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\nnew_errors: [0 items]\nstdout: <15 chars>\nundo_steps: 0\nvalue_repr: None\nscript raised RuntimeError: gui notification probe\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"exec.python_error\",\"message\":\"RuntimeError: gui notification probe\",\"data\":{\"exception\":\"RuntimeError\",\"traceback\":\"Traceback (most recent call last):\\n  File \\\"<string>\\\", line 2, in <module>\\nRuntimeError: gui notification probe\\n\"}},\"structured_content\":{\"doc\":\"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\",\"stdout\":\"visible stdout\\n\",\"value_repr\":null,\"fingerprint_before\":\"4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\",\"fingerprint_after\":\"4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:z6A11dS_mT4o4HHJ9KCAYg\\nfingerprint_after: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\\nfingerprint_before: 4bae8a79eaf38ffcdec5e87ec8414f5cac2cb5d81fe0140c64c14ef48d7cac26\\nnew_errors: [0 items]\\nstdout: <15 chars>\\nundo_steps: 0\\nvalue_repr: None\\nscript raised RuntimeError: gui notification probe\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\"}"
+  ]
+ }
+]

@@ -1,0 +1,2 @@
+[{"name":"len","tool":"query_object","args":{"doc":"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg","object":"Box"}},
+ {"name":"names","tool":"script_exec","args":{"doc":"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg","recompute":false,"code":"result = [list(doc.UndoNames), list(doc.RedoNames), doc.getObject('Box').Length.Value]"}}]

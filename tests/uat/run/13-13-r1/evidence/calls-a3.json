@@ -1,0 +1,1 @@
+[{"name":"fail_gui","tool":"script_exec","args":{"doc":"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg","code":"print('visible stdout')\nraise RuntimeError('gui notification probe')"}}]
