@@ -83,11 +83,12 @@ is `{ "name", "shape": null }` and the call stays `OK`. The `object` path keeps 
 Exactly one of `objects` and `pairs`. `common_volume` uses `Shape.common`; `min_distance` uses
 `distToShape` and is 0 when the shapes touch or overlap. When `common` raises or returns an
 empty shape while `min_distance` is 0, a fuse cross-check runs: if the fuse is valid and its
-volume equals the sum of the two volumes within 1e-12 of that sum, the pair touches without
-overlap, `common_volume` is 0 and `boolean_failed` is false (Epic 13 decision 41). Otherwise
+volume equals the sum of the two volumes within 1e-12 of that sum and no solid lies inside the
+other (a probe point just under a face of one shape is not strictly inside the other), the pair
+touches without overlap, `common_volume` is 0 and `boolean_failed` is false (Epic 13 decision 41). Otherwise
 `boolean_failed` is true and `common_volume` is null. An empty result must never read as "no
 overlap" (a measured false pass, usage-evidence.md) unless the fuse proves it. Known limit: an
-overlap of less than 1e-12 of the summed volume (2e-3 mm^3 for two boxes of 1,000 mm) can read
+overlap of less than 1.5e-12 of the summed volume (3e-3 mm^3 for two boxes of 1,000 mm) can read
 as touching; for a small part against a large one the limit follows the large part.
 
 A pair is measured only when both shapes are valid solids with positive volume; otherwise

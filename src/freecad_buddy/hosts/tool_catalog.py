@@ -1676,7 +1676,7 @@ def tool_specs() -> list[ToolSpec]:
             "(min_distance is null too), or the boolean returned nothing and either the distance "
             "is unknown or, at distance 0, a fuse cross-check could not prove the shapes only "
             "touch. Solids that only touch give common_volume 0 with boolean_failed false; an "
-            "overlap below 1e-12 of the summed volumes can read as touching. A pair whose faces "
+            "overlap below 1.5e-12 of the summed volumes can read as touching. A pair whose faces "
             "multiplied exceed 150000 is refused, and a call still measuring after 40 s stops, "
             "both with INVALID_INPUT code interference.too_complex. Cost grows with face "
             "count, so query few large pairs per call. Numbers only, no verdict.",

@@ -472,6 +472,7 @@ class _FakeSolid:
 
     ShapeType = "Solid"
     Volume = 1.0
+    Solids = ()
 
     @staticmethod
     def isValid():
@@ -564,14 +565,22 @@ class QueryInterferenceTest(unittest.TestCase):
         self.assertIsNone(record["min_distance"])
         self.assertIn("BOOLEAN FAILED", envelope["text"])
 
-    def test_Should_flag_a_failed_boolean_When_common_raises_and_the_distance_is_zero(self):
+    def test_Should_flag_a_failed_boolean_When_common_and_the_fuse_raise_at_distance_zero(
+        self,
+    ):
         # Arrange
+        fuse_calls = []
+
         class RaisingShape(_FakeSolid):
             def common(self, other):
                 raise RuntimeError("boolean failed")
 
             def distToShape(self, other):
                 return (0.0, [], [])
+
+            def fuse(self, other):
+                fuse_calls.append(other)
+                raise RuntimeError("fuse failed")
 
         # Act
         volume, distance, failed = queries._measure_interference(RaisingShape(), RaisingShape())
@@ -580,6 +589,7 @@ class QueryInterferenceTest(unittest.TestCase):
         self.assertIsNone(volume)
         self.assertEqual(distance, 0.0)
         self.assertTrue(failed)
+        self.assertEqual(len(fuse_calls), 1)
 
     def test_Should_flag_a_failed_boolean_When_common_raises_and_the_distance_is_unknown(self):
         # Arrange
@@ -676,7 +686,7 @@ class QueryInterferenceTest(unittest.TestCase):
                 self.assertTrue(record["boolean_failed"])
                 self.assertIsNone(record["common_volume"])
 
-    def test_Should_flag_a_failed_boolean_When_the_fuse_loses_the_volume_of_a_solid_inside_another(
+    def test_Should_flag_a_failed_boolean_When_the_fuse_volume_is_far_below_the_sum(
         self,
     ):
         # Arrange
@@ -775,13 +785,17 @@ class QueryInterferenceTest(unittest.TestCase):
                 raise RuntimeError("distance failed")
 
             def fuse(self, other):
-                raise AssertionError("the fuse must not run without a distance")
+                fuse_calls.append(other)
+                raise RuntimeError("the fuse must not run without a distance")
+
+        fuse_calls = []
 
         # Act
         result = queries._measure_interference(Shape(), Shape())
 
         # Assert
         self.assertEqual(result, (None, None, True))
+        self.assertEqual(fuse_calls, [])
 
     def test_Should_report_zero_overlap_When_common_raises_and_a_valid_fuse_has_the_summed_volume(
         self,
@@ -809,6 +823,156 @@ class QueryInterferenceTest(unittest.TestCase):
 
         # Assert
         self.assertEqual(result, (0.0, 0.0, False))
+
+    def test_Should_flag_a_failed_boolean_When_one_sphere_lies_inside_another_and_common_is_empty(
+        self,
+    ):
+        # Arrange
+        margin = 1e-6
+        cases = {"radius 10": 10.0, "radius 100": 100.0}
+        for label, radius in cases.items():
+            with self.subTest(case=label):
+                self.tearDown()
+                self.setUp()
+                self._add_shape("Inner", Part.makeSphere(radius))
+                self._add_shape("Outer", Part.makeSphere(radius + margin, App.Vector(margin, 0, 0)))
+                common = self.document.Inner.Shape.copy().common(self.document.Outer.Shape.copy())
+                self.assertTrue(
+                    common.isNull() or not common.Volume, "the fixture needs an empty common"
+                )
+
+                # Act
+                envelope = self._measure(objects=["Inner", "Outer"])
+
+                # Assert
+                record = envelope["structured_content"]["pairs"][0]
+                self.assertTrue(record["boolean_failed"])
+                self.assertIsNone(record["common_volume"])
+
+    def test_Should_flag_a_failed_boolean_When_the_fuse_keeps_two_unmerged_solids_of_nested_spheres(
+        self,
+    ):
+        # Arrange
+        inner = Part.makeSphere(10.0)
+        outer = Part.makeSphere(10.0 + 1e-6, App.Vector(1e-6, 0, 0))
+        fused = inner.fuse(outer)
+        summed = inner.Volume + outer.Volume
+
+        # Act
+        proves_touching = queries._fuse_proves_touching(inner, outer)
+
+        # Assert
+        self.assertEqual(len(fused.Solids), 2)
+        self.assertAlmostEqual(fused.Volume, summed, places=6)
+        self.assertFalse(proves_touching)
+
+    def test_Should_skip_the_distance_kernel_When_the_section_shows_the_boundaries_meet(self):
+        # Arrange
+        distance_calls = []
+
+        class Section:
+            Edges = ("shared edge",)
+            Vertexes = ()
+
+        class Fused:
+            Volume = 2.0
+
+            @staticmethod
+            def isValid():
+                return True
+
+        class Shape(_FakeSolid):
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def section(self, other):
+                return Section()
+
+            def distToShape(self, other):
+                distance_calls.append(other)
+                return (0.0, [], [])
+
+            def fuse(self, other):
+                return Fused()
+
+        # Act
+        result = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual(result, (0.0, 0.0, False))
+        self.assertEqual(distance_calls, [])
+
+    def test_Should_measure_the_distance_When_the_section_is_empty_or_raises(self):
+        # Arrange
+        class EmptySection:
+            Edges = ()
+            Vertexes = ()
+
+        class Base(_FakeSolid):
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                return (3.0, [], [])
+
+        class WithEmptySection(Base):
+            def section(self, other):
+                return EmptySection()
+
+        class WithRaisingSection(Base):
+            def section(self, other):
+                raise RuntimeError("section failed")
+
+        for shape_type in (WithEmptySection, WithRaisingSection):
+            with self.subTest(shape=shape_type.__name__):
+                # Act
+                result = queries._measure_interference(shape_type(), shape_type())
+
+                # Assert
+                self.assertEqual(result, (0.0, 3.0, False))
+
+    def test_Should_flag_a_failed_boolean_When_the_fuse_volume_is_above_the_sum(self):
+        # Arrange
+        class Fused:
+            Volume = 1000.0 * (1.0 + 1e-9)
+
+            @staticmethod
+            def isValid():
+                return True
+
+        class Shape(_FakeSolid):
+            Volume = 500.0
+
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                return (0.0, [], [])
+
+            def fuse(self, other):
+                return Fused()
+
+        # Act
+        result = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual(result, (None, 0.0, True))
+
+    def test_Should_flag_a_failed_boolean_When_the_overlap_is_twice_the_stated_limit(self):
+        # Arrange
+        size = 100.0
+        depth = 4.5e-10
+        self._add_box("A", size=size)
+        self._add_box("B", size - depth, 0, 0, size=size)
+        common = self.document.A.Shape.copy().common(self.document.B.Shape.copy())
+        self.assertTrue(common.isNull() or not common.Volume, "the fixture needs an empty common")
+
+        # Act
+        envelope = self._measure(objects=["A", "B"])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertTrue(record["boolean_failed"])
 
     def test_Should_accept_a_fuse_gap_inside_the_tolerance_and_refuse_one_above_it(self):
         # Arrange

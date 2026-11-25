@@ -2333,3 +2333,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `verify-13-18.md` "Round 2" R2-R1; design `mcp-tools-design.md` §3.7.4.
   blocker: no bounded-cost self-intersection check for BSpline results is known.
   unblock: a measured check with a time bound, or the AD-27 bridge-recovery decision (worker isolation would allow a timed check).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-fu-followups.md`
+  summary: `query_interference` reads two solids as disjoint, with a positive gap and `boolean_failed` false, when one lies inside the other and `common` is empty with a distance above 1e-7 mm.
+  evidence: Red team probe `p4_nested_tangent.py`: spheres of radius 10 and 10 + 5e-7, concentric, read `(0.0, 5e-7, False)` with a real overlap of 4,188.79 mm^3; a nested torus pair reads a gap of 1e-6. The branch is the pre-existing `distance > _CONTACT_DISTANCE_MM` return in `queries.py` (Story 13-7). The probe point check added in 13-fu runs only at contact distance.
+  blocker: the distance of a nested pair is itself a kernel misclassification; a classification probe on every disjoint pair costs a pass per face and that cost is unmeasured.
+  unblock: measure the probe on pairs with a positive distance (with a cap on faces sampled) and decide whether to run it on every disjoint pair.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-fu-followups.md`
+  summary: A pair whose boundaries do not meet still pays the unbounded `distToShape` cost, which grows with the number of near solutions and not with the face product.
+  evidence: Lid on a row of unit boxes: 13.6 s at 100 boxes and 108 s at 200 boxes at face product 7,200 (red team RT-5). 13-fu skips `distToShape` when a section shows the boundaries meet (1.4 s for 200 boxes); a pair at a small positive gap with many near solutions was not measured.
+  blocker: no measured cost bound for `distToShape` with many near solutions; decision 45 documents long GIL-holding calls as a limit.
+  unblock: a measured bound, or the worker isolation decision (AD-27) that lets a timed call stop.
