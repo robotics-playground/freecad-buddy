@@ -55,10 +55,10 @@ context:
 
 ## Code Map
 
-- `src/freecad_buddy/usecases/features.py:2253-2335` -- `_parameter_writes`, `_property_family`, `_parameter_value`: add `placement` and `string` families.
-- `src/freecad_buddy/usecases/features.py:2339-2390` -- `feature_set_parameters`: no-op shortcut, `state_probe`, `recompute_check`, `report`, unique transaction label.
-- `src/freecad_buddy/usecases/features.py:2459-2480` -- `ParameterRefusal`, `_storable_text`: reuse for strings; `:2869` `_EXPRESSION_CALLS`, `:3095` unattached-offset rule: model.
-- `src/freecad_buddy/usecases/features.py:358-420` -- `_feature_mutation` (`report` replaces `feature` and `feature_state`; `report` must return both).
+- `src/freecad_buddy/usecases/features.py` -- `_parameter_writes`, `_property_family`, `_parameter_value`: add `placement` and `string` families.
+- `src/freecad_buddy/usecases/features.py` -- `feature_set_parameters`: no-op shortcut, `state_probe`, `recompute_check`, `report`, unique transaction label.
+- `src/freecad_buddy/usecases/features.py` -- `ParameterRefusal`, `_storable_text`: reuse for strings; `_EXPRESSION_CALLS` and the unattached-offset rule of `feature_set_expression`: model.
+- `src/freecad_buddy/usecases/features.py` -- `_feature_mutation` (`keep_state` keeps `feature` and `feature_state` beside a `report`).
 - `src/freecad_buddy/usecases/transaction.py:82` `RecomputeFailure`, `:368-424` state proof: reuse.
 - `src/freecad_buddy/hosts/tool_catalog.py:871-890` -- `feature_set_parameters` schema text only.
 - `_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/mcp-tools-design.md:104,192,576` -- row, carve-out note, validation line.
@@ -68,12 +68,12 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `features.py` -- `_placement_value(raw, what, current=None)`, `string` family, helpers for equality, probe, read-back -- shared parser, Story 13-17 reuses it
-- [ ] `features.py` -- `feature_set_parameters`: no-op shortcut, `state_probe`, `recompute_check`, `report` (`label`, `undo_steps`) -- L5, L6, L8
-- [ ] `tool_catalog.py` -- `feature_set_parameters` description and `parameters` schema text -- agents discover the new types
-- [ ] `mcp-tools-design.md`, `SKILL.md` -- row, validation line, carve-out note, typed-tool list -- design and skill match the code
-- [ ] `tests/infc/test_set_parameters_placement.py`, `tests/infc/test_confirm_gate.py` -- cases below, each `test_Should_<outcome>_When_<condition>` -- every matrix row, planted rollback mismatch, undo, confirm gate
-- [ ] `tests/uat/testcases/TC-20-set-parameters-placement-strings.md` -- placement and label cases for the container verifier
+- [x] `features.py` -- `_placement_value(raw, what, current=None)`, `string` family, helpers for equality, probe, read-back -- shared parser, Story 13-17 reuses it
+- [x] `features.py` -- `feature_set_parameters`: no-op shortcut, `state_probe`, `recompute_check`, `report` (`label`, `undo_steps`) -- L5, L6, L8
+- [x] `tool_catalog.py` -- `feature_set_parameters` description and `parameters` schema text -- agents discover the new types
+- [x] `mcp-tools-design.md`, `SKILL.md` -- row, validation line, carve-out note, typed-tool list -- design and skill match the code
+- [x] `tests/infc/test_set_parameters_placement.py`, `tests/infc/test_confirm_gate.py` -- cases below, each `test_Should_<outcome>_When_<condition>` -- every matrix row, planted rollback mismatch, undo, confirm gate
+- [x] `tests/uat/testcases/TC-20-set-parameters-placement-strings.md` -- placement and label cases for the container verifier
 
 **Acceptance Criteria:**
 - Given a Body, when `Placement` with only `base.x` is written, then y, z and rotation equal their previous values and `document_undo` restores the old placement.
@@ -87,6 +87,8 @@ context:
 - `_feature_mutation` gained `keep_state` so a `report` adds fields without dropping `feature` and `feature_state` from a failed result.
 
 ## Spec Change Log
+
+- Round 1 and 2 (leader-authorised, after approval): the read-back covers every written family (numeric, boolean, enumeration, placement, string except `Label`), not only placement and string, so an expression-bound or clamped numeric write fails as `parameters.value_overwritten`; this narrows the Always rule "numeric, bool and enum behaviour does not change" for a value the recompute reverts and changes nothing for a value that holds. A rotation axis outside 1e-100..1e100 and an `axis` without an `angle` while the current rotation is zero are refused (silent changes of the stored value, L8). Matrix row "Unattached offset" names a Body, which has no `AttachmentOffset` property; the refusal applies to an attachable object with `MapMode` Deactivated (property status `Hidden`), tested on an unattached sketch. Rows 4 and 5 of the matrix: the attached sketch and the Pad are refused before the bracket as `INVALID_INPUT` (read-only `Placement`), accepted by the leader. KEEP: pre-bracket read-only refusal, read-back after the recompute, `state_probe`, no-op before the gate.
 
 ## Review Triage Log
 
@@ -114,6 +116,28 @@ Round 1 (blind a91118f7dae0452aa, edge ae707f991cc5f9719, gap a33ff8044dd65939f)
 | 18 | repeated Label write already made unique runs the bracket | low | reject: reports `undo_steps: 0` truthfully; rare |
 | 19 | preview of a Label-only call shows no fingerprint change | low | reject: decision 46 (AD-6 blind to property-only changes) |
 | 20 | Tasks name `test_feature_tools.py` | low | patch: spec Tasks text corrected |
+
+Round 2 (blind a81d9eb183201e75f, edge a34a89c4e42a1344f, gap a1943a2149033081f), carried rows are the same claim as round 1:
+
+| # | Finding | Verdict | Route and evidence |
+|---|---------|---------|--------------------|
+| 21 | plain float with 17 digits reopens as 16 digits, so the snapshot-restore probe reads a mismatch (SPEC_FAILED) | high | patch: `_comparable` rounds floats; test `Should_prove_the_snapshot_restore_When_a_float_and_a_length_hold_17_digits`; mutant red |
+| 22 | no passing test of the read-back for an angle or a unitless float; quantity branch of the probe untested | medium | patch: `NumericWriteTest` and the rollback test above |
+| 23 | read-only `Placement` of a feature in a Body gives no next step | low | patch: hint "move the Body"; test asserts it |
+| 24 | catalog text omits `value_overwritten` | low | patch |
+| 25 | design bullet mixes before-bracket refusals with after-bracket and output rules; `DuplicateLabels`; transaction name counter | low | patch: separate paragraph |
+| 26 | spec record: tasks unchecked, Change Log empty, Code Map lines stale, frozen rules contradicted | low | patch: Change Log entry, tasks checked, Code Map without line numbers |
+| 27 | Placement-only call has no gate test | low | patch: `Should_keep_the_gate_When_only_a_placement_is_written` |
+| 28 | TC-20 claims undo of the label and a visual for the offset without a step | low | patch |
+| 29 | `Visibility` abort escalates to a snapshot restore | low | carried (r1 #17) |
+| 30 | `MapMode` Deactivated and `AttachmentOffset` in one call | low | carried (r1 #16) |
+| 31 | empty `Label` | low | carried (r1 #15) |
+| 32 | angle-only rotation on a zero rotation turns about Z | low | reject: Z is the axis of the identity rotation; the stored value is the one requested |
+| 33 | refuse an expression-bound target before the bracket and name the expression | low | reject: the leader chose the read-back; a pre-check adds a second mechanism |
+| 34 | no-op uses exact equality | low | carried (r1 #7) |
+| 35 | gap-list row 42 says "string or link"; narrow it, do not remove it | low | defer: Story 13-19 owns the gap list; deferred entry corrected |
+| 36 | decisions log has no 13-16 entry | low | leader owns `epic-13-decisions.md`; noted in the report |
+| 37 | validation runs before the confirm gate in the no-op path | low | carried (r1 #3) |
 
 ## Verification
 

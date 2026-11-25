@@ -889,7 +889,9 @@ def _feature_specs():
             "Edit an object's properties and re-verify the solid in the same transaction. "
             "Unknown, read-only, wrong-type or wrong-unit values are rejected before it opens; the "
             "Placement of an attached object is read-only, write its AttachmentOffset. A Label "
-            "FreeCAD makes unique is reported as label {requested, stored}. A call that changes "
+            "FreeCAD makes unique is reported as label {requested, stored}. A written value the "
+            "recompute reverts (an expression drives it, or it is clamped) fails as "
+            "RECOMPUTE_ERROR parameters.value_overwritten and rolls back. A call that changes "
             "only placements or strings already held opens no transaction (undo_steps 0). A call "
             "whose parameters hold only Visibility (true/false) is display state and needs no "
             "confirm in any posture.",

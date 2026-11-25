@@ -2350,5 +2350,5 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   summary: `skills/freecad-scripting-idioms/references/gap-list.md:33` and `:42` still say `feature_set_parameters` refuses a placement and a string and route them to `script_exec`.
   evidence: Story 13-16 makes the tool write `Placement`, `AttachmentOffset` and `Label`; `SKILL.md:74-78` now says so. The plan assigns the gap-list row removal to Story 13-19.
   blocker: Story 13-19 owns the gap list.
-  unblock: Story 13-19 removes both rows (and the `Label` row beside them).
+  unblock: Story 13-19 removes row 33 and the `Label` row, and narrows row 42 ("string or link") to the link and file types, which `feature_set_parameters` still refuses.
 

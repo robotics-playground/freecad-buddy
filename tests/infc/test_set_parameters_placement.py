@@ -343,6 +343,7 @@ class OverwrittenValueTest(_PlacementFixture):
 
         # Assert
         self.assertIn("Block.Placement is read-only", message)
+        self.assertIn("move the Body", message)
 
     def test_Should_roll_back_When_a_python_feature_resets_the_placement(self):
         # Arrange
@@ -501,7 +502,57 @@ class StringWriteTest(_PlacementFixture):
         self.assertNotIn("label", envelope["structured_content"])
 
 
+class NumericWriteTest(_PlacementFixture):
+    def test_Should_store_the_angle_When_a_cylinder_angle_is_written(self):
+        # Arrange
+        cylinder = self.document().addObject("Part::Cylinder", "Cyl")
+        self.document().recompute()
+
+        # Act
+        envelope = self.dispatch("Cyl", {"Angle": deg(90.0)})
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertAlmostEqual(cylinder.Angle.Value, 90.0)
+
+    def test_Should_store_the_float_When_a_unitless_float_is_written(self):
+        # Arrange
+        self.padded_body()
+
+        # Act
+        envelope = self.dispatch("Block", {"FuzzyTolerance": 0.25})
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertAlmostEqual(self.document().getObject("Block").FuzzyTolerance, 0.25)
+
+
 class RollbackProofTest(_PlacementFixture):
+    def test_Should_prove_the_snapshot_restore_When_a_float_and_a_length_hold_17_digits(self):
+        # Arrange
+        # The saved file keeps 16 digits, so a probe that compares the raw floats would call the
+        # restored 0.1 + 0.2 a mismatch and report the rollback as unproven.
+        feature = self.document().addObject("Part::FeaturePython", "Py")
+        feature.addProperty("App::PropertyFloat", "Ratio", "Meta")
+        feature.addProperty("App::PropertyLength", "Size", "Meta")
+        _ResetsPlacement(feature)
+        feature.Ratio = 0.1 + 0.2
+        feature.Size = 0.1 + 0.2
+        self.document().recompute()
+        self.document().UndoMode = 0
+
+        # Act
+        with mock.patch.object(shim, "enable_undo", return_value=False):
+            envelope = self.dispatch(
+                "Py", {"Ratio": 0.5, "Size": mm(0.5), "Placement": base(x=7.0)}
+            )
+
+        # Assert
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR", envelope)
+        block = envelope["structured_content"]["mutation"]
+        self.assertEqual(block["rollback_proven"], "rolled_back_via_snapshot")
+        self.assertAlmostEqual(self.document().getObject("Py").Ratio, 0.3)
+
     def test_Should_restore_the_label_through_the_snapshot_When_abort_restores_nothing(self):
         # Arrange
         # A label change leaves the shape fingerprint equal, so with the undo stack off only the

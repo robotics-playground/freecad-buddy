@@ -2265,11 +2265,11 @@ def _parameter_writes(feature: object, parameters: object) -> list[tuple[str, ob
         if prop not in list(feature.PropertiesList):
             raise ValidationError(f"{feature.Name} has no property named {prop!r}")
         if "ReadOnly" in list(feature.getEditorMode(prop) or []):
-            hint = (
-                "; its attachment sets it, so write AttachmentOffset instead"
-                if prop == "Placement" and "AttachmentOffset" in feature.PropertiesList
-                else ""
-            )
+            hint = ""
+            if prop == "Placement" and "AttachmentOffset" in feature.PropertiesList:
+                hint = "; its attachment sets it, so write AttachmentOffset instead"
+            elif prop == "Placement" and getattr(feature, "_Body", None) is not None:
+                hint = "; a feature inside a Body follows the Body, so move the Body instead"
             raise ValidationError(f"{feature.Name}.{prop} is read-only{hint}")
         writes.append((prop, _parameter_value(feature, prop, raw)))
     return writes
@@ -2443,14 +2443,17 @@ def _holds_written(feature: object, prop: str, value: object) -> bool:
 def _comparable(value: object) -> object:
     """Return ``value`` in a form two readings of an unchanged property compare equal.
 
-    A placement and a quantity are read as rounded floats: a snapshot restore reads them back from
-    the saved file, and an exact float comparison there could fail on the last digit.
+    A placement, a quantity and a float are read as rounded floats: a snapshot restore reads them
+    back from the saved file, which keeps 16 digits, so an exact comparison fails on a 17-digit
+    value (0.1 + 0.2 reopens as 0.3).
     """
     if hasattr(value, "Rotation") and hasattr(value, "Base"):
         base, quaternion = value.Base, value.Rotation.Q
         return tuple(round(float(c), 9) for c in (base.x, base.y, base.z, *quaternion))
     if hasattr(value, "Value") and hasattr(value, "Unit"):
         return round(float(value.Value), 9)
+    if isinstance(value, float):
+        return round(value, 9)
     return value
 
 
