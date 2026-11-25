@@ -22,8 +22,9 @@ never imported here — the document and its objects are passed in.
 from __future__ import annotations
 
 import math
+import re
 from collections.abc import Collection
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 from freecad_buddy.contracts import RefFinding, RefVerdict, TnpAuditBlock
 from freecad_buddy.usecases import shim
@@ -50,6 +51,19 @@ _SKETCH_TYPE_PREFIX = "Sketcher::"
 # its own. Part.Shape.getTolerance(1) measures 1.0000000000000002e-07 on a padded solid.
 _WITNESS_EPSILON = 1e-7
 
+# FreeCAD 1.1 mapped-name markers whose number counts pieces in build order (ElementNamingUtils.h:
+# POSTFIX_MOD ";:M", POSTFIX_GEN ";:G", POSTFIX_MODGEN ";:MG", POSTFIX_UPPER ";:U", appended with
+# an index in TopoShapeExpansion.cpp:1768-1776 and :1871; the bare marker is index 1) and the
+# random duplicate rename ";D<hex>" (ElementMap.cpp:753 renameDuplicateElement). No other marker
+# starts with M, G or U. The number is printed only when the index exceeds 1 (:1782-1784); the
+# indices 0 and 00 name coplanar or parallel faces with a fixed name (:1622-1625, :1776-1781), so
+# ";:G0" is stable. A hash id of a multi-source name follows the marker directly, so a "#" after
+# ";:G" or ";:U" marks the same positional form. A bare ";:G" or ";:U" is index 1 and is
+# positional only while a sibling with an index exists (``_split_sibling_stems``).
+_POSITIONAL_COUNTER = re.compile(r";:MG|;:M|;:[GU](?:[1-9]|#)|;D[0-9a-f]+(?=;|$)")
+_INDEXED_MARKER = re.compile(r";:[GU](?:[1-9]|#)")
+_BARE_MARKER = re.compile(r";:[GU](?![0-9#])")
+
 # The sub-shape type plus its bounding-box corners: (ShapeType, XMin, YMin, ZMin, XMax, YMax,
 # ZMax). BoundBox reads on every shape type, while CenterOfMass does not — Part.Vertex raises
 # AttributeError for it.
@@ -71,6 +85,9 @@ class RefEntry(TypedDict):
     missing: bool
     witness: Witness | None
     history: tuple[int, str] | None
+    # True when the mapped name carries a bare ";:G" or ";:U" and the same shape holds a sibling
+    # with an indexed marker after the same text. Absent in a record from an older snapshot.
+    split_siblings: NotRequired[bool]
 
 
 class RefRecord(TypedDict):
@@ -216,6 +233,38 @@ def _axis_shifts(before: Witness | None, after: Witness | None) -> AxisShifts | 
     return ((deltas[0], deltas[3]), (deltas[1], deltas[4]), (deltas[2], deltas[5]))
 
 
+def _has_positional_counter(name: str | None) -> bool:
+    """Whether a mapped name carries a build-order piece counter or a duplicate-rename marker.
+
+    FreeCAD numbers the pieces of a split face or edge by position (``;:M``, ``;:M2``, ...). An edit
+    that changes the piece count shifts every counter, so one name and one history source can
+    then denote a different piece. Such a name proves nothing about identity.
+    """
+    return bool(name) and _POSITIONAL_COUNTER.search(name) is not None
+
+
+def _split_sibling_stems(shape: object) -> frozenset[str]:
+    """Return the text before each indexed ``;:G``/``;:U`` marker in ``shape``'s element map.
+
+    An element named with the bare marker is piece 1 of that stem; a stem that also appears here
+    has further pieces, so piece 1 can name another piece after a piece-count change.
+    """
+    try:
+        names = shape.ElementMap
+    except Exception:  # noqa: BLE001 - a shape without an element map has no sibling evidence
+        return frozenset()
+    return frozenset(
+        name[: match.start()] for name in names for match in _INDEXED_MARKER.finditer(name)
+    )
+
+
+def _has_split_siblings(name: str | None, stems: frozenset[str]) -> bool:
+    """Whether a bare-marker mapped name shares its leading text with an indexed sibling."""
+    return bool(name) and any(
+        name[: match.start()] in stems for match in _BARE_MARKER.finditer(name)
+    )
+
+
 def _follows_support(
     before: RefEntry, after: RefEntry, support_shift: AxisShifts | None, tolerance: float
 ) -> bool:
@@ -228,6 +277,11 @@ def _follows_support(
     outside that range, stays ``REPOINTED``. The range joins both support faces because a face
     must be able to follow the support's other face (midplane growth); the cost is that a tampered
     shift opposite to its own face but inside that range is excused.
+
+    A mapped name or history source name that carries a positional piece counter
+    (``_has_positional_counter``), or a bare ``;:G``/``;:U`` name whose shape holds indexed
+    siblings (``split_siblings``), is never excused: after a piece-count change the same name can
+    denote another piece, so equality of the two names no longer shows the same element.
     """
     element_shift = _axis_shifts(before["witness"], after["witness"])
     if element_shift is None or support_shift is None:
@@ -237,6 +291,17 @@ def _follows_support(
         and before["mapped"] == after["mapped"]
         and before["history"] is not None
         and before["history"] == after["history"]
+        and not before.get("split_siblings", False)
+        and not after.get("split_siblings", False)
+        and not any(
+            _has_positional_counter(name)
+            for name in (
+                before["mapped"],
+                after["mapped"],
+                before["history"][1],
+                after["history"][1],
+            )
+        )
     )
     support_moved = any(abs(shift) > tolerance for axis in support_shift for shift in axis)
     inside_support_shift = all(
@@ -282,8 +347,12 @@ def _history(shape: object, mapped: str | None) -> tuple[int, str] | None:
         return None
 
 
-def _capture_entry(target: object, subname: str) -> RefEntry:
+def _capture_entry(
+    target: object, subname: str, sibling_stems: dict[str | None, frozenset[str]] | None = None
+) -> RefEntry:
     """Split ``subname`` and fill its mapped shadow, witness and ancestry from ``target``.
+
+    ``sibling_stems`` caches ``_split_sibling_stems`` per target name across one walk.
 
     An entry that names no element (a whole-object link), a target carrying no shape, or an
     element that does not resolve leaves the resolved halves ``None`` rather than raising.
@@ -301,6 +370,12 @@ def _capture_entry(target: object, subname: str) -> RefEntry:
     if element is not None:
         entry["witness"] = _witness(element)
     entry["history"] = _history(shape, entry["mapped"])
+    if entry["mapped"] and _BARE_MARKER.search(entry["mapped"]):
+        cache = sibling_stems if sibling_stems is not None else {}
+        key = getattr(target, "Name", None)
+        if key not in cache:
+            cache[key] = _split_sibling_stems(shape)
+        entry["split_siblings"] = _has_split_siblings(entry["mapped"], cache[key])
     return entry
 
 
@@ -385,6 +460,7 @@ def snapshot_references(doc: object) -> list[RefRecord]:
     """
     records: list[RefRecord] = []
     support_witnesses: dict[str | None, Witness | None] = {}
+    sibling_stems: dict[str | None, frozenset[str]] = {}
     for obj in sorted(doc.Objects, key=lambda o: o.Name):
         for prop in sorted(getattr(obj, "PropertiesList", None) or ()):
             try:
@@ -407,7 +483,7 @@ def snapshot_references(doc: object) -> list[RefRecord]:
                             "owner": obj.Name,
                             "prop": prop,
                             "target": target_name,
-                            "entries": [_capture_entry(target, sub) for sub in subs],
+                            "entries": [_capture_entry(target, sub, sibling_stems) for sub in subs],
                             "element_map_version": version,
                             "target_witness": support_witnesses[target_name],
                         }

@@ -13,6 +13,18 @@ Layer 1 does not grade a moved witness `REPOINTED` when all of these hold:
   shift of the element's two bounding-box faces lies in the range spanned by zero and both of the
   support's face shifts.
 
+- The name carries no positional piece counter. FreeCAD 1.1 numbers the pieces of a split face or
+  edge by the order OCC reports them: `;:M`, `;:MG` (any index, also the bare form), `;:G` and
+  `;:U` followed by an index or a hash id (`ElementNamingUtils.h:67-70`;
+  `TopoShapeExpansion.cpp:1768-1784` prints the number when the index exceeds 1, `:1871-1873` for
+  `;:U`), and the random duplicate rename `;D<hex>` (`ElementMap.cpp:753-770`). A change of the
+  piece count shifts the numbers, so one mapped name and one history source can then denote
+  another piece (red-team probe: a plate-length edit moved a datum from x 16 to x 33 and passed).
+  `;:G0` and `;:G00` are fixed names of coplanar or parallel faces (`:1622-1625`) and stay
+  eligible, as does a bare `;:G`/`;:U` (index 1) when the shape holds no element with an indexed
+  marker after the same leading text. The check reads both mapped names and both history source
+  names, and the sibling flag on both sides.
+
 The excused entry still goes to Layer 2. Every other witness move stays `REPOINTED`.
 
 `RefRecord` carries `target_witness`, the witness of the whole target shape. One mechanism covers
@@ -60,6 +72,10 @@ element moves in a way the support bounding box does not show. A vertical edge a
 `REPOINTED`, from the mapped-name check: its hashed `#id` segment changes while the edge does
 not. That is outside this rule.
 
+A third residual: a bare `;:G`/`;:U` is excused when no indexed sibling shares its leading text on
+either side. A piece that gains siblings under another leading text is not seen. No probe
+produced it.
+
 ## Alternatives considered
 
 - **Exempt by owner, or by "same support and same mapped name".** Rejected: it disables the
@@ -81,4 +97,6 @@ Decision 014; `verification-design.md` §3.2 Layer 1; spec
 - `snapshot_references` reads the target's `BoundBox` once per target per walk.
 - `Fillet.Base` entries that FreeCAD renumbers after a Pad change (`Edge1`, `Edge2`) still grade
   `BROKEN`; only the entries that keep their element identity pass.
+- `snapshot_references` reads `ElementMap` once per target per walk, and only when an entry has a bare
+  `;:G`/`;:U` name (200 references on one heavy support: 0.022 s, unchanged).
 - An entry with no readable history or no mapped name keeps today's verdict: no history, no excuse.

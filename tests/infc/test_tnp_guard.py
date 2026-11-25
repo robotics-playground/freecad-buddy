@@ -15,7 +15,7 @@ import FreeCAD as App
 import Part
 import Sketcher
 
-from freecad_buddy.usecases import shim, tnp_guard, transaction
+from freecad_buddy.usecases import confirm, shim, sketches, tnp_guard, transaction
 from freecad_buddy.usecases.documents import DocumentRegistry, temp_dir
 from freecad_buddy.usecases.fingerprint import fingerprint
 
@@ -1698,3 +1698,257 @@ class FollowsSupportTest(unittest.TestCase):
 
         # Assert
         self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_a_bare_name_has_split_siblings_before(self):
+        # Arrange
+        before = dict(self._entry(), split_siblings=True)
+        after = self._entry(shift=(0.0, 0.0, 5.0))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_a_bare_name_has_split_siblings_after(self):
+        # Arrange
+        before = self._entry()
+        after = dict(self._entry(shift=(0.0, 0.0, 5.0)), split_siblings=True)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_the_mapped_name_carries_a_positional_counter(self):
+        # Arrange
+        name = ";#60:3;:M3;CUT;:H1:8,E"
+        before = self._entry(mapped=name)
+        after = self._entry(shift=(0.0, 0.0, 5.0), mapped=name)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+
+class SplitSiblingTest(_BodyFixture):
+    """A bare ``;:U`` name is piece 1; it is positional only while indexed siblings exist."""
+
+    def _fillet_names(self):
+        fillet = self._add_fillet()
+        return fillet, {indexed: mapped for mapped, indexed in fillet.Shape.ElementMap.items()}
+
+    def _bare_element(self, fillet, names, with_siblings):
+        stems = tnp_guard._split_sibling_stems(fillet.Shape)
+        for indexed, mapped in names.items():
+            if ";:U;" in mapped and (mapped.split(";:U;")[0] in stems) == with_siblings:
+                return indexed
+        self.fail("the fillet carries no bare ;:U element with siblings=%s" % with_siblings)
+
+    def test_Should_mark_a_bare_name_When_indexed_siblings_share_its_stem(self):
+        # Arrange
+        fillet, names = self._fillet_names()
+        indexed = self._bare_element(fillet, names, with_siblings=True)
+
+        # Act
+        entry = tnp_guard._capture_entry(fillet, indexed)
+
+        # Assert
+        self.assertTrue(entry["split_siblings"], names[indexed])
+
+    def test_Should_not_mark_a_bare_name_When_no_indexed_sibling_shares_its_stem(self):
+        # Arrange
+        fillet, names = self._fillet_names()
+        indexed = self._bare_element(fillet, names, with_siblings=False)
+
+        # Act
+        entry = tnp_guard._capture_entry(fillet, indexed)
+
+        # Assert
+        self.assertFalse(entry["split_siblings"], names[indexed])
+
+    def test_Should_not_mark_a_pad_face_When_the_name_carries_the_fixed_index_zero(self):
+        # Arrange
+        top_face = _plane_name(self.pad.Shape, 2, PAD_LENGTH)
+
+        # Act
+        entry = tnp_guard._capture_entry(self.pad, top_face)
+
+        # Assert
+        self.assertNotIn("split_siblings", entry)
+
+    def test_Should_detect_siblings_When_the_stem_has_an_indexed_marker(self):
+        # Arrange
+        stems = frozenset(["#26:1"])
+
+        # Act
+        results = [
+            tnp_guard._has_split_siblings("#26:1;:U;FLT;:H1:7,E", stems),
+            tnp_guard._has_split_siblings("#26:2;:U;FLT;:H1:7,E", stems),
+            tnp_guard._has_split_siblings("#26:1;:G0;XTR;:H1:8,F", stems),
+            tnp_guard._has_split_siblings(None, stems),
+        ]
+
+        # Assert
+        self.assertEqual(results, [True, False, False, False])
+
+
+class SplitPieceCounterTest(_BodyFixture):
+    """A positional piece counter in the mapped name never lets a move pass as support-following."""
+
+    PLATE_LENGTH = 40.0
+    PLATE_WIDTH = 10.0
+    PLATE_THICKNESS = 10.0
+    EDITED_LENGTH = 60.0
+
+    def _rectangle(self, name, x_min, y_min, x_max, y_max, attach=None):
+        sketch = self.document.addObject("Sketcher::SketchObject", name)
+        self.plate.addObject(sketch)
+        if attach is not None:
+            sketch.AttachmentSupport = [(attach, "")]
+            sketch.MapMode = "FlatFace"
+        corners = [
+            (x_min, y_min, x_max, y_min),
+            (x_max, y_min, x_max, y_max),
+            (x_max, y_max, x_min, y_max),
+            (x_min, y_max, x_min, y_min),
+        ]
+        for x1, y1, x2, y2 in corners:
+            sketch.addGeometry(
+                Part.LineSegment(App.Vector(x1, y1, 0), App.Vector(x2, y2, 0)), False
+            )
+        for index in range(4):
+            sketch.addConstraint(Sketcher.Constraint("Coincident", index, 2, (index + 1) % 4, 1))
+        return sketch
+
+    def _build_slotted_plate(self):
+        """A plate whose length drives a groove pattern; the groove count changes with it."""
+        self.plate = self.document.addObject("PartDesign::Body", "Plate")
+        xy_plane = next(f for f in self.plate.Origin.OriginFeatures if f.TypeId == "App::Plane")
+        sketch = self._rectangle("PlateSketch", 0, 0, self.PLATE_LENGTH, self.PLATE_WIDTH, xy_plane)
+        for constraint in (
+            Sketcher.Constraint("Horizontal", 0),
+            Sketcher.Constraint("Horizontal", 2),
+            Sketcher.Constraint("Vertical", 1),
+            Sketcher.Constraint("Vertical", 3),
+            Sketcher.Constraint("Coincident", 0, 1, -1, 1),
+        ):
+            sketch.addConstraint(constraint)
+        length_index = sketch.addConstraint(
+            Sketcher.Constraint("DistanceX", 0, 1, 0, 2, self.PLATE_LENGTH)
+        )
+        sketch.renameConstraint(length_index, "L")
+        sketch.addConstraint(Sketcher.Constraint("DistanceY", 1, 1, 1, 2, self.PLATE_WIDTH))
+        pad = self.document.addObject("PartDesign::Pad", "PlatePad")
+        self.plate.addObject(pad)
+        pad.Profile = sketch
+        pad.Length = self.PLATE_THICKNESS
+        self.document.recompute()
+        groove_sketch = self._rectangle(
+            "GrooveSketch",
+            8,
+            -1,
+            10,
+            self.PLATE_WIDTH + 1,
+            xy_plane,
+        )
+        groove_sketch.AttachmentOffset = App.Placement(
+            App.Vector(0, 0, self.PLATE_THICKNESS), App.Rotation()
+        )
+        groove = self.document.addObject("PartDesign::Pocket", "Groove")
+        self.plate.addObject(groove)
+        groove.Profile = groove_sketch
+        groove.Length = 2.0
+        self.document.recompute()
+        pattern = self.document.addObject("PartDesign::LinearPattern", "GroovePattern")
+        self.plate.addObject(pattern)
+        pattern.Originals = [groove]
+        pattern.Direction = (sketch, ["H_Axis"])
+        pattern.setExpression("Length", "PlateSketch.Constraints.L - 12 mm")
+        pattern.setExpression("Occurrences", "floor(PlateSketch.Constraints.L / 13 mm)")
+        self.document.recompute()
+        return pattern
+
+    def _strip_edge(self, pattern):
+        """The top edge of the strip between the first and second groove (x 10 to 22)."""
+        return next(
+            f"Edge{index}"
+            for index, edge in enumerate(pattern.Shape.Edges, start=1)
+            if abs(edge.BoundBox.YMin - self.PLATE_WIDTH) < 1e-6
+            and abs(edge.BoundBox.ZMin - self.PLATE_THICKNESS) < 1e-6
+            and abs(edge.BoundBox.XMin - 10.0) < 1e-6
+            and abs(edge.BoundBox.XMax - 22.0) < 1e-6
+        )
+
+    def test_Should_flag_repointed_When_a_pattern_edit_changes_the_split_piece_count(self):
+        # Arrange
+        pattern = self._build_slotted_plate()
+        edge = self._strip_edge(pattern)
+        datum = self.document.addObject("PartDesign::Point", "DatumPoint")
+        self.plate.addObject(datum)
+        datum.AttachmentSupport = [(pattern, (edge,))]
+        datum.MapMode = "CenterOfMass"
+        self.document.recompute()
+        posture = confirm.set_auto_approve(True)
+        self.addCleanup(confirm.set_auto_approve, posture)
+
+        # Act
+        envelope = sketches.sketch_set_datum(
+            self.registry,
+            doc=self.handle,
+            sketch="PlateSketch",
+            constraint="L",
+            value={"value": self.EDITED_LENGTH, "unit": "mm"},
+        )
+
+        # Assert
+        audit = envelope["structured_content"]["mutation"]["post_verify"]["tnp_audit"]
+        findings = [f for f in audit["findings"] if f["owner"] == "DatumPoint"]
+        self.assertIn("REPOINTED", [f["verdict"] for f in findings])
+        self.assertNotEqual(audit["status"], "CLEAN")
+        self.assertEqual(envelope["status"], "SPEC_FAILED")
+
+
+class PositionalCounterTest(unittest.TestCase):
+    def test_Should_detect_the_counter_When_the_name_carries_a_FreeCAD_split_marker(self):
+        # Arrange
+        names = [
+            "#60:3;:M3;CUT;:Hcc3:8,E",
+            "#60;:M;CUT;:Hcc3:8,E",
+            "g1;:G2;XTR;:Hcc3:8,F",
+            "g1;:G#73;CUT;:Hcc3:a,V",
+            "g1;:MG;FLT;:Hcc3:8,F",
+            "g1;:MG4;FLT;:Hcc3:8,F",
+            "g1;:U2;:Hcc3:8,V",
+            "g1;:U3;FLT;:Hcc3:8,E",
+            "g1;D1a2;:Hcc3:8,F",
+        ]
+
+        # Act
+        results = [tnp_guard._has_positional_counter(name) for name in names]
+
+        # Assert
+        self.assertEqual(results, [True] * len(names))
+
+    def test_Should_not_detect_a_counter_When_the_name_has_only_tag_and_operation_markers(self):
+        # Arrange
+        names = [
+            "g1;SKT;:Hcc3:8,F",
+            "#60;:H1a:8,F;XTR;:Hcc5,F",
+            "g12;:L;FLT;:T5,E",
+            "g1;:G0;XTR;:Hcc3:8,F",
+            "g1;:G00;XTR;:Hcc3:8,F",
+            "g1;:G;XTR;:Hcc3:8,F",
+            "g1;:U;XTR;:Hcc3:8,E",
+            "g1;:X2;:C3;:I4,F",
+            "",
+        ]
+
+        # Act
+        results = [tnp_guard._has_positional_counter(name) for name in names]
+
+        # Assert
+        self.assertEqual(results, [False] * len(names))
