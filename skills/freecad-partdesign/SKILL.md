@@ -60,10 +60,11 @@ it — otherwise none of these steps can run.
   geometric-query/mapped-name selector**, never a bare `Face6`/`Edge3`, because
   indices reshuffle on recompute (TNP) and a fillet's edge list silently drops
   members that lose their two adjacent faces.
-- Give a loft/sweep ordered, compatible profiles: a loft needs its `Sections` in
-  sequence (set `Closed` to loop the last back to the first, `Ruled` for straight
-  transitions); a sweep needs a `Spine` path plus its section(s), and a self-
-  intersecting or sharply-kinked spine is the usual sweep failure.
+- Build a loft with `feature_loft` and a sweep with `feature_sweep`, and give them
+  ordered, compatible profiles: a loft needs its `sections` in sequence (`closed`
+  loops the last back to the first and needs two or more sections, `ruled` makes
+  straight transitions); a sweep needs a `spine` path plus its profile, and a
+  self-intersecting or sharply-kinked spine is the usual sweep failure.
 - Give a hole feature a sketch of its center points, then set `Diameter`,
   `DepthType`, and (if tapped) `Threaded` — the thread and counterbore/countersink
   metadata (`HoleCutType`, `ThreadDiameter`) is descriptive, so verify the actual

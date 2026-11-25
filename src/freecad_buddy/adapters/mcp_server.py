@@ -66,9 +66,9 @@ SERVER_INSTRUCTIONS = "\n".join(
         "- verify_: check shapes, sketches and recomputes against numbers.",
         "- export_ and verify_export_: write STEP, STL or 3MF, then check the written file.",
         "- sketch_: create sketches; add, remove and constrain geometry.",
-        "- feature_: PartDesign bodies and features (pad, pocket, revolve, hole, fillet, "
-        "chamfer, pattern, mirror, datum) and their parameters; Part primitives (box, cylinder, "
-        "cone, sphere, torus) and Part booleans (cut, fuse, common).",
+        "- feature_: PartDesign bodies and features (pad, pocket, revolve, loft, sweep, hole, "
+        "fillet, chamfer, pattern, mirror, datum) and their parameters; Part primitives (box, "
+        "cylinder, cone, sphere, torus) and Part booleans (cut, fuse, common).",
         "- preview_: dry-run a mutation before it is applied.",
         "- view_: fit the 3D viewport.",
         "",

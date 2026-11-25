@@ -111,6 +111,8 @@ no expression. `query_parameters` lists the bindings (`truncated` says when a li
 need = {"Part::Box": ("Length", "Width", "Height"),
         "Part::Cylinder": ("Radius", "Height"),
         "Part::Cone": ("Radius1", "Radius2", "Height"),
+        "Part::Sphere": ("Radius",),
+        "Part::Torus": ("Radius1", "Radius2"),
         "Part::Wedge": ("Xmin", "Xmax", "X2min", "X2max", "Ymin", "Ymax",
                         "Zmin", "Zmax", "Z2min", "Z2max")}
 place = ("Placement.Base.x", "Placement.Base.y", "Placement.Base.z")

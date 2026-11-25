@@ -79,9 +79,10 @@ MCP client at it — otherwise none of these steps can run.
 - **Exhaust the typed tools before any fallback**: `feature_set_parameters` writes
   booleans, numbers, quantities, enum members, strings (including `Label`), and
   placements (`Placement`, `AttachmentOffset`) on any object — including
-  `Visibility` — and `feature_parameters_define`, `feature_set_expression`,
+  `Visibility` — and `feature_part_primitive`, `feature_part_boolean`, `feature_loft`,
+  `feature_sweep`, `feature_parameters_define`, `feature_set_expression`,
   `document_object_delete`, `query_interference`, `query_section` and
-  `query_parameters` cover parameters, bindings, deletes and measurements, so try
+  `query_parameters` cover solids, parameters, bindings, deletes and measurements, so try
   them before GUI input or a script. `references/gap-list.md`
   names every operation with no typed tool; only a row there, or a tool list that
   shows no typed tool, justifies a fallback. Before each `script_exec` call, state
@@ -144,7 +145,7 @@ human-facing handle, give the feature an intent-bearing Name when you create it.
 - **Driving the GUI before checking the typed tools.** Symptom: clicks and keys to
   the model tree are dropped, the view stays empty. Why: background input does not
   reach FreeCAD's Qt tree, and the property was writable all along. Fix:
-  `feature_set_parameters` `{"Visibility": true}` on the body and its Tip, then
+  `feature_set_parameters` with `parameters` `{"Visibility": true}` on the body and its Tip, then
   `view_fit_viewport`.
 - **Trusting a failed `freecadcmd` save.** Symptom: `OSError: Failed to write all
   data to file Permission denied` and a `<file>.<uuid>` temp file beside the target

@@ -40,7 +40,12 @@ at it — otherwise the chosen operation can't be built.
   **sweep** one constant profile along a path, because loft is for a changing
   cross-section (a transition, a blend) and sweep is for a constant one following a
   curve (a pipe, a trim). If the section changes, loft; if only the path bends,
-  sweep.
+  sweep. Tools: `feature_loft` (`profile`, `sections`, `ruled`, `closed`,
+  `subtractive`) and `feature_sweep` (`profile`, `spine` as a sketch Name or an
+  Edge selector, `mode` `standard` or `frenet`, `subtractive`); every sketch
+  fully constrained. `loft.too_complex` or `sweep.too_complex` asks for fewer
+  sections, edges or turns; `sweep.degenerate_spine` asks to split the edge that
+  doubles back.
 - Prefer a **pad/pocket/revolve** over a loft or sweep whenever the shape allows,
   because lofts and sweeps are more failure-prone (twist, self-intersection) and
   harder to constrain — spend that complexity only when a simpler operation genuinely
@@ -60,10 +65,13 @@ at it — otherwise the chosen operation can't be built.
 - Prefer **PartDesign features on a Body** over raw Part booleans for a parametric
   part, because PartDesign keeps a single ordered feature tree that edits cleanly and
   carries the reference/TNP machinery; reach for Part booleans only when combining
-  independent solids that aren't a single body's feature history.
+  independent solids that aren't a single body's feature history. Then use
+  `feature_part_primitive` (box, cylinder, cone, sphere, torus) and
+  `feature_part_boolean` (`cut`, `fuse`, `common`) on top-level solids.
 - When the task **converts an existing CSG code-CAD model** (build123d, CadQuery:
-  primitives plus `+=` / `-=`), build with Part primitives and booleans whose sizes
-  and placements are VarSet expressions (see code-cad-conversion), because that maps
+  primitives plus `+=` / `-=`), build with `feature_part_primitive` and
+  `feature_part_boolean`, then bind sizes and placements to VarSet expressions
+  (see code-cad-conversion), because that maps
   the source one-to-one and each part can be proven equal to the source STEP.
 - When two operations both work, pick the one that leaves the **simpler, more
   editable tree**, because the tree is read and edited later — favor the choice a

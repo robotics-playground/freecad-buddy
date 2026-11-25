@@ -1654,6 +1654,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-6-measured-build-session.md`
   summary: No MCP tool makes a `Part::Common`, so an agent splits a model into print pieces with base-feature copies and region pockets; when more than one piece body takes the same master, it takes another piece as base and FreeCAD logs out-of-scope `BaseFeature` links on every recompute.
   evidence: Build session `a3153685` summary and the headless log in `tests/uat/run/2026-10-07-03/report.md` ("Other findings"). Relates to the derived-piece rule in `skills/design-decomposition/SKILL.md`.
+  resolution: resolved by Story 13-17 (`feature_part_boolean` `common`) and Story 13-19: `skills/design-decomposition/SKILL.md` makes derived pieces with `feature_part_primitive` and `feature_part_boolean`; `gap-list.md` lists both tools as covered and drops the Part primitives and booleans row.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-6-measured-build-session.md`
   summary: `session_metrics.py` reads a spilled result's status from its spill file; when Claude Code later deletes that file, the result silently stops counting as a feature, so the calls-per-feature median of a re-measured transcript can drift with no warning.
@@ -2354,6 +2355,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: Story 13-16 makes the tool write `Placement`, `AttachmentOffset` and `Label`; `SKILL.md:74-78` now says so. The plan assigns the gap-list row removal to Story 13-19.
   blocker: Story 13-19 owns the gap list.
   unblock: Story 13-19 removes row 33 and the `Label` row, and narrows row 42 ("string or link") to the link and file types, which `feature_set_parameters` still refuses.
+  resolution: resolved by Story 13-19: `gap-list.md` drops the placement row and the `Label` row, states the `parameters.value_overwritten` failure in the `feature_set_parameters` row, and narrows the string row to link, file, vector, list and colour properties.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-15-tnp-expected-reattachment.md`
   summary: A curved element (a cylinder or fillet face) that rides its moved support may still grade `REPOINTED` in the GUI, because `Shape.BoundBox` can use the display triangulation and a remesh shifts the box by the mesh deflection, more than the 1e-7 element tolerance.

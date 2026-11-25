@@ -61,13 +61,17 @@ then point your MCP client at it — otherwise the plan can't be built.
   then `document_save`, then, when the user's project uses version control, one
   commit of the `.FCStd` and the plan file — one commit per milestone, so every
   commit is a verified state to return to.
-- Keep **derived pieces** — print splits, `Part::Common` cuts of a master body —
-  out of the edit loop: put them in a separate document, or rebuild them only at
-  milestones, because every master-body change recomputes each one. On
+- Make **derived pieces** — print splits, `Part::Common` cuts of a master body —
+  with `feature_part_primitive` (a region box) and `feature_part_boolean`
+  (`operation: "common"`, `base` the master Body, `tools` the region). The tool
+  hides its inputs: show the master again with `feature_set_parameters`
+  `Visibility` true. Keep the pieces out of the edit loop: delete and create them
+  only at milestones (`document_object_delete` on the piece and its region boxes,
+  then create both again), because every master-body change recomputes each one. On
   `kiwibox-drawer.FCStd`, 3 split `Part::Common` objects took 7.5 s of the 14.6 s
-  recompute after one change to the master body. No typed tool creates a
-  `Part::Common`, so make or rebuild them through the closed-document script
-  fallback in freecad-scripting-idioms.
+  recompute after one change to the master body. A common that is empty
+  (disjoint or only touching regions) fails as `part_boolean.empty_result` and
+  rolls back: move the region, do not script around it.
 - Decide single body vs multiple bodies before modeling: parts that are
   separately manufactured, purchased, or movable are separate bodies; one
   monolithic manufacturing intent is one fused solid. Never emit an unlabeled

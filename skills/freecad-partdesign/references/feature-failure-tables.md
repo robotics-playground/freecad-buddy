@@ -39,7 +39,7 @@ trust the property values as proof.
 
 | Feature | Prerequisite | Key properties | Common failure → fix |
 | --- | --- | --- | --- |
-| Loft | ≥2 profiles in order | `Sections`, `Ruled`, `Closed` | mismatched profile vertex counts or wildly different orientation → twisted/failed surface (reorder, align, or add intermediate sections) |
+| Loft | ≥2 profiles in order (`feature_loft`: `profile` plus `sections`, each sketch with the same wire count: `loft.wire_count_mismatch`) | `Sections`, `Ruled`, `Closed` | mismatched profile vertex counts or wildly different orientation → twisted/failed surface (reorder, align, or add intermediate sections) |
 | Sweep (Pipe) | a spine path + section(s) | `Sections`, `Spine`, `SpineTangent`, `AuxiliarySpine` | self-intersecting or sharply-kinked spine, or a section larger than the spine's turn radius → boolean failure (smooth the spine, shrink the section) |
 
 ## Dress-up: fillet and chamfer
