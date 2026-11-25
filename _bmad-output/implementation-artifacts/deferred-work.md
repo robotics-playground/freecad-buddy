@@ -2307,3 +2307,9 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `ExpressionBindingTest` in `tests/infc/test_tnp_guard.py` covers the rule, but `benchmarks/g2/fault-injection/` has no case for "binding removed by the op" and "binding lost during the recompute", so `audit_references` is scored without them.
   blocker: a new fault suite case and a re-score, not asked by this Story.
   unblock: a G2 fault-suite story.
+
+- source_spec: `_bmad-output/implementation-artifacts/epic-13-status.md`
+  summary: Two external tests fail intermittently on the Windows host and pass on re-run: `tests/external/test_marshal_self_submit.py::test_submitting_to_a_loop_this_thread_must_pump_deadlocks` (failed once in 5 runs alone at 04574455, and in several full runs) and `tests/external/test_mcp_cache_proxy.py::test_should_answer_both_calls_when_two_parallel_calls_meet_a_lost_session` (verifiers 13-9/13-10/13-11 saw it fail on base too). Neither file is touched by Epic 13. A flaky test can hide a real failure in CI (the repo rule is that CI must not hide failures).
+  evidence: leader gate runs on the integration head after the 13-1..13-10 merges; verify-13-9.md N1; verify-13-11.md.
+  blocker: timing races outside Epic 13 scope; needs a root-cause look, not a retry.
+  unblock: a small Story that finds the race in each test and makes it deterministic.
