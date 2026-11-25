@@ -2,11 +2,11 @@
 title: 'Part primitive and Part boolean tools'
 type: 'feature'
 created: '2026-11-24'
-status: 'draft'
+status: 'in-progress'
 route: 'dispatch'
 spec_checkpoint: true
 review_loop_iteration: 0
-baseline_commit: 'e60897ab'
+baseline_commit: '0b690db152cf1541987b5dd562151d4010c40bb0'
 context:
   - '{project-root}/_bmad-output/specs/spec-mcp-usage-improvement/tool-contracts.md'
   - '{project-root}/.knowledge-base/technical/standards/freecad/source-verify.md'
@@ -102,12 +102,12 @@ A field that does not belong to the kind, a missing field, a unit other than `mm
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `shape_trust.py` -- move the two functions; `queries.py` imports them
-- [ ] `transaction.py` -- `RecomputeFailure` and the `detail.code` pass-through
-- [ ] `features.py` -- `_placement_value` (if 13-16 has not added it), `feature_part_primitive`, `feature_part_boolean`, trust, top-level and cost prechecks, empty-result check, visibility
-- [ ] `tool_catalog.py` -- two specs, schemas, descriptions
-- [ ] `docs/intent.md`, `mcp-tools-design.md` -- the edits listed under Design changes
-- [ ] tests -- infc per matrix row, fingerprint changes on create and returns on undo, dispatch test, catalog lists
+- [x] `shape_trust.py` -- move the two functions; `queries.py` imports them
+- [x] `transaction.py` -- `RecomputeFailure` and the `detail.code` pass-through
+- [x] `features.py` -- `_placement_value` (if 13-16 has not added it), `feature_part_primitive`, `feature_part_boolean`, trust, top-level and cost prechecks, empty-result check, visibility
+- [x] `tool_catalog.py` -- two specs, schemas, descriptions
+- [x] `docs/intent.md`, `mcp-tools-design.md` -- the edits listed under Design changes
+- [x] tests -- infc per matrix row, fingerprint changes on create and returns on undo, dispatch test, catalog lists
 
 **Acceptance Criteria:**
 - Given a 10 cube and a cube shifted 5 mm, when cut, fused and common run, then volumes are 500, 1500 and 500 (analytic).
