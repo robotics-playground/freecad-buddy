@@ -161,6 +161,7 @@ Each has a recommendation; answer only the ones you want to change.
 - Review round 1: the sections names `part_boolean.invalid_input` (a repeated input, tools not 1 to 20 Names) and `part_boolean.invalid_result` for a boolean object in an error state; a part tool refuses a name that is another object's Label (Name = Label); a primitive size above 3.4e38 mm is refused (FreeCAD clamps it silently).
 
 - Review round 2: the boolean refuses an input in a `Touched`, `Invalid` or `Error` state (`part_boolean.untrusted_shape`, its shape may be out of date); a failed boolean object in any of those states ends `part_boolean.invalid_result`; the 3.4e38 size bound applies to sphere and torus only (the kinds whose constraint FreeCAD clamps). The overlap-inside-one-compound gap stays deferred and now carries the >600 s probe.
+- Review round 3 request (leader): the solid-pair count also adds, inside each input, the solid pairs whose bounding boxes overlap (a tool compound of mutually crossing solids ran longer than 600 s). Same limit 1,000. Measured: pass 0.031 s on 990 disjoint cylinders (count 0), 0.006 s on 100 + 100 crossing (stopped above the limit); a plate cut by 30 + 30 crossing in one compound (960 pairs) 21.9 s. The deferred overlap check remains for volume correctness only.
 
 ## Review Triage Log
 

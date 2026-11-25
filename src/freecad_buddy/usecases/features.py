@@ -4148,9 +4148,13 @@ _PART_BOOLEAN_MAX_TOOLS = 20
 # limit. Both are under the 120 s feature timeout. The bridge cannot interrupt a long OCC call, so
 # the limits apply to the input. Pairs are counted across every two inputs, because several tools
 # are intersected with each other too: a plate cut by two families of 100 crossing cylinders (606
-# faces, 200 base-by-tool pairs, 10,200 pairs in all) took 68.9 s. All timings are for
-# inputs whose solids do not overlap inside one compound; the trust check does not detect that
-# (deferred-work.md), and a tool compound of mutually crossing solids can run far longer.
+# faces, 200 base-by-tool pairs, 10,200 pairs in all) took 68.9 s. The same crossing solids in
+# one tool compound (a plate cut by one compound of 100 + 100 crossing cylinders) ran longer than
+# 600 s, because Part::Cut fuses the tool solids pairwise, so the pairs of solids whose bounding
+# boxes overlap inside each input are added to the count. That pass sorts the solids on x: 0.031 s
+# for the 990 disjoint cylinders (count 0), 0.006 s for the 100 + 100 crossing compound (stopped
+# above the limit), 0.002 s for the 30 + 30 compound (count 900). A plate cut by that 30 + 30
+# compound (60 pairs across, 900 inside, 960 in all, just under the limit) took 21.9 s.
 _PART_BOOLEAN_MAX_FACES = 3000
 _PART_BOOLEAN_MAX_SOLID_PAIRS = 1000
 
@@ -4196,6 +4200,30 @@ def _part_boolean_inputs(
     return base_obj, tool_objs
 
 
+def _overlapping_solid_pairs(shape: object, cap: int) -> int:
+    """Count the pairs of solids in ``shape`` whose bounding boxes overlap, stopping above ``cap``.
+
+    Two solids that cannot touch cost the kernel nothing, so only overlapping boxes count: a
+    compound of 990 disjoint cylinders counts 0, and a compound of two crossing families of 100
+    cylinders counts 10,000. A sort on the x extent bounds the work; the count stops as soon as
+    it passes ``cap``, so the pass stays short on an input that is refused anyway.
+    """
+    boxes = [solid.BoundBox for solid in shape.Solids]
+    order = sorted(range(len(boxes)), key=lambda index: boxes[index].XMin)
+    count = 0
+    for position, first in enumerate(order):
+        a = boxes[first]
+        for later in range(position + 1, len(order)):
+            b = boxes[order[later]]
+            if b.XMin > a.XMax:
+                break
+            if b.YMin <= a.YMax and a.YMin <= b.YMax and b.ZMin <= a.ZMax and a.ZMin <= b.ZMax:
+                count += 1
+                if count > cap:
+                    return count
+    return count
+
+
 def _check_part_boolean_inputs(base_obj: object, tool_objs: list[object]) -> None:
     """Refuse inputs a boolean cannot take, in cost order: placement, size, then shape trust.
 
@@ -4225,14 +4253,22 @@ def _check_part_boolean_inputs(base_obj: object, tool_objs: list[object]) -> Non
     shapes = [getattr(obj, "Shape", None) for obj in objects]
     faces = sum(len(shape.Faces) for shape in shapes if shape is not None)
     solids = [len(shape.Solids) if shape is not None else 0 for shape in shapes]
-    pairs = sum(a * b for a, b in itertools.combinations(solids, 2))
+    across = sum(a * b for a, b in itertools.combinations(solids, 2))
+    inside = sum(
+        _overlapping_solid_pairs(shape, _PART_BOOLEAN_MAX_SOLID_PAIRS)
+        for shape in shapes
+        if shape is not None
+    )
+    pairs = across + inside
     if faces > _PART_BOOLEAN_MAX_FACES or pairs > _PART_BOOLEAN_MAX_SOLID_PAIRS:
         raise PartToolRefusal(
             "part_boolean.too_complex",
-            f"the inputs hold {faces} faces (limit {_PART_BOOLEAN_MAX_FACES}) and {pairs} "
-            f"solid pairs across the inputs (limit {_PART_BOOLEAN_MAX_SOLID_PAIRS}); the "
-            "kernel call would hold the bridge for tens of seconds or more. Use fewer or "
-            "simpler inputs",
+            f"the inputs hold {faces} faces (limit {_PART_BOOLEAN_MAX_FACES}) and "
+            f"{'at least ' if inside > _PART_BOOLEAN_MAX_SOLID_PAIRS else ''}{pairs} solid pairs "
+            f"(limit {_PART_BOOLEAN_MAX_SOLID_PAIRS}): {across} across the inputs and "
+            f"{'at least ' if inside > _PART_BOOLEAN_MAX_SOLID_PAIRS else ''}{inside} overlapping "
+            "inside one input; the kernel call would hold the bridge for tens of seconds or "
+            "more. Use fewer or simpler inputs",
         )
     for obj, shape in zip(objects, shapes, strict=True):
         if shape is None or not shape_trust.is_measurable_solid(shape):

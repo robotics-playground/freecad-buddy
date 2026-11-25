@@ -986,6 +986,7 @@ class PartBooleanRefusalTest(_PartFixture):
         )
         self.assertIn("606 faces", message)
         self.assertIn("10200 solid pairs", message)
+        self.assertIn("0 overlapping inside one input", message)
 
     def test_Should_refuse_an_input_that_is_not_recomputed_When_its_shape_may_be_out_of_date(
         self,
@@ -1024,6 +1025,53 @@ class PartBooleanRefusalTest(_PartFixture):
         with self.assertRaises(ValidationError) as caught:
             act()
         self.assertIn("Label of D", str(caught.exception))
+
+    def test_Should_refuse_one_compound_of_crossing_solids_When_it_is_the_only_tool(self):
+        # Arrange
+        # One tool compound of two fully crossing families of 100 cylinders: 606 faces and 200
+        # base-by-tool pairs, but 10,000 solid pairs inside the tool. Part::Cut fuses the
+        # tool solids pairwise and ran longer than 600 s in the probe.
+        self.add_shape("Plate", Part.makeBox(400.0, 400.0, 10.0))
+        both = [
+            *self.crossing_family("x", 100, 3.0).Solids,
+            *self.crossing_family("y", 100, 3.0).Solids,
+        ]
+        self.add_shape("Crossing", Part.Compound(both))
+
+        # Act and Assert
+        message = self.assert_refusal(
+            lambda: self.boolean(base="Plate", tools=["Crossing"]), "part_boolean.too_complex"
+        )
+        self.assertIn("606 faces", message)
+        self.assertIn("at least 1201 solid pairs", message)
+        self.assertIn("200 across the inputs", message)
+        self.assertIn("at least 1001 overlapping inside one input", message)
+
+    def test_Should_count_only_solids_whose_boxes_overlap_When_pairs_inside_an_input_are_counted(
+        self,
+    ):
+        # Arrange
+        apart = Part.Compound([Part.makeBox(1, 1, 1, App.Vector(3 * i, 0, 0)) for i in range(5)])
+        touching_boxes = Part.Compound(
+            [Part.makeBox(2, 2, 2, App.Vector(1 * i, 0, 0)) for i in range(4)]
+        )
+        offset_in_y = Part.Compound(
+            [
+                Part.makeBox(2, 2, 2, App.Vector(0, 0, 0)),
+                Part.makeBox(2, 2, 2, App.Vector(1, 5, 0)),
+            ]
+        )
+
+        # Act
+        counts = [
+            features._overlapping_solid_pairs(shape, 1000)
+            for shape in (apart, touching_boxes, offset_in_y)
+        ]
+        capped = features._overlapping_solid_pairs(touching_boxes, 2)
+
+        # Assert
+        self.assertEqual(counts, [0, 5, 0])
+        self.assertGreater(capped, 2)
 
     def test_Should_accept_exactly_twenty_tools_When_they_are_disjoint_boxes(self):
         # Arrange
@@ -1285,6 +1333,26 @@ class PartBooleanCostTest(_PartFixture):
 
         # Act
         envelope = self.boolean(base="Plate", tools=["FamilyX", "FamilyY"])
+        elapsed = time.monotonic() - started
+
+        # Assert
+        self.assert_ok(envelope)
+        self.assertLess(elapsed, 60.0)
+
+    def test_Should_finish_inside_the_budget_When_one_compound_holds_900_crossing_pairs(self):
+        # Arrange
+        # One tool compound of two crossing families of 30 cylinders: 900 solid pairs inside the
+        # input, 60 pairs across the inputs, 960 in all, just under the limit of 1,000.
+        self.add_shape("Plate", Part.makeBox(120.0, 120.0, 10.0))
+        both = [
+            *self.crossing_family("x", 30, 3.0).Solids,
+            *self.crossing_family("y", 30, 3.0).Solids,
+        ]
+        self.add_shape("Crossing", Part.Compound(both))
+        started = time.monotonic()
+
+        # Act
+        envelope = self.boolean(base="Plate", tools=["Crossing"])
         elapsed = time.monotonic() - started
 
         # Assert
