@@ -201,13 +201,13 @@ development_status:
   13-10-feature-set-expression-tool: done
   13-11-document-object-delete-tool: done
   13-12-skill-routing-measure-parameter-delete-tools: done
-  13-13-script-exec-observe-only-bracket-and-error-status: ready-for-dev
+  13-13-script-exec-observe-only-bracket-and-error-status: done
   13-14-typed-verify-shape-check-schema: done
-  13-15-tnp-audit-expected-reattachment-moves: review
-  13-16-feature-set-parameters-placement-and-strings: backlog
-  13-17-part-primitive-and-part-boolean-tools: review
+  13-15-tnp-audit-expected-reattachment-moves: done
+  13-16-feature-set-parameters-placement-and-strings: done
+  13-17-part-primitive-and-part-boolean-tools: done
   13-18-loft-and-sweep-tools: done
-  13-19-skill-routing-part-loft-sweep-placement-tools: backlog
+  13-19-skill-routing-part-loft-sweep-placement-tools: done
   13-20-usage-report-and-bridge-hygiene: done
   epic-13-retrospective: optional
 
