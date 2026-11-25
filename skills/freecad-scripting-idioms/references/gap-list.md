@@ -50,6 +50,7 @@ report the operation as blocked.
 ## STEP import script
 
 ```python
+# import step file (this first line names the undo entry)
 import Import
 before = {o.Name for o in doc.Objects}
 try:

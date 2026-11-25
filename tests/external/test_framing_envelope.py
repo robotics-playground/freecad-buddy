@@ -8,7 +8,6 @@ because "omit on failure" is the rule a future tool is most likely to erode one 
 
 from __future__ import annotations
 
-import inspect
 import json
 from pathlib import Path
 
@@ -656,12 +655,39 @@ def test_should_store_the_fresh_verdict_when_a_cached_call_follows_a_fresh_one()
     assert view.projections == projections_after_fresh
 
 
-def test_should_register_script_exec_with_a_fresh_framing_read():
-    # Arrange
-    source = inspect.getsource(tool_catalog.build_inline_handlers)
+def test_should_measure_every_script_exec_call_again_when_the_catalog_wires_the_handler(
+    monkeypatch,
+):
+    # Arrange: two calls with the same digest, camera and size, as two Visibility-only scripts give.
+    from freecad_buddy.adapters.mcp_server import Capabilities
+
+    view = _FakeView()
+    structured = {"fingerprint_after": "digest-1"}
+    monkeypatch.setattr(
+        tool_catalog.script_exec_uc,
+        "script_exec",
+        lambda *_args: _envelope(structured=structured),
+    )
+
+    class _CatalogRegistry(_FakeRegistry):
+        """Serves ``with_document``; every lifecycle method the catalog binds is a stub."""
+
+        def __getattr__(self, name):
+            return lambda **_params: None
+
+    registry = tool_catalog.build_inline_handlers(
+        _CatalogRegistry(_document()),
+        tool_catalog.ExportRegistry(),
+        Capabilities(script_exec=True),
+        None,
+        render_port=object(),
+        viewport_port=_FakeViewportPort(view),
+    )
 
     # Act
-    wiring = 'fresh=spec.name == "script_exec"'
+    first = registry.dispatch("script_exec", {"doc": _HANDLE, "code": "x"})
+    second = registry.dispatch("script_exec", {"doc": _HANDLE, "code": "x"})
 
     # Assert
-    assert wiring in source
+    assert first["framing"]["checked"] == "computed"
+    assert second["framing"]["checked"] == "computed"

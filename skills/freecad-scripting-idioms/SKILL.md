@@ -55,7 +55,8 @@ MCP client at it — otherwise none of these steps can run.
   whenever one covers it, because the typed path runs the transaction, verification,
   and reference audit around the change. Use `script_exec` only for an operation no
   typed tool covers. The call runs in a bracket: one transaction named after the
-  script's first line, a recompute and a commit, so one `document_undo` reverts the
+  script's first line (start with a `# what this does` comment), a recompute when
+  any object is Touched, and a commit, so one `document_undo` reverts the
   script. The result carries `changed`, `new_errors` and `undo_steps`; check it with
   `verify_*`. The bracket never rolls back: a script that raises keeps its changes
   (`INVALID_INPUT`, `exec.python_error`). For all-or-nothing, wrap the writes in
@@ -125,7 +126,7 @@ human-facing handle, give the feature an intent-bearing Name when you create it.
 - **Keying lookups on Label.** Symptom: a lookup fails after a rename. Why: Label is
   mutable. Fix: identify by immutable Name.
 - **`script_exec` where a typed tool exists.** Symptom: an unverified or corrupt
-  document that recomputed fine. Why: raw code bypassed the verify and
+  document that recomputed fine. Why: a script bypasses the verify and
   reference-audit wrapper. Fix: use the typed tool; when none exists, run `verify_*`
   after the script.
 - **Scripting the open document.** Symptom: a headless edit vanishes after the next

@@ -32,6 +32,9 @@ _NAME_PREFIX = "script_exec"
 _NAME_SOURCE_LIMIT = 80
 _TRACEBACK_LIMIT = 4000
 
+_UNDO_UNAVAILABLE_NOTE = (
+    "undo is unavailable on this document: document_undo cannot revert this call"
+)
 _NO_UNDO_STEP_NOTE = (
     "undo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step"
 )
@@ -67,8 +70,11 @@ def _added_undo_steps(before: list[str], after: list[str]) -> int:
 
     A full stack drops its oldest entry for each new one, so the counts alone cannot tell. The
     smallest ``k`` for which ``after[k:]`` is the leading part of ``before`` is the number added.
-    Repeated names on a full stack can make that undercount.
+    Repeated names on a full stack can make that undercount. A script that removed the newest
+    entries (``doc.undo()``) leaves ``after`` as the tail of ``before``: nothing was added.
     """
+    if len(after) < len(before) and after == before[len(before) - len(after) :]:
+        return 0
     for added in range(len(after) + 1):
         remaining = after[added:]
         if remaining == before[: len(remaining)]:
@@ -113,25 +119,35 @@ def _close_bracket(
     A phase that raises leaves the changes in place and names the phase, so the caller reports it
     instead of aborting (AD-5).
     """
-    phase = "recompute"
+    failure: tuple[str, Exception] | None = None
     try:
         if recompute and _any_touched(document):
             document.recompute()
-        phase = "commit"
+    except Exception as exc:  # noqa: BLE001 - the transaction must still close
+        failure = ("recompute", exc)
+    # The commit runs after a failed recompute too: a transaction left open would take the name
+    # of the next change by any caller.
+    try:
         document.commitTransaction()
         shim.commit_active_transaction()
-        phase = "fingerprint_after"
+    except Exception as exc:  # noqa: BLE001 - the changes stay; report the phase
+        return None, failure or ("commit", exc)
+    if failure is not None:
+        return None, failure
+    try:
         after = fingerprint(document)
         result_projection.remember(after)
     except Exception as exc:  # noqa: BLE001 - the changes stay; report the phase
-        return None, (phase, exc)
+        return None, ("fingerprint_after", exc)
     return after, None
 
 
 def _run_bracket(handle: str, document: object, code: str, recompute: bool) -> ResultEnvelope:
-    shim.enable_undo(document)
+    undo_enabled = shim.enable_undo(document)
     try:
         before = fingerprint(document)
+        invalid_before = {name for name, _status in invalid_objects(document)}
+        names_before = list(document.UndoNames)
     except Exception as exc:  # noqa: BLE001 - nothing ran yet; report instead of raising
         message = f"{type(exc).__name__}: {exc}"
         return {
@@ -144,8 +160,6 @@ def _run_bracket(handle: str, document: object, code: str, recompute: bool) -> R
             "text": f"script not run: fingerprint_before failed: {message}",
         }
     result_projection.remember(before)
-    invalid_before = {name for name, _status in invalid_objects(document)}
-    names_before = list(document.UndoNames)
 
     namespace = _script_namespace(document)
     buffer = io.StringIO()
@@ -169,10 +183,13 @@ def _run_bracket(handle: str, document: object, code: str, recompute: bool) -> R
         shim.commit_active_transaction()
     else:
         after, bracket_failure = _close_bracket(document, recompute)
-        invalid_after = {name for name, _status in invalid_objects(document)}
-        new_errors = sorted(invalid_after - invalid_before)
-        undo_steps = _added_undo_steps(names_before, list(document.UndoNames))
-        changed = result_projection.changed_objects(before, after, False)
+        try:
+            invalid_after = {name for name, _status in invalid_objects(document)}
+            new_errors = sorted(invalid_after - invalid_before)
+            undo_steps = _added_undo_steps(names_before, list(document.UndoNames))
+            changed = result_projection.changed_objects(before, after, False)
+        except Exception as exc:  # noqa: BLE001 - the script already ran; report, never raise
+            bracket_failure = bracket_failure or ("observe", exc)
 
     value = namespace.get("result", _UNSET)
     structured = {
@@ -188,6 +205,8 @@ def _run_bracket(handle: str, document: object, code: str, recompute: bool) -> R
     notes = []
     if gone:
         notes.append(f"the script closed its document {handle}; this handle is now stale")
+    elif not undo_enabled:
+        notes.append(_UNDO_UNAVAILABLE_NOTE)
     elif undo_steps == 0:
         notes.append(_NO_UNDO_STEP_NOTE)
     if new_errors:
@@ -205,11 +224,12 @@ def _envelope(
     status = "OK"
     detail = None
     if script_error is not None:
-        trace = "".join(
-            traceback.format_exception(type(script_error), script_error, script_error.__traceback__)
-        )
+        # The first frame is the bridge's own exec call; the last lines name the exception.
+        frames = script_error.__traceback__
+        frames = frames.tb_next or frames if frames is not None else None
+        trace = "".join(traceback.format_exception(type(script_error), script_error, frames))
         message = f"{type(script_error).__name__}: {script_error}"
-        data = {"exception": type(script_error).__name__, "traceback": trace[:_TRACEBACK_LIMIT]}
+        data = {"exception": type(script_error).__name__, "traceback": trace[-_TRACEBACK_LIMIT:]}
         if bracket_failure is not None:
             data["bracket_phase"] = bracket_failure[0]
         status, detail = "INVALID_INPUT", _error_detail("exec.python_error", message, data)

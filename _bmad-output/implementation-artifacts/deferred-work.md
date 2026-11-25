@@ -2341,9 +2341,16 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: spec case 20: `fingerprint_after` equals `fingerprint_before` after a Visibility-only script; `usecases/framing.py` `_cache_key`; `hosts/tool_catalog.py` `with_framing`.
   blocker: none; a small fix in the next run.
   unblock: give `with_framing` a fresh read for `feature_set_parameters` calls that write `Visibility`, or add a visibility component to the cache key.
+  note: the framing block is omitted on a non-OK `script_exec` result, so a script that changes `Visibility` and then raises leaves a cache entry the next call can serve under an unchanged digest.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-13-script-exec-bracket.md`
   summary: After a `TIMEOUT`, the late body of a `script_exec` call still commits (AD-27) but writes no audit line: the `TIMEOUT` `after` line is the only record, and it carries no digests.
   evidence: decision 19 (the use case writes no audit line); `adapters/rpc_listener.py` `_handle_request`; spec case 17.
   blocker: the adapter returns to the caller at the timeout and holds no hook for the late return.
   unblock: a callback that the late body invokes after its commit, or the AD-27 bridge-recovery Story (decision 45).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-13-script-exec-bracket.md`
+  summary: `scripts/automation/usage_report.py` has a failure class "Python error reported as `RECOMPUTE_ERROR`" for `script_exec`; since Story 13-13 a script exception returns `INVALID_INPUT` `exec.python_error`, so such calls fall into the unclassified bucket and a `RECOMPUTE_ERROR` from `script_exec` now means new invalid objects or `exec.bracket_failed`.
+  evidence: `scripts/automation/usage_report.py` `FAILURE_CLASSES`; `tests/external/test_usage_report.py` pins the old class; a `Call` carries only the message, not `detail.code`.
+  blocker: the report reads the message only, and a Python message has no fixed text to match.
+  unblock: read `detail.code` into `Call` and add an `exec.python_error` class; relabel the `RECOMPUTE_ERROR` class.

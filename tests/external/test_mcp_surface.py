@@ -1655,3 +1655,55 @@ def test_Should_write_both_digests_on_the_after_line_When_script_exec_returns_th
     after = [line for line in lines if line.get("verify_verdict") == "OK"][-1]
     assert after["fingerprint_before"] == "a" * 64
     assert after["fingerprint_after"] == "b" * 64
+
+
+def test_Should_advertise_recompute_as_an_optional_boolean_When_script_exec_is_listed():
+    # Arrange
+    registry = _registry(Capabilities(script_exec=True))
+
+    # Act
+    tool = next(
+        t
+        for t in registered_tools(registry, Capabilities(script_exec=True))
+        if t.name == "script_exec"
+    )
+
+    # Assert
+    assert tool.inputSchema["properties"]["recompute"]["type"] == "boolean"
+    assert "recompute" not in tool.inputSchema["required"]
+
+
+def test_Should_accept_recompute_false_When_script_exec_is_called_through_the_server(tmp_path):
+    # Arrange
+    seen = {}
+    registry = MethodRegistry()
+    registry.register(
+        RpcMethod(
+            name=SCRIPT_EXEC_SPEC.name,
+            handler=lambda **params: (
+                seen.update(params)
+                or {
+                    "schema": "fcb.result-envelope/1",
+                    "status": "OK",
+                    "detail": None,
+                    "structured_content": {},
+                    "text": "ok",
+                }
+            ),
+            input_schema=SCRIPT_EXEC_SPEC.input_schema,
+            mutating=SCRIPT_EXEC_SPEC.mutating,
+            audit_event=SCRIPT_EXEC_SPEC.audit_event,
+        )
+    )
+    server = build_server(
+        registry, Capabilities(script_exec=True), AuditSink(tmp_path / "audit.jsonl")
+    )
+
+    # Act
+    result = _call_tool_via_server(
+        server, "script_exec", {"doc": "fcb-doc:a", "code": "1", "recompute": False}
+    )
+
+    # Assert
+    assert result.isError is False
+    assert seen["recompute"] is False

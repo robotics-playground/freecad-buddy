@@ -1420,7 +1420,7 @@ SCRIPT_EXEC_SPEC = ToolSpec(
             doc_registry,
             params.get("doc"),
             params.get("code", ""),
-            params.get("recompute", True),
+            params.get("recompute") is not False,
         )
     ),
     input_schema={
@@ -1439,8 +1439,10 @@ SCRIPT_EXEC_SPEC = ToolSpec(
     },
     description="Run Python inside FreeCAD for an operation no typed tool covers. Globals: "
     "`FreeCAD`/`App`, `Part`, `doc`; set `result` to return its repr. The call is bracketed: "
-    "one transaction named `script_exec <first line>`, then a recompute and a commit, so one "
-    "`document_undo` reverts the script. Nothing is rolled back: a script that raises "
+    "one transaction named `script_exec <first line>` (start with a comment that says what the "
+    "script does), then a recompute when any object is Touched (pass `recompute` false for a "
+    "read-only probe) and a commit, so one `document_undo` reverts the script. Nothing is "
+    "rolled back: a script that raises "
     "(any exception, SystemExit included) returns INVALID_INPUT `exec.python_error` and keeps "
     "the changes it made. Result {doc, stdout, value_repr, fingerprint_before, "
     "fingerprint_after, changed, new_errors, undo_steps}: changed lists objects whose shape "

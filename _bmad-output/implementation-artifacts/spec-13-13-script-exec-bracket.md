@@ -2,7 +2,7 @@
 title: 'script_exec observe-only bracket and error status'
 type: 'feature'
 created: '2026-11-24'
-status: 'in-progress'
+status: 'done'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: '7549c1d4'
@@ -128,3 +128,33 @@ Probe scripts (scratch, not committed): `p1_txn.py`, `p2_empty.py`, `p3_multi.py
 - `uv run ruff check .`, `uv run python scripts/check_imports.py`, `uv run python scripts/check_status_vocab.py`, `uv run python scripts/gen_schemas.py --check`, `uv run python scripts/check_skill_shape.py`
 - `uv run pytest tests/external -q` (Git Bash) -- expected: pass except the known unstable test
 - `freecadcmd.exe -u <tmp>\user.cfg -s <tmp>\system.cfg tests/run_tests.py` -- expected: all pass
+
+## Review Triage Log
+
+Round 1: Blind Hunter (15 findings), Edge Cases Hunter (12), Verification Gap Finder (5 + 1 other). Verdict, route and evidence per grouped finding.
+
+| # | Finding (lens) | Verdict | Route | Evidence |
+|---|----------------|---------|-------|----------|
+| 1 | A failed recompute skips the commit and leaves the bridge transaction open (all three) | medium | patch | `_close_bracket` returned before `commitTransaction`. Fixed: commit runs after a failed recompute; the test asserts no active transaction and a named undo entry; a mutant that returns early fails it |
+| 2 | Reads outside any `try` before and after the script (Blind, Edge) | medium | patch | `invalid_objects`, `UndoNames`, `changed_objects` could raise and lose the script result. Pre-script reads moved into the `SPEC_FAILED` try; post-script reads give `bracket_phase` `observe`; two tests |
+| 3 | `recompute` runs when any object is Touched, so a read-only probe recomputes a dirty document (Blind, Edge) | low | patch | This is the T-6 rule. Documented in the tool description, the skill, mcp-tools-design §5 rule 4 and TC-03 (`recompute: false` for a probe) |
+| 4 | `_added_undo_steps` returns `len(after)` when the newest entries were removed (Blind, Edge) | low | patch | Unit test with `["c","b","a"]` to `["b","a"]`. The `doc.undo()` script case measured as 1 (the revert is recorded as an entry), so no infc test pins it |
+| 5 | Traceback cut at the wrong end; bridge frame included (Blind, Edge) | low | patch | Keeps the last 4000 characters and starts at the script frame; test with a 150-frame recursion |
+| 6 | `data.bracket_phase` undocumented (Blind) | low | patch | Added to mcp-tools-design §5 rule 4 |
+| 7 | Generator and import snippets share one undo name (Blind) | low | patch | First-line comment in both snippets; one phrase in the skill and the tool description |
+| 8 | `undo_steps 0` note false when undo is unavailable (Blind) | low | patch | Separate note; test |
+| 9 | AD-27 sentence does not say what releases quarantine for `script_exec` (Blind) | low | reject | The approved wording is fixed by decision 43 and the quarantine already ends when the in-flight op returns |
+| 10 | Weak tests: commit-phase, repeated names, bare prefix (Blind) | low | reject | The commit-phase raise is covered through the shim patch; the other two assert a documented limit and the pure name function |
+| 11 | Framing wiring pinned by source text only; typed tools unchecked (Blind, Gap) | medium | patch | Replaced by a behavioural test through `build_inline_handlers` (a mutant with `fresh=False` fails it); the default path keeps its existing cache tests |
+| 12 | `sequence-diagrams.md` §8 not updated (Blind) | low | patch | Note updated |
+| 13 | TC-08 fixture expects `undo_steps` 0 but never checks it (Blind) | low | patch | Verify step added |
+| 14 | `_measured_verdict` recomputes the cache key; skill wording "raw code" (Blind) | low | patch | Key passed in; wording changed |
+| 15 | Direct RPC `recompute` of another type (Edge) | low | patch | Handler passes `recompute is not False`; test |
+| 16 | `repr` of `result` or `str` of the exception can raise (Edge) | low | reject | Needs a hostile object; the fix adds guards |
+| 17 | Framing cache entry stale after a non-OK Visibility script (Edge) | low | defer | Same family as the `feature_set_parameters` Visibility entry; the note is added there |
+| 18 | AC3 not run through the real listener (Edge) | low | reject | The listener is unchanged; the use case catches `SystemExit` and the registry-level test serves the next call; external tests have no FreeCAD |
+| 19 | `remember(before)` untested (Gap) | medium | patch | Test asserts `recall` finds both digests |
+| 20 | `recompute` schema property untested at the MCP boundary (Gap) | medium | patch | Two external tests: schema and a call with `recompute: false` through the server |
+| 21 | UAT runner JSON scenarios stale: tc-02-06, tc-12-07, tc-09-17, tc-09-18 (Gap) | medium | patch | `recompute: false` added to two; the `build` status expectation is now `RECOMPUTE_ERROR` in two |
+| 22 | `usage_report.py` classifies `RECOMPUTE_ERROR` as a Python error (Gap) | low | defer | Needs `detail.code` in `Call`; recorded in `deferred-work.md` |
+| 23 | Verification-design claim "a commit at the end" after a recompute failure (Edge, claim) | low | patch | Closed by finding 1 |

@@ -243,7 +243,7 @@ def read_framing(
         if view is None:
             return None
         if fresh:
-            return _measured_verdict(handle, document, view, geometry)
+            return _measured_verdict(handle, document, view, _cache_key(view, geometry)[0])
         return _cached_verdict(handle, document, view, geometry)
 
     return registry.with_document(doc, read)
@@ -267,14 +267,13 @@ def _cached_verdict(
     entry = _CACHE.get(handle)
     if entry is not None and entry.view is view and entry.key == key:
         return _as_cached(entry.verdict, unread)
-    return _measured_verdict(handle, document, view, geometry)
+    return _measured_verdict(handle, document, view, key)
 
 
 def _measured_verdict(
-    handle: str, document: object, view: object, geometry: str | None
+    handle: str, document: object, view: object, key: _CacheKey
 ) -> FramingVerdict:
-    """``measure_framing``, stored under the current key so a later cache hit sees this verdict."""
-    key, _unread = _cache_key(view, geometry)
+    """``measure_framing``, stored under ``key`` so a later cache hit sees this verdict."""
     verdict = measure_framing(document, view)
     _CACHE.put(handle, key, verdict, view)
     return verdict

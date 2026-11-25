@@ -18,7 +18,8 @@ import FreeCAD as App
 import Part
 
 from freecad_buddy.adapters.marshal import Marshal, MarshalTimeout, ThreadExecutor
-from freecad_buddy.usecases import confirm, script_exec as script_exec_module, shim
+from freecad_buddy.usecases import confirm, result_projection, shim
+from freecad_buddy.usecases import script_exec as script_exec_module
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 from freecad_buddy.usecases.fingerprint import fingerprint
 from freecad_buddy.usecases.script_exec import script_exec
@@ -74,6 +75,8 @@ class BracketTest(_BracketFixture):
         self.assertEqual(content["undo_steps"], 1)
         self.assertEqual(self.undo_names()[0], "script_exec doc.Box.Width = 5")
         self.assertIsNone(App.getActiveTransaction())
+        self.assertIsNotNone(result_projection.recall(content["fingerprint_before"]))
+        self.assertIsNotNone(result_projection.recall(content["fingerprint_after"]))
 
     def test_Should_report_matches_pre_op_When_document_undo_runs_after_a_script_write(self):
         # Arrange
@@ -174,6 +177,18 @@ class BracketTest(_BracketFixture):
         self.assertEqual(self.document.Box.Width, BOX_WIDTH)
         self.assertEqual(len(self.undo_names()), steps_before)
         self.assertEqual(self.structured(envelope)["undo_steps"], 0)
+
+    def test_Should_recompute_When_the_handler_gets_a_null_recompute(self):
+        # Arrange
+        from freecad_buddy.hosts import tool_catalog
+
+        handler = tool_catalog.SCRIPT_EXEC_SPEC.make_handler(self.registry, None, None, None, None)
+
+        # Act
+        handler(doc=self.handle, code="doc.Box.Length = 12", recompute=None)
+
+        # Assert
+        self.assertNotIn("Touched", self.document.Box.State)
 
     def test_Should_name_the_transaction_after_the_first_non_blank_line_When_code_has_a_leader(
         self,
@@ -323,6 +338,21 @@ class ErrorPathTest(_BracketFixture):
         self.assertEqual(captured.getvalue(), "")
         self.assertEqual(self.document.Box.Width, 5)
 
+    def test_Should_keep_the_exception_line_and_drop_the_bridge_frame_When_the_traceback_is_long(
+        self,
+    ):
+        # Arrange
+        code = "def down(n):\n    return down(n - 1) if n else 1 / 0\ndown(150)"
+
+        # Act
+        envelope = self.run_script(code)
+
+        # Assert
+        trace = envelope["detail"]["data"]["traceback"]
+        self.assertLessEqual(len(trace), 4000)
+        self.assertTrue(trace.endswith("ZeroDivisionError: division by zero\n"))
+        self.assertNotIn("script_exec.py", trace)
+
     def test_Should_return_recompute_error_and_keep_the_change_When_a_script_invalidates_a_box(
         self,
     ):
@@ -438,6 +468,7 @@ class BracketFailureTest(_BracketFixture):
 
     def test_Should_return_recompute_error_When_the_recompute_phase_raises(self):
         # Arrange
+        self.document.UndoMode = 1
         document = _RecomputeRaises(self.document)
 
         # Act
@@ -446,6 +477,9 @@ class BracketFailureTest(_BracketFixture):
         # Assert
         self.assertEqual(envelope["status"], "RECOMPUTE_ERROR")
         self.assertEqual(envelope["detail"]["data"]["phase"], "recompute")
+        self.assertIsNone(App.getActiveTransaction())
+        self.assertFalse(self.document.HasPendingTransaction)
+        self.assertEqual(self.undo_names()[0], "script_exec doc.Box.Width = 5")
 
     def test_Should_prefer_invalid_input_When_the_script_raised_and_the_bracket_also_failed(self):
         # Arrange
@@ -502,6 +536,43 @@ class BracketFailureTest(_BracketFixture):
         # Assert
         self.assertEqual(envelope["status"], "OK")
 
+    def test_Should_return_spec_failed_When_a_pre_script_read_raises(self):
+        # Arrange
+        failing = mock.Mock(side_effect=RuntimeError("isValid died"))
+        with mock.patch.object(script_exec_module, "invalid_objects", failing):
+            # Act
+            envelope = self.run_script("doc.Box.Width = 5")
+
+        # Assert
+        self.assertEqual(envelope["status"], "SPEC_FAILED")
+        self.assertEqual(envelope["detail"]["data"]["phase"], "fingerprint_before")
+        self.assertEqual(self.document.Box.Width, BOX_WIDTH)
+
+    def test_Should_report_the_script_error_and_keep_the_changes_When_a_post_script_read_raises(
+        self,
+    ):
+        # Arrange
+        failing = mock.Mock(side_effect=RuntimeError("diff died"))
+        with mock.patch.object(result_projection, "changed_objects", failing):
+            # Act
+            envelope = self.run_script("doc.Box.Width = 5\nraise ValueError('boom')")
+
+        # Assert
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertEqual(envelope["detail"]["data"]["bracket_phase"], "observe")
+        self.assertEqual(self.document.Box.Width, 5)
+        self.assertIsNone(App.getActiveTransaction())
+
+    def test_Should_say_undo_is_unavailable_When_the_document_cannot_enable_undo(self):
+        # Arrange
+        with mock.patch.object(shim, "enable_undo", return_value=False):
+            # Act
+            envelope = self.run_script("doc.Box.Width = 5")
+
+        # Assert
+        self.assertIn("undo is unavailable", envelope["text"])
+        self.assertNotIn("would revert an earlier step", envelope["text"])
+
 
 class _RecomputeRaises:
     """A document proxy whose ``recompute`` raises; every other member is the real document's."""
@@ -529,6 +600,16 @@ class UndoStackTest(_BracketFixture):
         # Assert
         self.assertEqual(stack_size, 20)
         self.assertEqual(self.structured(envelope)["undo_steps"], 1)
+
+    def test_Should_report_zero_added_When_the_newest_entries_were_removed(self):
+        # Arrange
+        before = ["c", "b", "a"]
+
+        # Act
+        added = script_exec_module._added_undo_steps(before, ["b", "a"])
+
+        # Assert
+        self.assertEqual(added, 0)
 
     def test_Should_count_added_steps_by_aligning_names_When_entries_repeat_in_order(self):
         # Arrange

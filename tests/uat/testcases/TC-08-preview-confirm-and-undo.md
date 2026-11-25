@@ -848,6 +848,7 @@ mcp document_undo { doc: <handle-off> }
 ```
 
 **Then** an empty stack is refused, not reported as done — verify: the first call returns `nothing to undo on <Name>: the undo stack is empty`  
+**And** the two `script_exec` writes stayed outside the undo stack — verify: each of those two `script_exec` results has `structured_content.undo_steps` `0`  
 **And** the first real undo succeeds — verify: the first `document_undo` after the mutation returns `status: "OK"` with `undone` equal to `buddy: <the body-create label>`  
 **And** exhausting the stack is refused — verify: the second `document_undo` after the mutation returns the same empty-stack refusal  
 **And** the refusal never carries a fabricated result — verify: neither refusal returns a `matches_pre_op`, `fingerprint_after` or `undone` field  
