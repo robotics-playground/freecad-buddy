@@ -61,9 +61,10 @@ A typed refusal is not a gap. Each names its repair:
 - `sweep.degenerate_spine`: split the edge that doubles back.
 
 Any other `detail.code` refusal (`part_primitive.*`, `part_boolean.invalid_input`, `loft.*`,
-`sweep.invalid_*`) names the input to correct. The limits are measured on common shapes; near-tangent curved crossings and slanted packed
-tools can still run long. A script that repeats a call skips the guard, and FreeCAD then returns a wrong number or
-holds the bridge for minutes.
+`sweep.invalid_*`) names the input to correct. The limits are measured on common shapes:
+near-tangent curved crossings and closely packed slanted tools can exceed the time budget or be
+refused, so split the call. A script that repeats a call skips the guard, and FreeCAD then
+returns a wrong number or holds the bridge for minutes.
 
 ## STEP import script
 
