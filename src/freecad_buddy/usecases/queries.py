@@ -19,6 +19,7 @@ from freecad_buddy.contracts import CapabilityBanner, ResultEnvelope, summary_te
 from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 from freecad_buddy.usecases.parameter_types import PARAMETER_PROPERTY_TYPES
+from freecad_buddy.usecases.shape_trust import is_measurable_solid, solid_volumes
 from freecad_buddy.usecases.tree_text import (
     LINE_CAP,
     TreeNode,
@@ -802,48 +803,12 @@ def _copied_queryable_shape(document: object, name: str) -> object:
     return _named_shape(document, name).copy()
 
 
-def _solid_volumes(shape: object):
-    """Yield the signed volume of each solid in ``shape``, and ``None`` for any other content.
-
-    A ``Compound`` or ``CompSolid`` is walked; a shell, face, wire or edge yields ``None``. A solid
-    with reversed orientation reports a negative volume (``Part::Reverse``).
-    """
-    if shape.ShapeType == "Solid":
-        yield float(shape.Volume)
-    elif shape.ShapeType in ("Compound", "CompSolid"):
-        for sub in shape.SubShapes:
-            yield from _solid_volumes(sub)
-    else:
-        yield None
-
-
-def _is_measurable_solid(shape: object) -> bool:
-    """Whether the boolean and distance kernels can be trusted on ``shape``.
-
-    True only for a valid shape made of solids that all have a positive volume. OCC reads a
-    reversed solid as the material outside its faces, finds no inner distance solution for an
-    invalid solid, and a shell encloses no volume, so each of those can turn a real overlap into
-    an empty ``common`` with a positive distance.
-    """
-    try:
-        volumes = list(_solid_volumes(shape))
-        return (
-            bool(volumes)
-            and all(
-                volume is not None and volume > 0 and math.isfinite(volume) for volume in volumes
-            )
-            and bool(shape.isValid())
-        )
-    except Exception:  # noqa: BLE001 -- a shape the kernel cannot even inspect is not measurable
-        return False
-
-
 def _measure_interference(
     shape_a: object, shape_b: object
 ) -> tuple[float | None, float | None, bool]:
     """``(common_volume, min_distance, boolean_failed)`` for one shape pair, in mm^3 and mm.
 
-    The caller has checked both shapes with ``_is_measurable_solid``. ``common`` runs first because
+    The caller has checked both shapes with ``is_measurable_solid``. ``common`` runs first because
     it is cheap, and a non-zero common volume proves a distance of 0. ``distToShape`` is the slow
     call on large compounds, so it runs only when ``common`` gives no volume. A ``common`` that
     raises or returns an empty compound is not proof of no overlap (a self-intersecting solid
@@ -1009,7 +974,7 @@ def query_interference(
     def read(_handle: str, document: object) -> ResultEnvelope:
         names = {name for pair in name_pairs for name in pair}
         shapes = {name: _copied_queryable_shape(document, name) for name in sorted(names)}
-        measurable = {name: _is_measurable_solid(shape) for name, shape in shapes.items()}
+        measurable = {name: is_measurable_solid(shape) for name, shape in shapes.items()}
         # The trust check runs once per object, not per pair: 20 plates and 190 pairs took 10.7 s
         # with it per object and 69.7 s with it per pair.
         face_counts = {name: len(shape.Faces) for name, shape in shapes.items()}
@@ -1217,7 +1182,7 @@ def _section_untrusted_reason(shape: object) -> str | None:
             return "the shape is not valid"
         if not shape.Faces:
             return "the shape has no face to cut"
-        for volume in _solid_volumes(shape):
+        for volume in solid_volumes(shape):
             if volume is not None and not (volume > 0 and math.isfinite(volume)):
                 return "the shape holds a solid with non-positive volume (reversed)"
     except Exception:  # noqa: BLE001 -- a shape the kernel cannot even inspect is not cuttable
@@ -1387,7 +1352,7 @@ def query_section(
         edges = shape.section(plane_face).Edges
         wires = [Part.Wire(group) for group in Part.sortEdges(edges)]
         closed = sum(1 for wire in wires if wire.isClosed())
-        solids_only = None not in list(_solid_volumes(shape))
+        solids_only = None not in list(solid_volumes(shape))
         if not wires:
             area = 0.0
         elif solids_only and closed == len(wires) and len(wires) <= _MAX_AREA_WIRES:
