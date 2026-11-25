@@ -687,6 +687,17 @@ _MAX_INTERFERENCE_OBJECTS = 20
 _MAX_INTERFERENCE_PAIRS = 100
 # OCC's own tolerance for "touching" (Precision::Confusion). A distance at or below it is contact.
 _CONTACT_DISTANCE_MM = 1e-7
+# Largest relative gap between the sum of two solid volumes and the volume of their fuse that still
+# proves the solids touch without overlap. ``Shape.common`` of two touching solids is empty, which
+# says nothing about overlap, so a valid fuse whose volume equals the sum is the proof. Measured on
+# FreeCAD 1.1.4 as (sum - fuse) / sum for touching pairs: face, edge and vertex contact of boxes
+# 1e-16; boxes of size 1 to 1,000 at offsets up to 1e5 mm and rotated, 1e-14 at most; a filleted
+# box on a box 3.5e-13; 64 boxes against 64 boxes 1e-14. The noise grows with offset over size (a
+# 0.01 mm box at offset 1e6 mm 1.5e-10; a BSpline loft on a plate up to 1.1e-10), and those pairs
+# stay unmeasured, which is the safe side. Two boxes of 100 mm overlapping by 1e-7 mm depth (1e-3
+# mm^3, ``common`` still empty) give 3.3e-10, so 1e-12 reads them as overlapping. An overlap of
+# less than 1e-12 of the summed volume (2e-3 mm^3 for two boxes of 1,000 mm) reads as touching.
+_TOUCH_VOLUME_REL_TOL = 1e-12
 # Largest faces(a) x faces(b) accepted for one pair. Measured on the development host with two
 # interleaved box compounds one millimetre apart (the slowest geometry found, ``distToShape`` runs
 # because ``common`` finds no volume): 129,600 -> 9.5 s, 230,400 -> 17.8 s, 360,000 -> 29.4 s.
@@ -817,8 +828,8 @@ def _measure_interference(
     it is cheap, and a non-zero common volume proves a distance of 0. ``distToShape`` is the slow
     call on large compounds, so it runs only when ``common`` gives no volume. A ``common`` that
     raises or returns an empty compound is not proof of no overlap (a self-intersecting solid
-    returns empty at distance 0), so it is a failed boolean unless the distance is positive.
-    ``None`` means unmeasured.
+    returns empty at distance 0), so it is a failed boolean unless the distance is positive or the
+    fuse proves the solids touch (``_fuse_proves_touching``). ``None`` means unmeasured.
     """
     try:
         common = shape_a.common(shape_b)
@@ -840,7 +851,28 @@ def _measure_interference(
         return 0.0, distance, False
     if not empty and distance is not None:
         return 0.0, distance, False
+    if distance is not None and _fuse_proves_touching(shape_a, shape_b):
+        return 0.0, distance, False
     return None, distance, True
+
+
+def _fuse_proves_touching(shape_a: object, shape_b: object) -> bool:
+    """Whether the solids' fuse is valid and has the summed volume, so they touch without overlap.
+
+    The fuse is the cross-check for an empty ``common`` at contact; a fuse that raises, is invalid
+    or loses volume proves nothing.
+    """
+    try:
+        fused = shape_a.fuse(shape_b)
+        total = float(shape_a.Volume) + float(shape_b.Volume)
+        gap = total - float(fused.Volume)
+        return (
+            bool(fused.isValid())
+            and math.isfinite(gap)
+            and abs(gap) <= _TOUCH_VOLUME_REL_TOL * total
+        )
+    except Exception:  # noqa: BLE001 -- a fuse the kernel cannot build leaves the overlap unproven
+        return False
 
 
 def _refusal_envelope(code: str, message: str) -> ResultEnvelope:
@@ -888,8 +920,10 @@ def query_interference(
     ``i < j``) or ``pairs`` (1 to 100 ``[a, b]`` pairs). Each record is ``{a, b, common_volume,
     min_distance, boolean_failed}``. ``boolean_failed`` is true, and ``common_volume`` null, when
     either shape is not a valid solid-only shape with positive volume (``min_distance`` is then
-    null too), or when the boolean raised or returned nothing while the shapes touch or the
-    distance is unknown: an empty result must never read as no overlap. Reports numbers only,
+    null too), or when the boolean raised or returned nothing while the distance is unknown or the
+    shapes are in contact and their fuse does not prove they only touch: an empty result must never
+    read as no overlap. Solids in contact whose valid fuse has the summed volume read
+    ``common_volume`` 0 and ``boolean_failed`` false. Reports numbers only,
     never a verdict. Raises ``ValidationError`` for bad input, an unknown name, or an object with
     no shape, and returns ``INVALID_INPUT`` with code ``interference.too_complex`` for a pair above
     ``_MAX_PAIR_FACE_PRODUCT``, or for a call still measuring after ``_CALL_DEADLINE_SECONDS`` as

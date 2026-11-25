@@ -2326,6 +2326,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `_bmad-output/implementation-artifacts/verify-13-18.md` "Round 2"; `tests/uat/run/13-18-r2/`.
   blocker: the user stopped the run after Story 13-18; all three are low and within the 60 s budget.
   unblock: a small follow-up in the next run (one boundary test, two text corrections).
+  resolution: resolved by Story 13-fu: `SweepTest` boundary tests pin the limit at 3,000 (limits 10,000 and 2,999 turn them red); design `mcp-tools-design.md` closed-loft sentence and the `features.py` timing comments now match verify-13-18 round 2.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-18-loft-sweep.md`
   summary: A self-intersecting sweep built from a BSpline profile returns OK; the boolean self-intersection check is skipped for BSpline inputs because it did not finish in 50 s on a 3-face helix sweep (documented limit, residual R2-R1).

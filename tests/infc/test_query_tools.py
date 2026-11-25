@@ -598,18 +598,246 @@ class QueryInterferenceTest(unittest.TestCase):
         self.assertIsNone(distance)
         self.assertTrue(failed)
 
-    def test_Should_flag_a_failed_boolean_When_two_solids_only_touch_at_a_face(self):
+    def test_Should_report_zero_overlap_When_two_solids_only_touch(self):
         # Arrange
+        touching_offsets = {
+            "face": (10, 0, 0),
+            "edge": (10, 10, 0),
+            "vertex": (10, 10, 10),
+        }
         self._add_box("A")
-        self._add_box("B", 10, 0, 0)
+        for kind, offset in touching_offsets.items():
+            self._add_box(f"B_{kind}", *offset)
+
+        for kind in touching_offsets:
+            with self.subTest(contact=kind):
+                # Act
+                envelope = self._measure(pairs=[["A", f"B_{kind}"]])
+
+                # Assert
+                record = envelope["structured_content"]["pairs"][0]
+                self.assertEqual(envelope["status"], "OK")
+                self.assertFalse(record["boolean_failed"])
+                self.assertEqual(record["common_volume"]["value"], 0.0)
+                self.assertEqual(record["min_distance"]["value"], 0.0)
+                self.assertIn("0 overlapping, 0 boolean failed", envelope["text"])
+
+    def test_Should_report_zero_overlap_When_a_pin_touches_the_wall_of_its_hole(self):
+        # Arrange
+        plate = Part.makeBox(40, 40, 10, App.Vector(-20, -20, 0)).cut(Part.makeCylinder(5, 10))
+        self._add_shape("Plate", plate)
+        self._add_shape("Pin", Part.makeCylinder(5, 10))
+
+        # Act
+        envelope = self._measure(objects=["Plate", "Pin"])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertFalse(record["boolean_failed"])
+        self.assertEqual(record["common_volume"]["value"], 0.0)
+
+    def test_Should_flag_a_failed_boolean_When_boxes_overlap_by_a_depth_that_leaves_common_empty(
+        self,
+    ):
+        # Arrange
+        depth = 1e-7
+        self._add_box("A", size=100.0)
+        self._add_box("B", 100.0 - depth, 0, 0, size=100.0)
+        shape_a = self.document.A.Shape.copy()
+        shape_b = self.document.B.Shape.copy()
 
         # Act
         envelope = self._measure(objects=["A", "B"])
 
         # Assert
         record = envelope["structured_content"]["pairs"][0]
+        self.assertTrue(shape_a.common(shape_b).isNull() or not shape_a.common(shape_b).Volume)
         self.assertTrue(record["boolean_failed"])
         self.assertIsNone(record["common_volume"])
+
+    def test_Should_flag_a_failed_boolean_When_the_fuse_loses_the_volume_of_a_solid_inside_another(
+        self,
+    ):
+        # Arrange
+        class Inner(_FakeSolid):
+            Volume = 8.0
+
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                return (0.0, [], [])
+
+            def fuse(self, other):
+                return Fused(valid=True, volume=27.0)
+
+        class Fused:
+            def __init__(self, valid, volume):
+                self.valid = valid
+                self.Volume = volume
+
+            def isValid(self):
+                return self.valid
+
+        class Outer(Inner):
+            Volume = 27.0
+
+        # Act
+        volume, distance, failed = queries._measure_interference(Inner(), Outer())
+
+        # Assert
+        self.assertEqual((volume, distance, failed), (None, 0.0, True))
+
+    def test_Should_flag_a_failed_boolean_When_the_fuse_is_not_a_valid_shape(self):
+        # Arrange
+        class Fused:
+            Volume = 2.0
+
+            @staticmethod
+            def isValid():
+                return False
+
+        class Shape(_FakeSolid):
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                return (0.0, [], [])
+
+            def fuse(self, other):
+                return Fused()
+
+        # Act
+        volume, distance, failed = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual((volume, distance, failed), (None, 0.0, True))
+
+    def test_Should_flag_a_failed_boolean_When_the_fuse_raises_or_has_no_finite_volume(self):
+        # Arrange
+        class RaisingFuse(_FakeSolid):
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                return (0.0, [], [])
+
+            def fuse(self, other):
+                raise RuntimeError("fuse failed")
+
+        class NanFused:
+            Volume = float("nan")
+
+            @staticmethod
+            def isValid():
+                return True
+
+        class NanFuse(RaisingFuse):
+            def fuse(self, other):
+                return NanFused()
+
+        for shape_type in (RaisingFuse, NanFuse):
+            with self.subTest(shape=shape_type.__name__):
+                # Act
+                result = queries._measure_interference(shape_type(), shape_type())
+
+                # Assert
+                self.assertEqual(result, (None, 0.0, True))
+
+    def test_Should_not_run_the_fuse_When_the_distance_is_unknown(self):
+        # Arrange
+        class Shape(_FakeSolid):
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                raise RuntimeError("distance failed")
+
+            def fuse(self, other):
+                raise AssertionError("the fuse must not run without a distance")
+
+        # Act
+        result = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual(result, (None, None, True))
+
+    def test_Should_report_zero_overlap_When_common_raises_and_a_valid_fuse_has_the_summed_volume(
+        self,
+    ):
+        # Arrange
+        class Fused:
+            Volume = 2.0
+
+            @staticmethod
+            def isValid():
+                return True
+
+        class Shape(_FakeSolid):
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                return (0.0, [], [])
+
+            def fuse(self, other):
+                return Fused()
+
+        # Act
+        result = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual(result, (0.0, 0.0, False))
+
+    def test_Should_accept_a_fuse_gap_inside_the_tolerance_and_refuse_one_above_it(self):
+        # Arrange
+        class Fused:
+            def __init__(self, volume):
+                self.Volume = volume
+
+            @staticmethod
+            def isValid():
+                return True
+
+        def shapes_fusing_to(volume):
+            class Shape(_FakeSolid):
+                def common(self, other):
+                    raise RuntimeError("boolean failed")
+
+                def distToShape(self, other):
+                    return (0.0, [], [])
+
+                def fuse(self, other):
+                    return Fused(volume)
+
+            return Shape(), Shape()
+
+        tolerance = queries._TOUCH_VOLUME_REL_TOL
+        inside_tolerance = 2.0 * (1.0 - tolerance * 0.5)
+        above_tolerance = 2.0 * (1.0 - tolerance * 2.0)
+
+        # Act
+        at = queries._measure_interference(*shapes_fusing_to(inside_tolerance))
+        above = queries._measure_interference(*shapes_fusing_to(above_tolerance))
+
+        # Assert
+        self.assertFalse(at[2])
+        self.assertTrue(above[2])
+
+    def test_Should_leave_a_fresh_fingerprint_digest_equal_When_touching_pairs_are_measured(self):
+        # Arrange
+        self._add_box("A")
+        self._add_box("B", 10, 0, 0)
+        self._add_box("C", 10, 10, 10)
+        self.document.recompute()
+        before = fingerprint(self.document, fresh=True)["digest"]
+
+        # Act
+        envelope = self._measure(objects=["A", "B", "C"])
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual(fingerprint(self.document, fresh=True)["digest"], before)
 
     def test_Should_flag_a_failed_boolean_When_both_shapes_are_faces(
         self,

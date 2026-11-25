@@ -33,7 +33,7 @@ report the operation as blocked.
 | Write a placement or `AttachmentOffset` | none (`feature_set_parameters` refuses `App::PropertyPlacement`) | set `obj.Placement` or `obj.AttachmentOffset` |
 | Rename a `Label` | none | set `obj.Label` |
 | Remove one feature from the middle of a Body and keep the later features | none (`document_object_delete` refuses it with `delete.has_dependents`, and `with_dependents` true deletes every later feature) | `body.removeObject(feature)` relinks the next `BaseFeature`; then `doc.removeObject(feature.Name)`. Open a transaction, run `verify_*` after |
-| Overlap volume of parts that touch (`query_interference` gives `boolean_failed` true, `min_distance` at most 1e-7 mm) | none | `f = a.fuse(b)`; check `f.isValid()` and `f.Solids`, else the overlap is unmeasured; then `a.Volume + b.Volume - f.Volume`. `common()` reads 0 here and proves nothing |
+| Overlap volume of parts whose `query_interference` pair gives `boolean_failed` true with `min_distance` at most 1e-7 mm (parts that only touch read `common_volume` 0, `boolean_failed` false) | none | `f = a.fuse(b)`; check `f.isValid()` and `f.Solids`, else the overlap is unmeasured; then `a.Volume + b.Volume - f.Volume`. `common()` reads 0 here and proves nothing |
 | Add an enumeration property to a VarSet, write a spreadsheet cell or alias | none (`feature_parameters_define` has no enumeration type) | `addProperty`, `sheet.set`, `setAlias` |
 | Part primitives and booleans (`Part::Box`, `Part::Cut`, `Part::Common`) | none | `doc.addObject` |
 | Loft, sweep, helix, thickness | none | `doc.addObject` or `body.newObject` |

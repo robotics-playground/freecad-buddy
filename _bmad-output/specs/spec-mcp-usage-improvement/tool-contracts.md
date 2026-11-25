@@ -82,8 +82,13 @@ is `{ "name", "shape": null }` and the call stays `OK`. The `object` path keeps 
 
 Exactly one of `objects` and `pairs`. `common_volume` uses `Shape.common`; `min_distance` uses
 `distToShape` and is 0 when the shapes touch or overlap. When `common` raises or returns an
-empty shape while `min_distance` is 0, `boolean_failed` is true and `common_volume` is null. An
-empty result must never read as "no overlap" (a measured false pass, usage-evidence.md).
+empty shape while `min_distance` is 0, a fuse cross-check runs: if the fuse is valid and its
+volume equals the sum of the two volumes within 1e-12 of that sum, the pair touches without
+overlap, `common_volume` is 0 and `boolean_failed` is false (decision 41). Otherwise
+`boolean_failed` is true and `common_volume` is null. An empty result must never read as "no
+overlap" (a measured false pass, usage-evidence.md) unless the fuse proves it. Known limit: an
+overlap of less than 1e-12 of the summed volume (2e-3 mm^3 for two boxes of 1,000 mm) can read
+as touching.
 
 A pair is measured only when both shapes are valid solids with positive volume; otherwise
 `boolean_failed` is true and `common_volume` and `min_distance` are null (FreeCAD's `common` and

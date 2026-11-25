@@ -15,9 +15,9 @@ Result `{pairs: [{a, b, common_volume, min_distance, boolean_failed}]}`.
 
 | Field | Reading |
 | --- | --- |
-| `common_volume` | overlap as `{value, unit: "mm^3"}`; a value of 0 with `boolean_failed` false is a measured zero overlap |
+| `common_volume` | overlap as `{value, unit: "mm^3"}`; a value of 0 with `boolean_failed` false is a measured zero overlap, which includes valid solids that only touch (the tool fuses them and compares volumes). An overlap of less than 1e-12 of the summed volume can read as touching |
 | `min_distance` | gap as `{value, unit: "mm"}`; 0 for solids that touch or overlap |
-| `boolean_failed` true | the overlap is **unmeasured**, `common_volume` is null, and a script that reads the same empty boolean as zero is wrong too. `min_distance` null: a shape is not a valid solid with positive volume. `min_distance` 0 (at most 1e-7 mm, the contact tolerance): the boolean returned nothing at contact, which valid solids that only touch also give |
+| `boolean_failed` true | the overlap is **unmeasured**, `common_volume` is null, and a script that reads the same empty boolean as zero is wrong too. `min_distance` null: a shape is not a valid solid with positive volume. `min_distance` 0 (at most 1e-7 mm, the contact tolerance): the boolean returned nothing at contact and the fuse could not prove plain contact (for example a pair with BSpline faces, or a very small overlap in the contact band) |
 
 | Refusal | Cause | Fix |
 | --- | --- | --- |
@@ -25,8 +25,8 @@ Result `{pairs: [{a, b, common_volume, min_distance, boolean_failed}]}`.
 
 When `boolean_failed` is true and `min_distance` is null, run `verify_shape` on each shape
 (`is_valid_solid`, `expect_solid_count`) to find the broken shape. When it is true and
-`min_distance` is 0 (at most 1e-7 mm), check both shapes the same way; if both are valid the parts touch: report
-"touching, overlap unmeasured". For a number, use the fuse-volume gap row of
+`min_distance` is 0 (at most 1e-7 mm), check both shapes the same way; if both are valid the parts are in contact and the
+tool could not prove they only touch: report "contact, overlap unmeasured". For a number, use the fuse-volume gap row of
 `freecad-scripting-idioms`: `a.Volume + b.Volume - a.fuse(b).Volume` is the overlap volume, 0
 for parts that only touch; a failed fuse (`isValid()` false) leaves the overlap unmeasured.
 

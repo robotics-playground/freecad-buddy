@@ -2535,6 +2535,19 @@ class _LoftSweepFixture(_FeatureFixture):
         self.assertTrue(sketch.FullyConstrained, f"{name} is not fully constrained")
         return sketch
 
+    def segmented_spine(self, body, name, segments):
+        """A vertical spine of ``segments`` collinear 0.01 mm lines in one sketch, one edge each."""
+        sketch = self._sketch(body, name, 0.0, _VERTICAL)
+        sketch.addGeometry(
+            [
+                Part.LineSegment(App.Vector(0, i * 0.01, 0), App.Vector(0, (i + 1) * 0.01, 0))
+                for i in range(segments)
+            ],
+            False,
+        )
+        self.document().recompute()
+        return sketch
+
     def arc_spine(self, body, name):
         """The vertical 30 mm line, then a 30 mm arc of radius 20 that continues it."""
         sketch = self.line_spine(body, name)
@@ -3313,6 +3326,36 @@ class SweepTest(_LoftSweepFixture):
         # Assert
         self.assertGreater(poles, 1)
         self.assertEqual(cost, poles)
+
+    def test_Should_refuse_a_sweep_costing_one_unit_above_3000_When_the_real_limit_is_used(self):
+        # Arrange
+        body = self.empty_body()
+        self.circle_sketch(body, "Ring", (0.0, 0.0), 3.0)
+        self.segmented_spine(body, "Path", 3001)
+
+        # Act
+        with self.assertRaises(features.LoftSweepRefusal) as caught:
+            self.sweep()
+
+        # Assert
+        self.assertEqual(caught.exception.code, "sweep.too_complex")
+        self.assertIn("cost 3001 units", str(caught.exception))
+        self.assertIn("limit of 3000", str(caught.exception))
+
+    def test_Should_cost_3000_units_within_the_real_limit_When_a_circle_runs_along_3000_lines(
+        self,
+    ):
+        # Arrange
+        body = self.empty_body()
+        profile = self.circle_sketch(body, "Ring", (0.0, 0.0), 3.0)
+        spine = self.segmented_spine(body, "Path", 3000)
+
+        # Act
+        cost = features._sweep_cost(profile.Shape, list(spine.Shape.Edges))
+
+        # Assert
+        self.assertEqual(cost, 3000)
+        self.assertLessEqual(cost, features._SWEEP_MAX_COST)
 
     def test_Should_accept_a_sweep_at_the_cost_limit_and_refuse_one_below_it(self):
         # Arrange

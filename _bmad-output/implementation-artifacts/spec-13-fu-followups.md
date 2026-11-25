@@ -50,12 +50,12 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `queries.py` -- fuse cross-check with relative tolerance 1e-12 of the volume sum -- decision 41
-- [ ] `test_query_tools.py` -- touch (face, edge, vertex), 1e-3 mm3 overlap with empty `common`, fuse invalid, fuse raises, common raises with distance 0 and valid fuse, read-only fingerprint kept
+- [x] `queries.py` -- fuse cross-check with relative tolerance 1e-12 of the volume sum -- decision 41
+- [x] `test_query_tools.py` -- touch (face, edge, vertex), 1e-3 mm3 overlap with empty `common`, fuse invalid, fuse raises, common raises with distance 0 and valid fuse, read-only fingerprint kept
 - [ ] T-2, design §3.2.3 and §2 row, four skill files -- new touching reading
-- [ ] `test_feature_tools.py` -- 3001-line spine refused `sweep.too_complex` with the real limit; 3000-line cost not above the limit
-- [ ] `features.py` comments; `mcp-tools-design.md:734,738` -- measured timings, closed-loft sentence
-- [ ] `deferred-work.md` -- mark the 13-18 low entry resolved; TC-17 UAT fixture
+- [x] `test_feature_tools.py` -- 3001-line spine refused `sweep.too_complex` with the real limit; 3000-line cost not above the limit
+- [x] `features.py` comments; `mcp-tools-design.md:734,738` -- measured timings, closed-loft sentence
+- [x] `deferred-work.md` -- mark the 13-18 low entry resolved; TC-17 UAT fixture
 
 **Acceptance Criteria:**
 - Given two valid boxes touching at a face, edge or vertex, when measured, then `boolean_failed` is false and `common_volume` is 0.
