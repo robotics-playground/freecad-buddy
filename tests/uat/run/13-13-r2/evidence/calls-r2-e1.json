@@ -1,0 +1,6 @@
+[{"name":"create","tool":"document_create","args":{"label":"V1313E1"}},
+ {"name":"mkbox","tool":"script_exec","args":{"doc":"$DOC","code":"FreeCAD.closeActiveTransaction()\ndoc.addObject('Part::Box', 'Box')\ndoc.recompute()"}},
+ {"name":"h12","tool":"script_exec","args":{"doc":"$DOC","code":"doc.getObject('Box').Height = 12"}},
+ {"name":"undo_and_write","tool":"script_exec","args":{"doc":"$DOC","code":"doc.undo()\ndoc.getObject('Box').Width = 7"}},
+ {"name":"undo","tool":"document_undo","args":{"doc":"$DOC","expect_fingerprint":"$undo_and_write.structured_content.fingerprint_before"}},
+ {"name":"props","tool":"query_object","args":{"doc":"$DOC","object":"Box"}}]

@@ -1,0 +1,152 @@
+freecad_buddy from C:\Users\thuan\AppData\Local\Temp\claude\3d3814eab912640f\17c8e5ee-89aa-4e27-ba05-1fe1774e804a\scratchpad\verifier-13-13\rt2\copy\src\freecad_buddy\__init__.py
+test_A1_redo_after_document_undo_then_script_redo (probe_mod.Attacks.test_A1_redo_after_document_undo_then_script_redo) ...     FACT A1 names ['script_exec doc.Box.Height = 12'] redo ['script_exec doc.Box.Height = 13']
+    FACT A1 status OK undo_steps 2 changed ['Box']
+    FACT A1 notes ['undo_steps: 2']
+    FACT A1 names after ['script_exec doc.redo()', 'script_exec doc.Box.Height = 13', 'script_exec doc.Box.Height = 12'] Height 13.0 mm
+    FACT A1 document_undo matches False Height 13.0 mm
+ok
+test_A2_undo_then_redo_inside_script (probe_mod.Attacks.test_A2_undo_then_redo_inside_script) ...     FACT A2 status OK undo_steps 1 changed []
+    FACT A2 notes ['undo_steps: 1']
+    FACT A2 names ['script_exec doc.undo()', 'script_exec doc.Box.Height = 12'] Height 12.0 mm
+ok
+test_A3_undo_two_steps_then_write (probe_mod.Attacks.test_A3_undo_two_steps_then_write) ...     FACT A3 status OK undo_steps 1 changed ['Box']
+    FACT A3 notes ['undo_steps: 1', 'the script undid steps itself: document_undo cannot restore the state before this call']
+    FACT A3 names ['script_exec doc.undo()', 'script_exec doc.Box.Height = 12']
+ok
+test_A4_undo_two_steps_no_write (probe_mod.Attacks.test_A4_undo_two_steps_no_write) ...     FACT A4 status OK undo_steps 1 changed ['Box']
+    FACT A4 notes ['undo_steps: 1']
+FAIL
+test_A5_undo_then_write_with_the_same_name (probe_mod.Attacks.test_A5_undo_then_write_with_the_same_name) ...     FACT A5 status OK undo_steps 1 changed ['Box']
+    FACT A5 notes ['undo_steps: 1']
+    FACT A5 names before [] after ['script_exec # same name probe'] Height 3.0 mm Width 7.0 mm
+    FACT A5 document_undo matches True Height 3.0 mm Width 20.0 mm
+ok
+test_A6_huge_repr (probe_mod.Attacks.test_A6_huge_repr) ...     FACT A6 status OK len value_repr 5000000 seconds 0.0
+ok
+test_A7_non_str_repr (probe_mod.Attacks.test_A7_non_str_repr) ...     FACT A7 status OK undo_steps 1 changed ['Box']
+    FACT A7 notes ['undo_steps: 1', 'result R has no repr: TypeError: __repr__ returned non-string (type int)']
+    FACT A7 value_repr <repr failed: TypeError: __repr__ returned non-string (type int)>
+ok
+test_A8_keyboard_interrupt_during_commit (probe_mod.Attacks.test_A8_keyboard_interrupt_during_commit) ...     FACT A8 escaped KeyboardInterrupt('during commit') status None detail None
+    FACT A8 active None names ['script_exec from freecad_buddy.usecases import shim'] Width 9.0 mm
+    FACT A8 next call OK
+FAIL
+test_A9_keyboard_interrupt_in_document_commit_via_recompute (probe_mod.Attacks.test_A9_keyboard_interrupt_in_document_commit_via_recompute) ... Traceback (most recent call last):
+  File "<string>", line 5, in execute
+<class 'KeyboardInterrupt'>: in recompute
+K: in recompute
+    FACT A9 escaped None status RECOMPUTE_ERROR detail {'code': 'recompute.failed_objects', 'message': 'the script left invalid objects: K', 'data': {'objects': ['K']}}
+    FACT A9 active None names ['script_exec class K:']
+ok
+test_RT2_full_stack_one_name_gives_null_and_note (probe_mod.RTNotes.test_RT2_full_stack_one_name_gives_null_and_note) ...     FACT names 20 {'script_exec import Part'}
+    FACT RT2 status OK undo_steps None changed ['Box']
+    FACT RT2 notes ['undo_steps: None', 'undo_steps null: the undo list is full of identical entries, so the count is unknown']
+ok
+test_RT3_script_undo_gives_note (probe_mod.RTNotes.test_RT3_script_undo_gives_note) ...     FACT RT3 status OK undo_steps 1 changed ['Box']
+    FACT RT3 notes ['undo_steps: 1']
+FAIL
+test_RT4_stdout_kept_after_close (probe_mod.RTNotes.test_RT4_stdout_kept_after_close) ...     FACT RT4 status OK undo_steps 1 changed ['Box']
+    FACT RT4 notes ['undo_steps: 1']
+    FACT RT4 stdout 'kept line\n'
+ok
+test_RT6_clear_undos_note (probe_mod.RTNotes.test_RT6_clear_undos_note) ...     FACT RT6a status OK undo_steps 0 changed ['Box']
+    FACT RT6a notes ['undo_steps: 0', 'undo_steps 0: the script switched undo off or emptied the undo list, so document_undo cannot revert earlier steps']
+ok
+test_RT6_undo_mode_zero_note (probe_mod.RTNotes.test_RT6_undo_mode_zero_note) ...     FACT RT6b status OK undo_steps 0 changed ['Box']
+    FACT RT6b notes ['undo_steps: 0', 'undo_steps 0: the script switched undo off or emptied the undo list, so document_undo cannot revert earlier steps']
+ok
+
+======================================================================
+FAIL: test_A4_undo_two_steps_no_write (probe_mod.Attacks.test_A4_undo_two_steps_no_write)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\3d3814eab912640f\17c8e5ee-89aa-4e27-ba05-1fe1774e804a\scratchpad\verifier-13-13\rt2\probes\probe_v.py", line 98, in test_A4_undo_two_steps_no_write
+    self.assertTrue(note_in(env, se._SCRIPT_UNDID_NOTE))
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_A8_keyboard_interrupt_during_commit (probe_mod.Attacks.test_A8_keyboard_interrupt_during_commit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\3d3814eab912640f\17c8e5ee-89aa-4e27-ba05-1fe1774e804a\scratchpad\verifier-13-13\rt2\probes\probe_v.py", line 145, in test_A8_keyboard_interrupt_during_commit
+    self.assertIsNone(escaped)
+AssertionError: "KeyboardInterrupt('during commit')" is not None
+
+======================================================================
+FAIL: test_RT3_script_undo_gives_note (probe_mod.RTNotes.test_RT3_script_undo_gives_note)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\3d3814eab912640f\17c8e5ee-89aa-4e27-ba05-1fe1774e804a\scratchpad\verifier-13-13\rt2\probes\probe_v.py", line 41, in test_RT3_script_undo_gives_note
+    self.assertTrue(note_in(env, se._SCRIPT_UNDID_NOTE))
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.413s
+
+FAILED (failures=3)
+FreeCAD 1.1.4, Libs: 1.1.4R20260928 (Git shallow)
+(C) 2001-2026 FreeCAD contributors
+FreeCAD is free and open-source software licensed under the terms of LGPL2+ license.
+
+Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(50 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									Recompute......
+						(100 %)									
