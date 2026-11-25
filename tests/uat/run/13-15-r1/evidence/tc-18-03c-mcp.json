@@ -1,0 +1,818 @@
+[
+ {
+  "tool": "document_create",
+  "args": {
+   "label": "tc18_03c_vertical_edge"
+  },
+  "seconds": 0.308,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA",
+    "name": "tc18_03c_vertical_edge",
+    "label": "tc18_03c_vertical_edge"
+   },
+   "text": "doc: fcb-doc:4rnHGkpwqsRe_VdJR5rJwA\nlabel: tc18_03c_vertical_edge\nname: tc18_03c_vertical_edge"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:4rnHGkpwqsRe_VdJR5rJwA\",\"name\":\"tc18_03c_vertical_edge\",\"label\":\"tc18_03c_vertical_edge\"},\"text\":\"doc: fcb-doc:4rnHGkpwqsRe_VdJR5rJwA\\nlabel: tc18_03c_vertical_edge\\nname: tc18_03c_vertical_edge\"}"
+  ]
+ },
+ {
+  "tool": "feature_body_create",
+  "args": {
+   "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA",
+   "name": "Body"
+  },
+  "seconds": 0.104,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Body"
+     ]
+    },
+    "feature": "Body",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Body",
+     "readable": false
+    }
+   },
+   "text": "Mutation committed; fingerprint 283569b3f782.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Body\",\"volume\":0.0,\"area\":0.0,\"com\":[0.0,0.0,0.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":null,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Body\"]},\"feature\":\"Body\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"Body\",\"readable\":false}},\"text\":\"Mutation committed; fingerprint 283569b3f782.\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"no visible shape-bearing objects to measure\"}}"
+  ]
+ },
+ {
+  "tool": "sketch_create",
+  "args": {
+   "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA",
+   "name": "Profile",
+   "plane": "XY",
+   "body": "Body"
+  },
+  "seconds": 0.067,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "02d4b20e41785786d5c3602ca032a2ce27023331bc87c63aabdc9cafe589434c",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Profile",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Profile"
+     ]
+    },
+    "sketch": "Profile",
+    "sketch_state": {
+     "schema": "fcb.sketch-state/1",
+     "sketch": "Profile",
+     "readable": true,
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 0,
+     "constraint_count": 0,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    }
+   },
+   "text": "Mutation committed; fingerprint 02d4b20e4178.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"02d4b20e41785786d5c3602ca032a2ce27023331bc87c63aabdc9cafe589434c\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Profile\",\"volume\":0.0,\"area\":0.0,\"com\":[0.0,0.0,0.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":true,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Profile\"]},\"sketch\":\"Profile\",\"sketch_state\":{\"schema\":\"fcb.sketch-state/1\",\"sketch\":\"Profile\",\"readable\":true,\"dof\":0,\"fully_constrained\":true,\"geometry_count\":0,\"constraint_count\":0,\"conflicting\":[],\"malformed\":[],\"redundant\":[],\"partially_redundant\":[],\"solver_status_code\":0}},\"text\":\"Mutation committed; fingerprint 02d4b20e4178.\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"no visible shape-bearing objects to measure\"}}"
+  ]
+ },
+ {
+  "tool": "sketch_add_geometry",
+  "args": {
+   "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA",
+   "sketch": "Profile",
+   "geometry": [
+    {
+     "kind": "line_segment",
+     "start": [
+      0,
+      0
+     ],
+     "end": [
+      20,
+      0
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      20,
+      0
+     ],
+     "end": [
+      20,
+      10
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      20,
+      10
+     ],
+     "end": [
+      0,
+      10
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      0,
+      10
+     ],
+     "end": [
+      0,
+      0
+     ]
+    }
+   ],
+   "constraints": [
+    {
+     "type": "Coincident",
+     "first": 0,
+     "first_pos": 2,
+     "second": 1,
+     "second_pos": 1
+    },
+    {
+     "type": "Coincident",
+     "first": 1,
+     "first_pos": 2,
+     "second": 2,
+     "second_pos": 1
+    },
+    {
+     "type": "Coincident",
+     "first": 2,
+     "first_pos": 2,
+     "second": 3,
+     "second_pos": 1
+    },
+    {
+     "type": "Coincident",
+     "first": 3,
+     "first_pos": 2,
+     "second": 0,
+     "second_pos": 1
+    },
+    {
+     "type": "Horizontal",
+     "first": 0
+    },
+    {
+     "type": "Horizontal",
+     "first": 2
+    },
+    {
+     "type": "Vertical",
+     "first": 1
+    },
+    {
+     "type": "Vertical",
+     "first": 3
+    },
+    {
+     "type": "Coincident",
+     "first": 0,
+     "first_pos": 1,
+     "second": -1,
+     "second_pos": 1
+    },
+    {
+     "type": "DistanceX",
+     "first": 0,
+     "first_pos": 1,
+     "second": 0,
+     "second_pos": 2,
+     "value": {
+      "value": 20,
+      "unit": "mm"
+     },
+     "name": "Width"
+    },
+    {
+     "type": "DistanceY",
+     "first": 1,
+     "first_pos": 1,
+     "second": 1,
+     "second_pos": 2,
+     "value": {
+      "value": 10,
+      "unit": "mm"
+     },
+     "name": "Depth"
+    }
+   ]
+  },
+  "seconds": 0.057,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "02d4b20e41785786d5c3602ca032a2ce27023331bc87c63aabdc9cafe589434c",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "e93dfcc18b49dc896e6acd2283a8f13dc1e8c77534c3dd778ad99387d5928004",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Profile",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        10.0,
+        5.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Profile"
+     ]
+    },
+    "sketch": "Profile",
+    "sketch_state": {
+     "schema": "fcb.sketch-state/1",
+     "sketch": "Profile",
+     "readable": true,
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 4,
+     "constraint_count": 11,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    },
+    "geo_ids": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "constraint_ids": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   "text": "Mutation committed; fingerprint e93dfcc18b49.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"02d4b20e41785786d5c3602ca032a2ce27023331bc87c63aabdc9cafe589434c\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"e93dfcc18b49dc896e6acd2283a8f13dc1e8c77534c3dd778ad99387d5928004\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Profile\",\"volume\":0.0,\"area\":0.0,\"com\":[10.0,5.0,0.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":true,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Profile\"]},\"sketch\":\"Profile\",\"sketch_state\":{\"schema\":\"fcb.sketch-state/1\",\"sketch\":\"Profile\",\"readable\":true,\"dof\":0,\"fully_constrained\":true,\"geometry_count\":4,\"constraint_count\":11,\"conflicting\":[],\"malformed\":[],\"redundant\":[],\"partially_redundant\":[],\"solver_status_code\":0},\"geo_ids\":[0,1,2,3],\"constraint_ids\":[1,2,3,4,5,6,7,8,9,10,11]},\"text\":\"Mutation committed; fingerprint e93dfcc18b49.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.72,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "feature_pad",
+  "args": {
+   "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA",
+   "body": "Body",
+   "profile": "Profile",
+   "name": "Block",
+   "length": {
+    "value": 10,
+    "unit": "mm"
+   }
+  },
+  "seconds": 0.087,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "e93dfcc18b49dc896e6acd2283a8f13dc1e8c77534c3dd778ad99387d5928004",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "f62489b50a33e1aac5f09aec4dc9a55c59456f346b5a49795ec4dee804605ae3",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Block",
+       "volume": 2000.0,
+       "area": 1000.0,
+       "com": [
+        10.0,
+        5.0,
+        5.0
+       ]
+      },
+      {
+       "name": "Body",
+       "volume": 2000.0,
+       "area": 1000.0,
+       "com": [
+        10.0,
+        5.0,
+        5.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Block",
+      "Body"
+     ]
+    },
+    "feature": "Block",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Block",
+     "readable": true,
+     "body": "Body",
+     "is_tip": true,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 6,
+      "edge_count": 12,
+      "vertex_count": 8,
+      "is_valid": true,
+      "volume": 2000.0,
+      "area": 1000.0,
+      "bbox": [
+       20.0,
+       10.0,
+       10.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint f62489b50a33.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"e93dfcc18b49dc896e6acd2283a8f13dc1e8c77534c3dd778ad99387d5928004\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"f62489b50a33e1aac5f09aec4dc9a55c59456f346b5a49795ec4dee804605ae3\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Block\",\"volume\":2000.0,\"area\":1000.0,\"com\":[10.0,5.0,5.0]},{\"name\":\"Body\",\"volume\":2000.0,\"area\":1000.0,\"com\":[10.0,5.0,5.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":true,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Block\",\"Body\"]},\"feature\":\"Block\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"Block\",\"readable\":true,\"body\":\"Body\",\"is_tip\":true,\"shape_summary\":{\"solid_count\":1,\"face_count\":6,\"edge_count\":12,\"vertex_count\":8,\"is_valid\":true,\"volume\":2000.0,\"area\":1000.0,\"bbox\":[20.0,10.0,10.0]}}},\"text\":\"Mutation committed; fingerprint f62489b50a33.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.72,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA",
+   "code": "es = doc.getObject('Block').Shape.Edges\nresult = [f'Edge{i}' for i, e in enumerate(es, 1) if abs(e.BoundBox.XMin - 20) < 1e-6 and abs(e.BoundBox.XMax - 20) < 1e-6 and abs(e.BoundBox.YMin) < 1e-6 and abs(e.BoundBox.YMax) < 1e-6]"
+  },
+  "seconds": 0.065,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA",
+    "stdout": "",
+    "value_repr": "['Edge2']",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:4rnHGkpwqsRe_VdJR5rJwA\nfingerprint_after: None\nstdout: \nvalue_repr: ['Edge2']\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:4rnHGkpwqsRe_VdJR5rJwA\",\"stdout\":\"\",\"value_repr\":\"['Edge2']\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:4rnHGkpwqsRe_VdJR5rJwA\\nfingerprint_after: None\\nstdout: \\nvalue_repr: ['Edge2']\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.72,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "feature_datum",
+  "args": {
+   "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA",
+   "body": "Body",
+   "name": "EdgeAxis",
+   "kind": "axis",
+   "map_mode": "TwoPointLine",
+   "attachment": {
+    "kind": "mapped_name",
+    "object": "Block",
+    "mapped_name": "Edge2"
+   }
+  },
+  "seconds": 0.081,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "f62489b50a33e1aac5f09aec4dc9a55c59456f346b5a49795ec4dee804605ae3",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "06657552b6329df80ecc5a25ac2bb85189463c3d2c95cb8fd75f348709ee62ef",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "EdgeAxis",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        20.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "PASS": 1
+       },
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "EdgeAxis",
+      "Body"
+     ]
+    },
+    "feature": "EdgeAxis",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "EdgeAxis",
+     "readable": true,
+     "body": "",
+     "is_tip": false,
+     "shape_summary": {
+      "solid_count": 0,
+      "face_count": 0,
+      "edge_count": 1,
+      "vertex_count": 0,
+      "is_valid": true,
+      "volume": 0.0,
+      "area": 0.0,
+      "bbox": [
+       0.0,
+       0.0,
+       2e+100
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint 06657552b632.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"f62489b50a33e1aac5f09aec4dc9a55c59456f346b5a49795ec4dee804605ae3\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"06657552b6329df80ecc5a25ac2bb85189463c3d2c95cb8fd75f348709ee62ef\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"EdgeAxis\",\"volume\":0.0,\"area\":0.0,\"com\":[20.0,0.0,0.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":null,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{\"PASS\":1},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"EdgeAxis\",\"Body\"]},\"feature\":\"EdgeAxis\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"EdgeAxis\",\"readable\":true,\"body\":\"\",\"is_tip\":false,\"shape_summary\":{\"solid_count\":0,\"face_count\":0,\"edge_count\":1,\"vertex_count\":0,\"is_valid\":true,\"volume\":0.0,\"area\":0.0,\"bbox\":[0.0,0.0,2e+100]}}},\"text\":\"Mutation committed; fingerprint 06657552b632.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.72,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA",
+   "code": "a = doc.getObject('EdgeAxis')\nresult = (a.MapMode, a.isValid(), a.AttachmentSupport[0][1])"
+  },
+  "seconds": 0.071,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA",
+    "stdout": "",
+    "value_repr": "('TwoPointLine', True, ('Edge2',))",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:4rnHGkpwqsRe_VdJR5rJwA\nfingerprint_after: None\nstdout: \nvalue_repr: ('TwoPointLine', True, ('Edge2',))\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:4rnHGkpwqsRe_VdJR5rJwA\",\"stdout\":\"\",\"value_repr\":\"('TwoPointLine', True, ('Edge2',))\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:4rnHGkpwqsRe_VdJR5rJwA\\nfingerprint_after: None\\nstdout: \\nvalue_repr: ('TwoPointLine', True, ('Edge2',))\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.72,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "feature_set_parameters",
+  "args": {
+   "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA",
+   "feature": "Block",
+   "parameters": {
+    "Length": {
+     "value": 15,
+     "unit": "mm"
+    }
+   }
+  },
+  "seconds": 0.104,
+  "isError": true,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "SPEC_FAILED",
+   "detail": {
+    "code": "mutation.spec_failed",
+    "message": "TNP audit flagged 1 reference(s): EdgeAxis.AttachmentSupport REPOINTED"
+   },
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "06657552b6329df80ecc5a25ac2bb85189463c3d2c95cb8fd75f348709ee62ef",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "5d8597f28d2dc23e3873463b377f815d1b221879bc0b15dfc6bb14f029f4344d",
+      "serializer": "exportBinary"
+     },
+     "changed": [],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "FLAGGED",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "PASS": 1,
+        "REPOINTED": 1
+       },
+       "findings": [
+        {
+         "owner": "EdgeAxis",
+         "prop": "AttachmentSupport",
+         "mapped_before": "#10:4;:G;XTR;:H1205:7,E",
+         "state_after": "#10;:G;XTR;:H1205:7,E",
+         "verdict": "REPOINTED",
+         "layer": 1,
+         "detail": "EdgeAxis.AttachmentSupport entry Edge2 now maps to a different element: #10:4;:G;XTR;:H1205:7,E -> #10;:G;XTR;:H1205:7,E"
+        }
+       ]
+      },
+      "passed": false,
+      "explanation": "TNP audit flagged 1 reference(s): EdgeAxis.AttachmentSupport REPOINTED"
+     },
+     "rolled_back": true,
+     "rollback_proven": "rolled_back_verified",
+     "touched": [
+      "Block",
+      "Body"
+     ]
+    },
+    "feature": "Block",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Block",
+     "readable": true,
+     "body": "Body",
+     "is_tip": true,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 6,
+      "edge_count": 12,
+      "vertex_count": 8,
+      "is_valid": true,
+      "volume": 2000.0,
+      "area": 1000.0,
+      "bbox": [
+       20.0,
+       10.0,
+       10.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation rolled back (rolled_back_verified): TNP audit flagged 1 reference(s): EdgeAxis.AttachmentSupport REPOINTED"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"SPEC_FAILED\",\"detail\":{\"code\":\"mutation.spec_failed\",\"message\":\"TNP audit flagged 1 reference(s): EdgeAxis.AttachmentSupport REPOINTED\"},\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"06657552b6329df80ecc5a25ac2bb85189463c3d2c95cb8fd75f348709ee62ef\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"5d8597f28d2dc23e3873463b377f815d1b221879bc0b15dfc6bb14f029f4344d\",\"serializer\":\"exportBinary\"},\"changed\":[],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":true,\"tnp_audit\":{\"status\":\"FLAGGED\",\"element_map_version\":\"15.70200.5\",\"counts\":{\"PASS\":1,\"REPOINTED\":1},\"findings\":[{\"owner\":\"EdgeAxis\",\"prop\":\"AttachmentSupport\",\"mapped_before\":\"#10:4;:G;XTR;:H1205:7,E\",\"state_after\":\"#10;:G;XTR;:H1205:7,E\",\"verdict\":\"REPOINTED\",\"layer\":1,\"detail\":\"EdgeAxis.AttachmentSupport entry Edge2 now maps to a different element: #10:4;:G;XTR;:H1205:7,E -> #10;:G;XTR;:H1205:7,E\"}]},\"passed\":false,\"explanation\":\"TNP audit flagged 1 reference(s): EdgeAxis.AttachmentSupport REPOINTED\"},\"rolled_back\":true,\"rollback_proven\":\"rolled_back_verified\",\"touched\":[\"Block\",\"Body\"]},\"feature\":\"Block\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"Block\",\"readable\":true,\"body\":\"Body\",\"is_tip\":true,\"shape_summary\":{\"solid_count\":1,\"face_count\":6,\"edge_count\":12,\"vertex_count\":8,\"is_valid\":true,\"volume\":2000.0,\"area\":1000.0,\"bbox\":[20.0,10.0,10.0]}}},\"text\":\"Mutation rolled back (rolled_back_verified): TNP audit flagged 1 reference(s): EdgeAxis.AttachmentSupport REPOINTED\"}"
+  ]
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA",
+   "code": "a = doc.getObject('EdgeAxis')\nb = doc.getObject('Block')\nresult = (round(b.Length.Value, 6), a.isValid())"
+  },
+  "seconds": 0.073,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA",
+    "stdout": "",
+    "value_repr": "(10.0, True)",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:4rnHGkpwqsRe_VdJR5rJwA\nfingerprint_after: None\nstdout: \nvalue_repr: (10.0, True)\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:4rnHGkpwqsRe_VdJR5rJwA\",\"stdout\":\"\",\"value_repr\":\"(10.0, True)\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:4rnHGkpwqsRe_VdJR5rJwA\\nfingerprint_after: None\\nstdout: \\nvalue_repr: (10.0, True)\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.72,\"checked\":\"cached\",\"stale_reason\":\"served from cache; unverified key component(s): geometry\"}}"
+  ]
+ },
+ {
+  "tool": "document_close",
+  "args": {
+   "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA"
+  },
+  "seconds": 0.061,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:4rnHGkpwqsRe_VdJR5rJwA",
+    "name": "tc18_03c_vertical_edge",
+    "closed": true
+   },
+   "text": "Closed tc18_03c_vertical_edge (doc=fcb-doc:4rnHGkpwqsRe_VdJR5rJwA)."
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:4rnHGkpwqsRe_VdJR5rJwA\",\"name\":\"tc18_03c_vertical_edge\",\"closed\":true},\"text\":\"Closed tc18_03c_vertical_edge (doc=fcb-doc:4rnHGkpwqsRe_VdJR5rJwA).\"}"
+  ]
+ }
+]
