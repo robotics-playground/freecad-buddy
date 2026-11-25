@@ -51,7 +51,7 @@ first. If `query_capabilities` reports `exec_enabled: false`, build the typed pa
   about z). A build123d solid is centred by default and a FreeCAD box starts at its
   corner: offset the base (`references/build123d-mapping.md`). Booleans follow in
   source order with `feature_part_boolean` (`fuse`, `cut`, `common`; 1 to 20
-  `tools` per call, so chain a longer cut); the last step takes the part name, and a
+  `tools` per call, so chain a longer cut, fuse or common); the last step takes the part name, and a
   part of one primitive names that primitive after the part.
 - **Use the generator file for an object the typed tools cannot make.** A source
   `loft` of two rectangles (`Part::Wedge`, kit `taper_z`), another Part type, a
@@ -61,8 +61,8 @@ first. If `query_capabilities` reports `exec_enabled: false`, build the typed pa
   `feature_part_boolean` takes the generated Wedge by its Name, so offered
   primitives and every boolean stay typed. An enumeration switch needs one
   `script_exec` call for the property (kit, "Run it" step 4).
-- **A typed refusal is a stop with a repair** (`references/gap-list.md`, "A typed
-  refusal is not a gap"). A script that repeats the call skips the guard.
+- **A typed refusal is a stop with a repair** (`freecad-scripting-idioms`,
+  `references/gap-list.md`, "A typed refusal is not a gap"). A script that repeats the call skips the guard.
 - **One VarSet `Params`, source names kept.** Use the source constant names, so
   the two files compare line by line. Each float is `App::PropertyFloat`
   (unitless: mm on a length, degrees on an angle). Order the Data tab with groups.
@@ -84,11 +84,8 @@ first. If `query_capabilities` reports `exec_enabled: false`, build the typed pa
   `MultiFuse`, consecutive `-=` share one `Cut`, named `<part>_stepN`. A nested
   expression (`body += (post + lips) - slot`) is its own boolean chain, fused into
   the body afterwards, so `slot` never cuts the body.
-- **Frames.** A source `Location((tx, ty, 0), (0, 0, deg)) * part` becomes a
-  frame `(tx, ty, deg)`; all three may be parameters. Each primitive gets a
-  `Placement.Rotation.Angle` expression and a base of
-  `tx + x*cos(deg) - y*sin(deg)`, `ty + x*sin(deg) + y*cos(deg)`. FreeCAD `cos`,
-  `sin`, `atan2` use degrees.
+- **Frames.** A source `Location` becomes a frame `(tx, ty, deg)` of parameters
+  (`references/build123d-mapping.md`, "Placement"). FreeCAD `cos`, `sin`, `atan2` use degrees.
 - **Purchased parts.** Load each catalog STEP once into a hidden `Part::Feature`;
   place copies with `App::Link`, `LinkTransform = True`; only the placement is a
   parameter.
@@ -122,10 +119,10 @@ aligned MIN, so it needs no offset. `feature_parameters_define` creates `Params`
 (`L`, `PLATE_W`, `PLATE_T`, `HOLE_R`, `EDGE`), then:
 
 ```json
-{"doc": "bracket", "kind": "box", "name": "bracket_plate", "length": {"value": 60, "unit": "mm"}, "width": {"value": 40, "unit": "mm"}, "height": {"value": 5, "unit": "mm"}}
-{"doc": "bracket", "kind": "cylinder", "name": "bracket_hole", "radius": {"value": 2, "unit": "mm"}, "height": {"value": 5, "unit": "mm"}}
-{"doc": "bracket", "expressions": [{"object": "bracket_plate", "path": "Length", "expression": "Params.L"}, {"object": "bracket_plate", "path": "Width", "expression": "Params.PLATE_W"}, {"object": "bracket_plate", "path": "Height", "expression": "Params.PLATE_T"}, {"object": "bracket_hole", "path": "Radius", "expression": "Params.HOLE_R"}, {"object": "bracket_hole", "path": "Height", "expression": "Params.PLATE_T"}, {"object": "bracket_hole", "path": "Placement.Base.x", "expression": "Params.EDGE"}, {"object": "bracket_hole", "path": "Placement.Base.y", "expression": "Params.EDGE"}]}
-{"doc": "bracket", "operation": "cut", "base": "bracket_plate", "tools": ["bracket_hole"], "name": "bracket"}
+{"doc": "<fcb-doc handle>", "kind": "box", "name": "bracket_plate", "length": {"value": 60, "unit": "mm"}, "width": {"value": 40, "unit": "mm"}, "height": {"value": 5, "unit": "mm"}}
+{"doc": "<fcb-doc handle>", "kind": "cylinder", "name": "bracket_hole", "radius": {"value": 2, "unit": "mm"}, "height": {"value": 5, "unit": "mm"}}
+{"doc": "<fcb-doc handle>", "expressions": [{"object": "bracket_plate", "path": "Length", "expression": "Params.L"}, {"object": "bracket_plate", "path": "Width", "expression": "Params.PLATE_W"}, {"object": "bracket_plate", "path": "Height", "expression": "Params.PLATE_T"}, {"object": "bracket_hole", "path": "Radius", "expression": "Params.HOLE_R"}, {"object": "bracket_hole", "path": "Height", "expression": "Params.PLATE_T"}, {"object": "bracket_hole", "path": "Placement.Base.x", "expression": "Params.EDGE"}, {"object": "bracket_plate", "path": "Placement.Base.x", "expression": "0"}, {"object": "bracket_plate", "path": "Placement.Base.y", "expression": "0"}, {"object": "bracket_plate", "path": "Placement.Base.z", "expression": "0"}, {"object": "bracket_hole", "path": "Placement.Base.z", "expression": "0"}, {"object": "bracket_hole", "path": "Placement.Base.y", "expression": "Params.EDGE"}]}
+{"doc": "<fcb-doc handle>", "operation": "cut", "base": "bracket_plate", "tools": ["bracket_hole"], "name": "bracket"}
 ```
 
 The equality check passes (`verify_shape` valid, one solid, volume equal; overlap

@@ -2355,7 +2355,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: Story 13-16 makes the tool write `Placement`, `AttachmentOffset` and `Label`; `SKILL.md:74-78` now says so. The plan assigns the gap-list row removal to Story 13-19.
   blocker: Story 13-19 owns the gap list.
   unblock: Story 13-19 removes row 33 and the `Label` row, and narrows row 42 ("string or link") to the link and file types, which `feature_set_parameters` still refuses.
-  resolution: resolved by Story 13-19: `gap-list.md` drops the placement row and the `Label` row, states the `parameters.value_overwritten` failure in the `feature_set_parameters` row, and narrows the string row to link, file, vector and list properties.
+  resolution: resolved by Story 13-19: `gap-list.md` drops the placement row and the `Label` row, states the `parameters.value_overwritten` failure in the `feature_set_parameters` row, and narrows the string row to link, file, vector, list and colour properties.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-15-tnp-expected-reattachment.md`
   summary: A curved element (a cylinder or fillet face) that rides its moved support may still grade `REPOINTED` in the GUI, because `Shape.BoundBox` can use the display triangulation and a remesh shifts the box by the mesh deflection, more than the 1e-7 element tolerance.

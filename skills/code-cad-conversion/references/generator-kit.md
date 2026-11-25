@@ -12,15 +12,15 @@ the live FreeCAD through `script_exec` (`doc` and `STAGE` injected) or headless 
 On the live document the parameter layer and the clearing use typed tools, and `script_exec`
 builds only the parts the typed tools cannot make, and creates enumeration properties:
 
-1. Clear a document this generator owns (skip an empty one): `document_object_delete` `{"doc": "bracket", "objects": ["Params", "Box", "Box001", "Cut"]}`
+1. Clear a document this generator owns (skip an empty one): `document_object_delete` `{"doc": "<fcb-doc handle>", "objects": ["Params", "bracket_plate", "bracket_hole", "bracket"]}`
    naming every object Name (not Label) in the tree, the Cut's Base and Tool objects included:
    a Name left out is a dependent and `delete.has_dependents` refuses the call.
-2. Create every variable, plain and derived: `feature_parameters_define` `{"doc": "bracket", "varset": "Params",
+2. Create every variable, plain and derived: `feature_parameters_define` `{"doc": "<fcb-doc handle>", "varset": "Params",
    "parameters": [{"name": "PLATE_T", "type": "float", "value": 5.0}, {"name": "BOSS_H", "type":
    "float", "value": 0}, {"name": "COUNTERSINK", "type": "bool", "value": true}]}` (a call takes
    at most 100 parameters; use a type `float` for a unitless source constant; give a derived
    variable any value, step 3 binds it).
-3. Bind each derived variable: `feature_set_expression` `{"doc": "bracket", "expressions": [{"object": "Params",
+3. Bind each derived variable: `feature_set_expression` `{"doc": "<fcb-doc handle>", "expressions": [{"object": "Params",
    "path": "BOSS_H", "expression": "Params.PLATE_T + 7"}]}`.
 4. Run the generator once per stage with `script_exec`. Its `params()` reuses the variables that
    exist and creates the rest, so the enumeration properties (no typed type) appear here. A

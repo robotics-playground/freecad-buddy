@@ -145,7 +145,7 @@ human-facing handle, give the feature an intent-bearing Name when you create it.
 - **Driving the GUI before checking the typed tools.** Symptom: clicks and keys to
   the model tree are dropped, the view stays empty. Why: background input does not
   reach FreeCAD's Qt tree, and the property was writable all along. Fix:
-  `feature_set_parameters` `{"Visibility": true}` on the body and its Tip, then
+  `feature_set_parameters` with `parameters` `{"Visibility": true}` on the body and its Tip, then
   `view_fit_viewport`.
 - **Trusting a failed `freecadcmd` save.** Symptom: `OSError: Failed to write all
   data to file Permission denied` and a `<file>.<uuid>` temp file beside the target

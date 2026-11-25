@@ -66,7 +66,8 @@ then point your MCP client at it — otherwise the plan can't be built.
   (`operation: "common"`, `base` the master Body, `tools` the region). The tool
   hides its inputs: show the master again with `feature_set_parameters`
   `Visibility` true. Keep the pieces out of the edit loop: delete and create them
-  only at milestones (`document_object_delete`, then the tools again), because every master-body change recomputes each one. On
+  only at milestones (`document_object_delete` on the piece and its region boxes,
+  then create both again), because every master-body change recomputes each one. On
   `kiwibox-drawer.FCStd`, 3 split `Part::Common` objects took 7.5 s of the 14.6 s
   recompute after one change to the master body. A common that is empty
   (disjoint or only touching regions) fails as `part_boolean.empty_result` and

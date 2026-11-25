@@ -17,6 +17,8 @@ with no error. No typed tool creates the enumeration: one `script_exec` call doe
 A Python `if` on parameter values that decides whether a feature exists
 (`if y + 1.5 < WALL + MB_IN_W - ...`) becomes a ternary: park the tool out of the part
 (`fits ? MB_FLOOR + 6 : -1000` bound to its `Placement.Base.z`) or set a size that cuts
-nothing. A fixed decision breaks equality as soon as an edit changes the count. Loop counts
+nothing. A tool that adds material (`if fits: body += rib`) stays inside the base solid
+instead: a parked tool outside it fuses as a second solid. Bind a size that keeps the tool
+within the base (`rib` `Height`: `FITS ? 10 : 5` on a base 5 mm tall), so the fuse adds nothing. A fixed decision breaks equality as soon as an edit changes the count. Loop counts
 over literal ranges stay fixed; list them in the build notes (the generator header on the
 generator route).

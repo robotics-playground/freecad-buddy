@@ -24,7 +24,7 @@ report the operation as blocked.
 | Sketch geometry (line, circle, arc, point) and the `sketch_add_constraint` types, including a fixed point by `DistanceX` plus `DistanceY` | `sketch_*` |
 | PartDesign body, pad, pocket, hole, fillet, chamfer, revolve, loft, sweep, pattern, mirror, datum | `feature_*` |
 | Part box, cylinder, cone, sphere or torus at document level; cut, fuse or common of top-level solids (a Body is allowed; the inputs are hidden; an empty result is rolled back) | `feature_part_primitive`, `feature_part_boolean` |
-| Write a boolean, number, quantity or enum property of any object (a feature, a VarSet, `Visibility`); a string such as `Label`, a `Placement` or `AttachmentOffset`; lengths in mm, angles in degrees; a value the recompute reverts (an expression drives it) fails as `parameters.value_overwritten`; the `Placement` of an attached object or a feature inside a Body is refused: write the Body's `Placement` or the object's `AttachmentOffset` | `feature_set_parameters` |
+| Write a boolean, number, quantity or enum property of any object (a feature, a VarSet, `Visibility`); a string such as `Label`, a `Placement` or `AttachmentOffset`; lengths in mm, angles in degrees; a value the recompute reverts (an expression drives it) fails as `parameters.value_overwritten`; a `Placement` FreeCAD marks read-only (an attached sketch, a PartDesign feature such as a Pad) is refused: write the Body's `Placement` or the object's `AttachmentOffset` | `feature_set_parameters` |
 | Write one or several objects to one STEP, 3MF or STL file; omit `objects` for all visible solids | `export_step`, `export_3mf`, `export_stl`, then `verify_export_*` |
 
 ## Gaps
@@ -62,7 +62,7 @@ A typed refusal is not a gap. Each names its repair:
 
 Any other `detail.code` refusal (`part_primitive.*`, `part_boolean.invalid_input`, `loft.*`,
 `sweep.invalid_*`) names the input to correct. The limits are measured on common shapes; near-tangent curved crossings and slanted packed
-tools can still run long (`mcp-tools-design.md` §3.7.5). A script that repeats a call skips the guard, and FreeCAD then returns a wrong number or
+tools can still run long. A script that repeats a call skips the guard, and FreeCAD then returns a wrong number or
 holds the bridge for minutes.
 
 ## STEP import script
