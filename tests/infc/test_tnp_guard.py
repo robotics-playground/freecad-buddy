@@ -1077,3 +1077,364 @@ class ExpressionBindingTest(unittest.TestCase):
 
         # Assert
         self.assertEqual(audit["status"], "CLEAN")
+
+
+def _plane_name(shape, axis, value):
+    """The name of the face of ``shape`` that lies in the plane ``coordinate[axis] == value``."""
+    for index, face in enumerate(shape.Faces, start=1):
+        box = face.BoundBox
+        low = (box.XMin, box.YMin, box.ZMin)[axis]
+        high = (box.XMax, box.YMax, box.ZMax)[axis]
+        if abs(low - value) < 1e-6 and abs(high - value) < 1e-6:
+            return f"Face{index}"
+    raise AssertionError(f"no face lies at coordinate {axis} == {value}")
+
+
+class SupportFollowTest(_BodyFixture):
+    """A witness move that FreeCAD attributes to the same element riding its moved support."""
+
+    AXIS_X = 0
+    AXIS_Z = 2
+
+    def _attach_datum(self, face):
+        datum = self.document.addObject("PartDesign::Plane", "DatumPlane")
+        self.body.addObject(datum)
+        datum.AttachmentSupport = [(self.pad, (face,))]
+        datum.MapMode = "FlatFace"
+        self.document.recompute()
+        return datum
+
+    def _attach_datum_to_top_face(self):
+        return self._attach_datum(_plane_name(self.pad.Shape, self.AXIS_Z, PAD_LENGTH))
+
+    def _datum_findings(self, snapshot):
+        audit = self._audit(snapshot)
+        return audit, self._findings(audit, "DatumPlane", "AttachmentSupport")
+
+    def _datum_record(self, snapshot):
+        return next(r for r in snapshot if r["owner"] == "DatumPlane")
+
+    def _constrain_square(self):
+        """Pin the sketch square so its width is a driving dimension (constraint index 9)."""
+        for constraint in (
+            Sketcher.Constraint("Horizontal", 0),
+            Sketcher.Constraint("Vertical", 1),
+            Sketcher.Constraint("Horizontal", 2),
+            Sketcher.Constraint("Vertical", 3),
+            Sketcher.Constraint("Coincident", 0, 1, -1, 1),
+            Sketcher.Constraint("DistanceX", 0, 1, 0, 2, SQUARE),
+            Sketcher.Constraint("DistanceY", 1, 1, 1, 2, SQUARE),
+        ):
+            self.sketch.addConstraint(constraint)
+        self.document.recompute()
+        return 9
+
+    def _grow_pad(self):
+        self.pad.Length = PAD_LENGTH + 5.0
+        self.document.recompute()
+
+    def test_Should_pass_the_datum_When_pad_length_moves_the_face_it_is_attached_to(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._grow_pad()
+
+        # Act
+        audit, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
+        self.assertIn("descends from the same source element", findings[0]["detail"])
+
+    def test_Should_pass_the_datum_When_a_sketch_width_change_moves_the_face(self):
+        # Arrange
+        width_index = self._constrain_square()
+        self._attach_datum(_plane_name(self.pad.Shape, self.AXIS_X, SQUARE))
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.sketch.setDatum(width_index, App.Units.Quantity(f"{SQUARE + 10.0} mm"))
+        self.document.recompute()
+
+        # Act
+        audit, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertGreater(self.pad.Shape.BoundBox.XMax, SQUARE + 1.0, "the face must have moved")
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([f["verdict"] for f in findings], ["PASS"])
+
+    def test_Should_pass_an_external_geometry_edge_When_pad_length_moves_it(self):
+        # Arrange
+        reference = self.document.addObject("Sketcher::SketchObject", "ExternalSketch")
+        self.body.addObject(reference)
+        reference.AttachmentSupport = [(self._origin_plane(), ("",))]
+        reference.MapMode = "FlatFace"
+        self.document.recompute()
+        top_edge = next(
+            f"Edge{index}"
+            for index, edge in enumerate(self.pad.Shape.Edges, start=1)
+            if abs(edge.BoundBox.ZMin - PAD_LENGTH) < 1e-6
+            and abs(edge.BoundBox.ZMax - PAD_LENGTH) < 1e-6
+        )
+        reference.addExternal(self.pad.Name, top_edge)
+        self.document.recompute()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._grow_pad()
+
+        # Act
+        audit = self._audit(snapshot)
+        findings = self._findings(audit, "ExternalSketch", "ExternalGeometry")
+
+        # Assert
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
+
+    def test_Should_pass_a_pad_profile_face_When_pad_length_moves_it(self):
+        # Arrange
+        top_face = _plane_name(self.pad.Shape, self.AXIS_Z, PAD_LENGTH)
+        second = self.document.addObject("PartDesign::Pad", "Pad2")
+        self.body.addObject(second)
+        second.Profile = (self.pad, [top_face])
+        second.Length = 3.0
+        self.document.recompute()
+        self.assertEqual(list(second.State), ["Up-to-date"])
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._grow_pad()
+
+        # Act
+        audit = self._audit(snapshot)
+        findings = self._findings(audit, "Pad2", "Profile")
+
+        # Assert
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
+
+    def test_Should_pass_the_moving_fillet_edge_and_still_break_renumbered_ones_When_pad_grows(
+        self,
+    ):
+        # Arrange
+        self._add_fillet()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._grow_pad()
+
+        # Act
+        audit = self._audit(snapshot)
+        findings = self._findings(audit, "Fillet", "Base")
+
+        # Assert
+        moved = [f for f in findings if "Edge4" in f["detail"]]
+        self.assertEqual([(f["verdict"], f["layer"]) for f in moved], [("PASS", 2)])
+        broken = [f for f in findings if f["verdict"] == "BROKEN"]
+        self.assertTrue(broken, "FreeCAD renumbers Edge1 and Edge2; a real break must still report")
+        self.assertNotIn("REPOINTED", [f["verdict"] for f in findings])
+        self.assertEqual(audit["status"], "FLAGGED")
+
+    def test_Should_flag_repointed_When_the_element_moved_farther_than_its_support(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        entry = self._datum_record(snapshot)["entries"][0]
+        entry["witness"] = (entry["witness"][0],) + tuple(v - 500.0 for v in entry["witness"][1:])
+        self._grow_pad()
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+        self.assertIn("witness moved", findings[0]["detail"])
+
+    def test_Should_flag_repointed_When_the_witness_moved_and_the_support_did_not(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        entry = self._datum_record(snapshot)["entries"][0]
+        entry["witness"] = (entry["witness"][0],) + tuple(v + 5.0 for v in entry["witness"][1:])
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+        self.assertIn("witness moved", findings[0]["detail"])
+
+    def test_Should_flag_repointed_When_the_mapped_name_changed_although_the_support_moved(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._datum_record(snapshot)["entries"][0]["mapped"] = ";planted;:Hff:7,F"
+        self._grow_pad()
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+        self.assertIn("different element", findings[0]["detail"])
+
+    def test_Should_flag_repointed_When_one_side_has_no_history_although_the_support_moved(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._datum_record(snapshot)["entries"][0]["history"] = None
+        self._grow_pad()
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+
+    def test_Should_flag_repointed_When_the_history_source_differs_although_the_support_moved(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._datum_record(snapshot)["entries"][0]["history"] = (0, "planted")
+        self._grow_pad()
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([f["verdict"] for f in findings], ["REPOINTED"])
+
+    def test_Should_flag_repointed_When_the_support_witness_is_not_a_number(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        record = self._datum_record(snapshot)
+        support = record["target_witness"]
+        record["target_witness"] = (support[0], float("nan")) + support[2:]
+        witness = record["entries"][0]["witness"]
+        record["entries"][0]["witness"] = (witness[0],) + tuple(v - 5.0 for v in witness[1:])
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([f["verdict"] for f in findings], ["REPOINTED"])
+
+    def test_Should_record_the_whole_support_shape_witness_When_snapshotting_a_link(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+
+        # Act
+        snapshot = tnp_guard.snapshot_references(self.document)
+
+        # Assert
+        record = self._datum_record(snapshot)
+        self.assertEqual(record["target_witness"][0], "Solid")
+        self.assertEqual(record["target_witness"][6], PAD_LENGTH)
+
+
+class MaxDeltaTest(unittest.TestCase):
+    BOX = ("Solid", 0.0, 0.0, 0.0, 20.0, 20.0, 10.0)
+
+    def test_Should_return_zero_When_both_witnesses_are_equal(self):
+        # Arrange
+        before = after = self.BOX
+
+        # Act
+        result = tnp_guard._max_delta(before, after)
+
+        # Assert
+        self.assertEqual(result, 0.0)
+
+    def test_Should_return_the_largest_component_difference_When_a_witness_moved(self):
+        # Arrange
+        after = ("Solid", 0.0, 0.0, 0.0, 20.0, 20.0, 15.0)
+
+        # Act
+        result = tnp_guard._max_delta(self.BOX, after)
+
+        # Assert
+        self.assertEqual(result, 5.0)
+
+    def test_Should_return_none_When_a_side_is_unreadable(self):
+        # Arrange
+        before, after = self.BOX, None
+
+        # Act
+        result = tnp_guard._max_delta(before, after)
+
+        # Assert
+        self.assertIsNone(result)
+
+    def test_Should_return_none_When_the_shape_type_changed(self):
+        # Arrange
+        after = ("Compound",) + self.BOX[1:]
+
+        # Act
+        result = tnp_guard._max_delta(self.BOX, after)
+
+        # Assert
+        self.assertIsNone(result)
+
+    def test_Should_return_none_When_a_component_is_not_finite(self):
+        # Arrange
+        not_a_number = ("Solid", float("nan")) + self.BOX[2:]
+        infinite = ("Solid", float("inf")) + self.BOX[2:]
+
+        # Act
+        results = [
+            tnp_guard._max_delta(self.BOX, not_a_number),
+            tnp_guard._max_delta(self.BOX, infinite),
+        ]
+
+        # Assert
+        self.assertEqual(results, [None, None])
+
+
+class FollowsSupportTest(unittest.TestCase):
+    WITNESS = ("Face", 0.0, 0.0, 10.0, 20.0, 20.0, 10.0)
+    HISTORY = (7, "g1;SKT")
+
+    def _entry(self, shift=0.0, mapped=";a;", history=HISTORY):
+        witness = (self.WITNESS[0],) + tuple(v + shift for v in self.WITNESS[1:])
+        return {
+            "mapped": mapped,
+            "indexed": "Face6",
+            "missing": False,
+            "witness": witness,
+            "history": history,
+        }
+
+    def test_Should_excuse_the_move_When_the_same_element_moved_no_farther_than_its_support(self):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=5.0)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, 5.0, 1e-7)
+
+        # Assert
+        self.assertTrue(result)
+
+    def test_Should_not_excuse_the_move_When_the_support_did_not_change(self):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=0.5)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, 0.0, 1.0)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_the_support_travel_is_unknown(self):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=5.0)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, None, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_the_element_moved_beyond_the_support(self):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=6.0)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, 5.0, 1e-7)
+
+        # Assert
+        self.assertFalse(result)

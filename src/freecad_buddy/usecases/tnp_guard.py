@@ -20,6 +20,7 @@ never imported here — the document and its objects are passed in.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Collection
 from typing import TypedDict
 
@@ -74,6 +75,7 @@ class RefRecord(TypedDict):
     target: str | None
     entries: list[RefEntry]
     element_map_version: str | None
+    target_witness: Witness | None
 
 
 def _element_map_version(obj: object) -> str | None:
@@ -194,6 +196,45 @@ def _element_tolerance(element: object) -> float:
         return _WITNESS_EPSILON
 
 
+def _max_delta(before: Witness | None, after: Witness | None) -> float | None:
+    """Return the largest bounding-box component difference, or ``None`` when it is not comparable.
+
+    Not comparable: a side that could not be read, a changed ``ShapeType``, or a non-finite
+    component (NaN, infinity). Callers read ``None`` as "no bound", never as "no movement".
+    """
+    if before is None or after is None or before[0] != after[0]:
+        return None
+    deltas = [abs(a - b) for a, b in zip(before[1:], after[1:])]
+    if not all(math.isfinite(delta) for delta in deltas):
+        return None
+    return max(deltas)
+
+
+def _follows_support(
+    before: RefEntry, after: RefEntry, support_travel: float | None, tolerance: float
+) -> bool:
+    """Whether a moved witness is the same element carried along by its support object.
+
+    FreeCAD itself must call it the same element — an equal mapped name and an equal history
+    source on both sides, neither unreadable — and the support object must really have changed.
+    The element may then have moved no farther than the support did. An element that moved farther
+    than its whole support is not carried by it, which keeps a tampered witness on a record whose
+    support also changed graded ``REPOINTED``.
+    """
+    element_travel = _max_delta(before["witness"], after["witness"])
+    if element_travel is None or support_travel is None:
+        return False
+    same_element = (
+        before["mapped"] is not None
+        and before["mapped"] == after["mapped"]
+        and before["history"] is not None
+        and before["history"] == after["history"]
+    )
+    return (
+        same_element and support_travel > tolerance and element_travel <= support_travel + tolerance
+    )
+
+
 def _witness_moved(before: Witness | None, after: Witness | None, tolerance: float) -> bool:
     """Whether two witnesses differ: a type change, a missing side, or a component beyond epsilon.
 
@@ -251,6 +292,12 @@ def _capture_entry(target: object, subname: str) -> RefEntry:
     return entry
 
 
+def _support_witness(target: object) -> Witness | None:
+    """Return the witness of ``target``'s whole shape, or ``None`` when it carries none."""
+    shape = _shape_of(target)
+    return None if shape is None else _witness(shape)
+
+
 def _link_sub_entries(value: object) -> list[tuple[object, list[str]]]:
     """Normalize a ``PropertyLinkSub``/``PropertyLinkSubList`` value to ``[(target, subs)]``.
 
@@ -300,6 +347,7 @@ def _expression_records(obj: object, prop: str, value: object) -> list[RefRecord
                     }
                 ],
                 "element_map_version": version,
+                "target_witness": None,
             }
         )
     return records
@@ -316,6 +364,7 @@ def snapshot_references(doc: object) -> list[RefRecord]:
     ``ElementMapVersion``. A property that cannot be read is skipped, never raised.
     """
     records: list[RefRecord] = []
+    support_witnesses: dict[str | None, Witness | None] = {}
     for obj in sorted(doc.Objects, key=lambda o: o.Name):
         for prop in sorted(getattr(obj, "PropertiesList", None) or ()):
             try:
@@ -330,13 +379,17 @@ def snapshot_references(doc: object) -> list[RefRecord]:
                 value = getattr(obj, prop, None)
                 version = _element_map_version(obj)
                 for target, subs in _link_sub_entries(value):
+                    target_name = getattr(target, "Name", None)
+                    if target_name not in support_witnesses:
+                        support_witnesses[target_name] = _support_witness(target)
                     records.append(
                         {
                             "owner": obj.Name,
                             "prop": prop,
-                            "target": getattr(target, "Name", None),
+                            "target": target_name,
                             "entries": [_capture_entry(target, sub) for sub in subs],
                             "element_map_version": version,
+                            "target_witness": support_witnesses[target_name],
                         }
                     )
             except Exception:  # noqa: BLE001 - an unreadable property records no reference
@@ -668,14 +721,21 @@ def _grade_resolution(doc: object, record: RefRecord, entry: RefEntry) -> RefFin
     return None
 
 
-def _grade_entry(doc: object, record: RefRecord, before: RefEntry, after: RefEntry) -> RefFinding:
+def _grade_entry(
+    doc: object,
+    record: RefRecord,
+    before: RefEntry,
+    after: RefEntry,
+    support_travel: float | None,
+) -> RefFinding:
     """Layer 1: grade one entry, escalating to Layer 2 only where Layer 1 is ambiguous.
 
     The order is: an entry naming no element (a whole-object link) passes; an entry FreeCAD
     marked missing or whose element no longer resolves is ``BROKEN``; a changed mapped name is
-    ``REPOINTED``; a witness moved beyond the element's own tolerance is ``REPOINTED``. An entry
-    surviving all four resolves and matches on both name and witness — the design's definition of
-    ambiguous — so Layer 2 grades it.
+    ``REPOINTED``; a witness moved beyond the element's own tolerance is ``REPOINTED`` unless
+    ``_follows_support`` excuses it. An entry surviving all four resolves and matches on name and
+    either matches on witness or moved with its support — the design's definition of ambiguous —
+    so Layer 2 grades it. ``support_travel`` is how far the record's whole target shape moved.
     """
     name = _entry_name(before)
     if not name:
@@ -700,7 +760,9 @@ def _grade_entry(doc: object, record: RefRecord, before: RefEntry, after: RefEnt
         )
 
     tolerance = _element_tolerance(element) if element is not None else _WITNESS_EPSILON
-    if _witness_moved(before["witness"], after["witness"], tolerance):
+    if _witness_moved(before["witness"], after["witness"], tolerance) and not _follows_support(
+        before, after, support_travel, tolerance
+    ):
         return _finding(
             record,
             before,
@@ -717,16 +779,22 @@ def _grade_entry(doc: object, record: RefRecord, before: RefEntry, after: RefEnt
 
 
 def _grade_entries(
-    doc: object, record: RefRecord, before: list[RefEntry], after: list[RefEntry]
+    doc: object, record: RefRecord, baseline: RefRecord, live: RefRecord
 ) -> list[RefFinding]:
-    """Grade each ``(before, after)`` entry pair, or report a lone ``PASS`` when there are none."""
+    """Grade each ``(baseline, live)`` entry pair, or report a lone ``PASS`` when there are none.
+
+    ``baseline`` is the snapshot record, or the op-written one for an exempt record; it shares
+    ``record``'s owner, property and target.
+    """
+    before, after = baseline["entries"], live["entries"]
     if not after:
         return [
             _finding(
                 record, None, "PASS", 1, f"{record['owner']}.{record['prop']} names no element"
             )
         ]
-    return [_grade_entry(doc, record, b, a) for b, a in zip(before, after)]
+    support_travel = _max_delta(baseline["target_witness"], live["target_witness"])
+    return [_grade_entry(doc, record, b, a, support_travel) for b, a in zip(before, after)]
 
 
 def _grade_record(
@@ -792,7 +860,7 @@ def _grade_record(
 
     intended = written is not None and _entry_values(live) == _entry_values(written)
     if intended:
-        return findings + _grade_entries(doc, record, written["entries"], live["entries"])
+        return findings + _grade_entries(doc, record, written, live)
 
     before_count = len(record["entries"])
     after_count = len(live["entries"])
@@ -813,7 +881,7 @@ def _grade_record(
         )
         return findings
 
-    return findings + _grade_entries(doc, record, record["entries"], live["entries"])
+    return findings + _grade_entries(doc, record, record, live)
 
 
 def _reference_findings(

@@ -2,9 +2,10 @@
 title: 'TNP audit accepts expected re-attachment moves'
 type: 'bugfix'
 created: '2026-11-24'
-status: 'draft'
+status: 'in-review'
 route: 'dispatch'
 review_loop_iteration: 0
+baseline_commit: '538db0be3f566ebb9082d5e60ee4dc91d3ca5a0d'
 context:
   - '{project-root}/docs/decisions/014-tnp-intended-target-is-what-the-op-wrote.md'
   - '{project-root}/_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/verification-design.md'
@@ -36,18 +37,20 @@ context:
 | No history | History `None` on a side | `REPOINTED` layer 1 (as today) | N/A |
 | Silent drop, fillet, G2 `tnp-a/e`, coincidental | Unchanged inputs | Unchanged verdicts | N/A |
 
+## Decisions
+
+User answers, 2026-11-25 (epic decision 40):
+
+1. Scope: the rule applies to every sub-element link (datum, sketch attachment, external geometry, `Fillet.Base`, `Pad.Profile`) through one mechanism.
+2. Residual accepted: an element that moves farther than its whole support stays `REPOINTED`. The distance bound stays; `test_a_missing_entry_does_not_suppress_a_repoint_on_the_same_record` stays green.
+
 </frozen-after-approval>
-
-## Open Questions
-
-1. Scope of the rule. Options: all subelement-link references (datum, sketch attachment, external geometry, `Fillet.Base`, `Pad.Profile`) — one mechanism, recommended; or only `AttachmentSupport` — matches T-8 wording, needs a property-name list, `Fillet.Base` keeps its false positive. Measured with the rule on all references: `Fillet.Base` Edge4 moves with Pad length and passes; Edge1/Edge2 stay `BROKEN` (FreeCAD renumbers them) so a real break still reports.
-2. Accepted residual. An element that moves farther than its whole support moved (a pocket floor moves, support box unchanged) stays `REPOINTED`. Options: accept (conservative, strictly fewer false positives than today, recommended) or drop the distance bound (passes more, but then a witness tamper on a really changed support also passes; test `test_a_missing_entry_does_not_suppress_a_repoint_on_the_same_record` fails).
 
 ## Code Map
 
-- `src/freecad_buddy/usecases/tnp_guard.py:693` -- `_grade_entry`: `if _witness_moved(before["witness"], after["witness"], tolerance):` -- the only line that grades the false positive. Cause: `_witness` (:168) is the absolute bounding box of the element, so a legitimate move of the element reads as a re-point.
-- `tnp_guard.py:231` `_capture_entry`, `:307` `snapshot_references` -- add per-record whole-support witness.
-- `tnp_guard.py:709` `_grade_entries`, `:785`, `:806` -- pass the live record to `_grade_entry`.
+- `src/freecad_buddy/usecases/tnp_guard.py:703` -- `_grade_entry`: `if _witness_moved(before["witness"], after["witness"], tolerance):` -- the only line that grades the false positive. Cause: `_witness` (:169) is the absolute bounding box of the element, so a legitimate move of the element reads as a re-point.
+- `tnp_guard.py:232` `_capture_entry`, `:308` `snapshot_references` -- add per-record whole-support witness.
+- `tnp_guard.py:719` `_grade_entries`, `:795`, `:816` -- pass the live record to `_grade_entry`.
 - `tests/infc/test_tnp_guard.py:216`, `:303`, `:574` -- planted witness cases; must stay green unchanged.
 - `verification-design.md:228-249` §3.2 -- Layer 1 REPOINTED bullet; add the rule.
 - `benchmarks/g2/fault-injection/planted_ops.py` -- G2 `tnp-*` ops; no witness-only case there (a, b, c, d, e grade `DROPPED`, `BROKEN`, Layer 2).
@@ -55,10 +58,10 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `src/freecad_buddy/usecases/tnp_guard.py` -- add `target_witness` to `RefRecord`; snapshot it; add `_follows_support`; guard :693 with it -- smallest change at the cause
-- [ ] `tests/infc/test_tnp_guard.py` -- cases for the five new matrix rows (datum on Pad length, datum on sketch width, beyond-support, no history, name changed with support moved)
-- [ ] `verification-design.md` -- §3.2 Layer 1 text and `RefRecord` block
-- [ ] `docs/decisions/` -- short note beside 014: witness move excused only when same element and support moved
+- [x] `src/freecad_buddy/usecases/tnp_guard.py` -- add `target_witness` to `RefRecord`; snapshot it; add `_follows_support`; guard :693 with it -- smallest change at the cause
+- [x] `tests/infc/test_tnp_guard.py` -- cases for the five new matrix rows (datum on Pad length, datum on sketch width, beyond-support, no history, name changed with support moved)
+- [x] `verification-design.md` -- §3.2 Layer 1 text and `RefRecord` block
+- [x] `docs/decisions/` -- short note beside 014: witness move excused only when same element and support moved
 
 **Acceptance Criteria:**
 - Given a datum on a Pad face, when `Pad.Length` changes, then the audit status has no `REPOINTED` and the datum finding is `PASS`.
@@ -66,6 +69,11 @@ context:
 - Given the full infc suite and `tests/external`, when run, then no regression.
 
 ## Implementation Notes
+
+- `RefRecord.target_witness` holds the whole target shape's witness, read once per target per `snapshot_references` walk.
+- `_max_delta` returns the largest bounding-box component difference, or `None` for an unreadable side, a type change or a non-finite component. `_follows_support` reads `None` as "not excused".
+- `_grade_entries` takes the baseline and live records so it can compute the support travel once per record.
+- The G2 scorer refreshed `validator_sha` for `audit_references` in `benchmarks/_registry/validators.yaml`; sensitivity 1.0, false alarm 0.0, n=3 are unchanged.
 
 ## Spec Change Log
 
