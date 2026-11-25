@@ -828,22 +828,30 @@ def feature_revolve(
 #
 # Loft cost units are the edges of the profile and every section, a BSpline counting its poles:
 # 50 sections of 100 line edges (5,000) 1.6 s; 100 of 200 (20,000) 11 s; 200 of 300 (60,000) 49 s;
-# 20 closed BSplines of 200 poles (4,000) 1.6 s; 40 of 400 poles (16,000) 23 s. At the limit:
-# 40 sections of 200 line edges (8,000) 4.9 s; 20 BSplines of 400 poles (8,020) 4.0 s; 40 of 200
-# poles (8,040) 6.4 s.
+# 20 closed BSplines of 200 poles (4,000) 1.6 s; 40 of 400 poles (16,000) 23 s. Accepted at the
+# limit: 40 sections of 200 line edges (8,000) 4.9 s; 19 BSplines of 400 poles (7,619) 4.0 s;
+# 39 of 200 poles (7,839) 6.7 s.
 _LOFT_MAX_COST = 8000
-# Sweep cost units are profile edges times spine units, a spine edge counting 1 plus a tenth of
-# its poles: 100 profile edges along 100 spine lines (10,000) 5.8 s; 200 along 200 (40,000) 69 s;
+# Sections are bounded on their own, because one-edge sections cost one unit each: smooth loft
+# of 100 circles 0.09 s, 500 circles 1.6 s, 1,500 circles 19 s.
+_LOFT_MAX_SECTIONS = 500
+# Sweep cost units are profile units times spine units. A profile edge counts its poles (1 for
+# any other curve); a spine edge counts 1 plus a tenth of its poles, rounded down. A 200-pole
+# BSpline profile along a 20-turn helix of 194 poles (4,020) took 1.3 s. Line profiles: 100
+# profile edges along 100 spine lines (10,000) 5.8 s; 200 along 200 (40,000) 69 s;
 # 8 along 400 (3,200) 1.1 s; 200 along a 20-turn helix of 194 poles (4,000) 4.2 s; 400 along a
 # 25-turn helix of 392 poles (16,000) 8.7 s.
 _SWEEP_MAX_COST = 10000
 _SWEEP_POLES_PER_UNIT = 10
 
+# Only BSpline-like spine edges are sampled (a line or an analytic curve cannot reverse), and at
+# most _SPINE_MAX_SAMPLED_EDGES of them, so the check itself stays short.
 # A spine edge is sampled at this many parameters. A BSpline that doubles back on itself has a
 # point of zero velocity: an AdditivePipe over one held the interpreter for more than 280 s
 # (8 points through x = 0.5 i cos(0.3 i)). Its consecutive tangents flip to dot = -1.0; every
 # legitimate spine tried (helix, sine, hairpin, circle, 100-segment polyline) stays above 0.98.
 _SPINE_TANGENT_SAMPLES = 400
+_SPINE_MAX_SAMPLED_EDGES = 100
 
 _SWEEP_MODES = {"standard": "Standard", "frenet": "Frenet"}
 _SPINE_SHAPE_TYPES = frozenset({"Edge", "Wire"})
@@ -861,11 +869,8 @@ def _require_bool(value: object, what: str) -> bool:
 
 def _edge_poles(edge: object) -> int:
     """Return the pole count of a BSpline-like edge, or 0 for any other curve."""
-    getter = getattr(getattr(edge, "Curve", None), "getPoles", None)
-    if not callable(getter):
-        return 0
     try:
-        return len(getter())
+        return len(edge.Curve.getPoles())
     except Exception:  # noqa: BLE001 - a curve that cannot report poles counts as plain
         return 0
 
@@ -887,19 +892,30 @@ def _loft_sections(document: object, profile: object, sections: object) -> list[
         recompute for that).
     """
     if not isinstance(sections, list) or not sections:
-        raise ValidationError("sections must be a non-empty list of sketch names")
+        raise LoftSweepRefusal(
+            "loft.invalid_sections", "sections must be a non-empty list of sketch names"
+        )
+    if len(sections) > _LOFT_MAX_SECTIONS:
+        raise LoftSweepRefusal(
+            "loft.too_complex",
+            f"{len(sections)} sections is above the limit of {_LOFT_MAX_SECTIONS}: loft fewer "
+            "sections",
+        )
     if len(set(map(str, sections))) != len(sections):
-        raise ValidationError("sections must not repeat a sketch")
+        raise LoftSweepRefusal("loft.invalid_sections", "sections must not repeat a sketch")
     if profile in sections:
-        raise ValidationError(f"sections must not hold the profile {profile}")
+        raise LoftSweepRefusal(
+            "loft.invalid_sections", f"sections must not hold the profile {profile}"
+        )
     wanted = len(_section_shape(document, profile, "profile").Wires)
     shapes = []
     for section in sections:
         shape = _section_shape(document, section, "section")
         if len(shape.Wires) != wanted:
-            raise ValidationError(
+            raise LoftSweepRefusal(
+                "loft.wire_count_mismatch",
                 f"section {section} has {len(shape.Wires)} wires, the profile has {wanted}; "
-                "every section needs the same number of wires"
+                "every section needs the same number of wires",
             )
         shapes.append(shape)
     return shapes
@@ -928,9 +944,10 @@ def feature_loft(
     section back to the profile and needs at least two sections (FreeCAD resets it silently
     otherwise). ``subtractive`` removes the lofted solid from the Body.
 
-    :raises ValidationError: an input is unknown, not a sketch, empty, repeated or mismatched in
-        wire count, a flag is not a boolean, or ``closed`` has fewer than two sections.
-    :raises LoftSweepRefusal: ``loft.too_complex``: the sections cost more than the limit.
+    :raises ValidationError: an input is unknown or not a sketch, or a flag is not a boolean.
+    :raises LoftSweepRefusal: ``loft.invalid_sections`` (empty, repeated, or holding the
+        profile), ``loft.wire_count_mismatch``, ``loft.closed_needs_sections`` or
+        ``loft.too_complex`` (too many sections, or the sections cost more than the limit).
     """
     _require_partdesign()
 
@@ -941,8 +958,9 @@ def feature_loft(
         _require_bool(ruled, "ruled")
         _require_bool(subtractive, "subtractive")
         if _require_bool(closed, "closed") and len(sections) < 2:
-            raise ValidationError(
-                "closed needs at least 2 sections: FreeCAD ignores it for a single section"
+            raise LoftSweepRefusal(
+                "loft.closed_needs_sections",
+                "closed needs at least 2 sections: FreeCAD ignores it for a single section",
             )
         cost = _loft_cost([_section_shape(document, profile, "profile"), *shapes])
         if cost > _LOFT_MAX_COST:
@@ -992,8 +1010,9 @@ def _spine_target(document: object, spine: object) -> tuple[object, str, list[ob
     ``spine`` is a sketch Name, or a ``mapped_name`` selector naming one Edge, or a whole object
     (no ``mapped_name``). A whole object must be an Edge, a Wire or a compound of those.
 
-    :raises ValidationError: the spine is unknown, not a sketch (for a string), not an Edge or
-        a wire shape, or its subelement does not resolve to an Edge.
+    :raises ValidationError: the spine is unknown or, for a string, not a sketch.
+    :raises LoftSweepRefusal: ``sweep.invalid_spine``: a Body, a subelement that is not an Edge,
+        or a whole object that is not an edge, a wire or a compound of those.
     """
     if isinstance(spine, str):
         obj = _resolve_sketch(document, spine, "spine")
@@ -1001,6 +1020,8 @@ def _spine_target(document: object, spine: object) -> tuple[object, str, list[ob
     else:
         obj_name, subelement = _selector_subelement(spine, "spine", whole_object=True)
         obj = _resolve_object(document, obj_name, "spine")
+        if str(getattr(obj, "TypeId", "")) == _BODY_TYPE:
+            raise LoftSweepRefusal("sweep.invalid_spine", f"spine must not be a Body: {obj_name}")
     shape = _require_shape(obj)
     if subelement:
         try:
@@ -1008,17 +1029,19 @@ def _spine_target(document: object, spine: object) -> tuple[object, str, list[ob
         except Exception as exc:  # noqa: BLE001 - an unresolvable subelement is caller input
             raise ValidationError(f"unresolvable spine selector {subelement!r}: {exc}") from exc
         if getattr(element, "ShapeType", "") != "Edge":
-            raise ValidationError(
+            raise LoftSweepRefusal(
+                "sweep.invalid_spine",
                 f"spine selector {subelement!r} resolves to a "
-                f"{getattr(element, 'ShapeType', 'unknown')}, not an Edge"
+                f"{getattr(element, 'ShapeType', 'unknown')}, not an Edge",
             )
         return obj, subelement, [element]
     kinds = {shape.ShapeType}
     if shape.ShapeType == "Compound":
         kinds = {sub.ShapeType for sub in shape.SubShapes}
     if not shape.Edges or not kinds <= _SPINE_SHAPE_TYPES:
-        raise ValidationError(
-            f"spine {obj.Name} is a {shape.ShapeType}; a spine must be an edge or a wire"
+        raise LoftSweepRefusal(
+            "sweep.invalid_spine",
+            f"spine {obj.Name} is a {shape.ShapeType}; a spine must be an edge or a wire",
         )
     return obj, "", list(shape.Edges)
 
@@ -1026,9 +1049,17 @@ def _spine_target(document: object, spine: object) -> tuple[object, str, list[ob
 def _check_spine_tangents(edges: list[object]) -> None:
     """Refuse a spine edge whose direction reverses between two samples.
 
-    :raises LoftSweepRefusal: ``sweep.degenerate_spine``.
+    :raises LoftSweepRefusal: ``sweep.degenerate_spine``, or ``sweep.too_complex`` when the
+        spine holds more curved edges than the check samples.
     """
-    for edge in edges:
+    curved = [edge for edge in edges if _edge_poles(edge)]
+    if len(curved) > _SPINE_MAX_SAMPLED_EDGES:
+        raise LoftSweepRefusal(
+            "sweep.too_complex",
+            f"the spine holds {len(curved)} BSpline edges, above the limit of "
+            f"{_SPINE_MAX_SAMPLED_EDGES}: use fewer spine edges",
+        )
+    for edge in curved:
         first, last = edge.ParameterRange
         previous = None
         for index in range(_SPINE_TANGENT_SAMPLES + 1):
@@ -1051,8 +1082,9 @@ def _check_spine_tangents(edges: list[object]) -> None:
 
 
 def _sweep_cost(profile_shape: object, spine_edges: list[object]) -> int:
+    profile_units = sum(_edge_poles(edge) or 1 for edge in profile_shape.Edges)
     spine_units = sum(1 + _edge_poles(edge) // _SWEEP_POLES_PER_UNIT for edge in spine_edges)
-    return len(profile_shape.Edges) * spine_units
+    return profile_units * spine_units
 
 
 def feature_sweep(
@@ -1074,15 +1106,17 @@ def feature_sweep(
     follows the Frenet trihedron of the spine. ``subtractive`` removes the swept solid from the
     Body.
 
-    :raises ValidationError: an input is unknown, not a sketch, or has the wrong shape; the spine
-        is the profile; ``mode`` is not one of the two names; or a flag is not a boolean.
-    :raises LoftSweepRefusal: ``sweep.too_complex`` or ``sweep.degenerate_spine``.
+    :raises ValidationError: an input is unknown or not a sketch, or a flag is not a boolean.
+    :raises LoftSweepRefusal: ``sweep.invalid_spine`` (the profile, a Body, or not an edge or
+        wire), ``sweep.invalid_mode``, ``sweep.too_complex`` or ``sweep.degenerate_spine``.
     """
     _require_partdesign()
 
     def member() -> str:
         if not isinstance(mode, str) or mode not in _SWEEP_MODES:
-            raise ValidationError(f"mode must be one of {sorted(_SWEEP_MODES)}, got {mode!r}")
+            raise LoftSweepRefusal(
+                "sweep.invalid_mode", f"mode must be one of {sorted(_SWEEP_MODES)}, got {mode!r}"
+            )
         return _SWEEP_MODES[mode]
 
     def precheck(document: object) -> None:
@@ -1091,22 +1125,21 @@ def feature_sweep(
         profile_shape = _section_shape(document, profile, "profile")
         obj, _, edges = _spine_target(document, spine)
         if obj.Name == profile:
-            raise ValidationError("spine must not be the profile sketch")
+            raise LoftSweepRefusal("sweep.invalid_spine", "spine must not be the profile sketch")
         _require_bool(subtractive, "subtractive")
         resolved = member()
         shim.probe_object(
             "PartDesign::AdditivePipe",
             lambda probe: _checked_enum(probe, "Mode", resolved, "mode"),
         )
-        _check_spine_tangents(edges)
         cost = _sweep_cost(profile_shape, edges)
         if cost > _SWEEP_MAX_COST:
             raise LoftSweepRefusal(
                 "sweep.too_complex",
-                f"the profile and spine cost {cost} units (profile edges times spine edges, "
-                f"a BSpline adding a tenth of its poles), above the limit of {_SWEEP_MAX_COST}: "
-                "use a simpler profile or spine",
+                f"the profile and spine cost {cost} units (profile units times spine units), "
+                f"above the limit of {_SWEEP_MAX_COST}: use a simpler profile or spine",
             )
+        _check_spine_tangents(edges)
 
     def op(document: object) -> list[str]:
         body_obj = _resolve_body(document, body)

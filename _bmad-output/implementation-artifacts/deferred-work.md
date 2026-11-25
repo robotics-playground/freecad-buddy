@@ -2295,3 +2295,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `_bmad-output/implementation-artifacts/verify-13-11.md` "Round 2" R2-1 (synthetic Python object; no stock FreeCAD type found affected).
   blocker: no stock FreeCAD type reproduces it; low.
   unblock: a real document type that holds a member in Group and also links to it, or a small refactor that checks link properties besides Group.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-18-loft-sweep.md`
+  summary: `feature_sweep` does not detect a BSpline spine with a zero-velocity point and no tangent reversal.
+  evidence: Review finding (unverified, would be medium): `_check_spine_tangents` refuses only a negative tangent dot product. A zero-velocity cusp without reversal may still hold the interpreter in `AdditivePipe`. A probe of such a curve (derivative length near zero at one sample, tangent continuous) settles it.

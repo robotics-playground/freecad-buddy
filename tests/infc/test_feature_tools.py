@@ -2806,6 +2806,82 @@ class LoftTest(_LoftSweepFixture):
         self.assertGreater(poles, 1)
         self.assertEqual(cost, poles)
 
+    def test_Should_carry_the_documented_code_When_a_loft_refusal_names_one(self):
+        # Arrange
+        body = self.two_square_loft_body()
+        self.ring_sketch(body, "Holed", 20.0)
+        cases = {
+            "closed with one section": ({"closed": True}, "loft.closed_needs_sections"),
+            "profile in sections": ({"sections": ["Base"]}, "loft.invalid_sections"),
+            "repeated section": ({"sections": ["Top", "Top"]}, "loft.invalid_sections"),
+            "empty sections": ({"sections": []}, "loft.invalid_sections"),
+            "wire count mismatch": ({"sections": ["Holed"]}, "loft.wire_count_mismatch"),
+        }
+
+        for label, (overrides, code) in cases.items():
+            with self.subTest(label):
+                # Act
+                with self.assertRaises(features.LoftSweepRefusal) as caught:
+                    self.loft(**overrides)
+
+                # Assert
+                self.assertEqual(caught.exception.code, code)
+
+    def test_Should_refuse_with_a_code_When_there_are_more_sections_than_the_limit(self):
+        # Arrange
+        body = self.two_square_loft_body()
+        self.square(body, "Third", 0.0, 20.0, 30.0)
+        real_limit = features._LOFT_MAX_SECTIONS
+        features._LOFT_MAX_SECTIONS = 1
+
+        # Act
+        try:
+            with self.assertRaises(features.LoftSweepRefusal) as caught:
+                self.loft(sections=["Top", "Third"])
+        finally:
+            features._LOFT_MAX_SECTIONS = real_limit
+
+        # Assert
+        self.assertEqual(caught.exception.code, "loft.too_complex")
+        self.assertIn("limit of 1", str(caught.exception))
+
+    def test_Should_refuse_before_the_bracket_When_the_profile_is_not_a_sketch(self):
+        # Arrange
+        self.two_square_loft_body()
+        self.document().addObject("Part::Box", "Box")
+
+        # Act
+        message = self.assert_rejected_pre_bracket(self.object_count, self.loft, profile="Box")
+
+        # Assert
+        self.assertIn("not a sketch", message)
+
+    def test_Should_refuse_before_the_bracket_When_a_section_sketch_is_empty(self):
+        # Arrange
+        body = self.two_square_loft_body()
+        self._sketch(body, "Blank", 10.0)
+        self.document().recompute()
+
+        # Act
+        message = self.assert_rejected_pre_bracket(self.object_count, self.loft, sections=["Blank"])
+
+        # Assert
+        self.assertIn("carries no", message)
+
+    def test_Should_roll_back_with_spec_failed_When_a_section_sketch_is_not_fully_constrained(self):
+        # Arrange
+        body = self.two_square_loft_body()
+        self.loose_rect_sketch(body, "Loose", 12.0, 12.0)
+        before = self.object_count()
+
+        # Act
+        envelope = self.loft(sections=["Loose"])
+
+        # Assert
+        self.assertEqual(envelope["status"], "SPEC_FAILED", envelope.get("detail"))
+        self.assertTrue(envelope["structured_content"]["mutation"]["rolled_back"])
+        self.assertEqual(self.object_count(), before)
+
     def test_Should_reach_the_loft_When_preview_dry_run_names_it(self):
         # Arrange
         self.two_square_loft_body()
@@ -3022,6 +3098,194 @@ class SweepTest(_LoftSweepFixture):
         # Assert
         for members in probes:
             self.assertTrue(mapped <= set(members), members)
+
+    def helix_object(self, turns=5):
+        """A helix of radius 10 and pitch 5 in a plain Part feature outside the Body."""
+        document = self.document()
+        helix = document.addObject("Part::Feature", "Helix")
+        helix.Shape = Part.makeHelix(5.0, 5.0 * turns, 10.0)
+        document.recompute()
+        return helix
+
+    def test_Should_sweep_along_a_helix_When_the_spine_is_a_whole_part_object(self):
+        # Arrange
+        body = self.empty_body()
+        self.circle_sketch(
+            body, "Ring", (10.0, 0.0), 1.5, rotation=App.Rotation(App.Vector(1, 0, 0), 90)
+        )
+        helix = self.helix_object()
+        length = sum(edge.Length for edge in helix.Shape.Edges)
+        spine = {"kind": "mapped_name", "object": "Helix"}
+
+        # Act
+        envelope = self.sweep(spine=spine, mode="frenet")
+
+        # Assert
+        state = self.assert_ok(envelope)
+        expected = math.pi * 1.5**2 * length
+        self.assertAlmostEqual(state["shape_summary"]["volume"] / expected, 1.0, delta=0.03)
+
+    def test_Should_count_curved_spine_units_When_the_spine_is_a_bspline(self):
+        # Arrange
+        body = self.empty_body()
+        ring = self.circle_sketch(body, "Ring", (10.0, 0.0), 1.5)
+        helix = self.helix_object(turns=20)
+        poles = sum(len(edge.Curve.getPoles()) for edge in helix.Shape.Edges)
+
+        # Act
+        cost = features._sweep_cost(ring.Shape, list(helix.Shape.Edges))
+
+        # Assert
+        self.assertGreater(poles, 10)
+        self.assertEqual(cost, 1 * (1 + poles // 10))
+
+    def test_Should_count_profile_poles_When_the_profile_edge_is_a_bspline(self):
+        # Arrange
+        body = self.empty_body()
+        sketch = self._sketch(body, "Ring", 0.0)
+        curve = Part.BSplineCurve()
+        points = [App.Vector(3 * math.cos(i), 3 * math.sin(i), 0) for i in range(6)]
+        curve.interpolate(points, PeriodicFlag=True)
+        sketch.addGeometry(curve, False)
+        self.line_spine(body, "Path")
+        self.document().recompute()
+        poles = len(sketch.Shape.Edges[0].Curve.getPoles())
+        spine_edges = list(self.document().getObject("Path").Shape.Edges)
+
+        # Act
+        cost = features._sweep_cost(sketch.Shape, spine_edges)
+
+        # Assert
+        self.assertGreater(poles, 1)
+        self.assertEqual(cost, poles)
+
+    def test_Should_accept_a_sweep_at_the_cost_limit_and_refuse_one_below_it(self):
+        # Arrange
+        self.sweep_body()
+        real_limit = features._SWEEP_MAX_COST
+
+        # Act
+        try:
+            features._SWEEP_MAX_COST = 1
+            at_limit = self.sweep()
+            self.registry.document_undo(doc=self.handle)
+            features._SWEEP_MAX_COST = 0
+            with self.assertRaises(features.LoftSweepRefusal) as caught:
+                self.sweep()
+        finally:
+            features._SWEEP_MAX_COST = real_limit
+
+        # Assert
+        self.assert_ok(at_limit)
+        self.assertEqual(caught.exception.code, "sweep.too_complex")
+        self.assertIn("cost 1 units", str(caught.exception))
+
+    def test_Should_refuse_with_a_code_When_the_spine_has_more_curved_edges_than_are_sampled(self):
+        # Arrange
+        self.sweep_body()
+        helix = self.helix_object()
+        spine = {"kind": "mapped_name", "object": "Helix"}
+        real_limit = features._SPINE_MAX_SAMPLED_EDGES
+        features._SPINE_MAX_SAMPLED_EDGES = 0
+
+        # Act
+        try:
+            with self.assertRaises(features.LoftSweepRefusal) as caught:
+                self.sweep(spine=spine)
+        finally:
+            features._SPINE_MAX_SAMPLED_EDGES = real_limit
+
+        # Assert
+        self.assertEqual(caught.exception.code, "sweep.too_complex")
+        self.assertIn("limit of 0", str(caught.exception))
+        self.assertTrue(helix.Shape.Edges)
+
+    def test_Should_carry_the_documented_code_When_a_sweep_refusal_names_one(self):
+        # Arrange
+        self.sweep_body()
+        self.document().addObject("Part::Box", "Box")
+        self.document().recompute()
+        cases = {
+            "spine is the profile": ({"spine": "Ring"}, "sweep.invalid_spine"),
+            "spine is a body": (
+                {"spine": {"kind": "mapped_name", "object": "Body", "mapped_name": "Edge1"}},
+                "sweep.invalid_spine",
+            ),
+            "face as spine element": ({"spine": sub("Box", "Face1")}, "sweep.invalid_spine"),
+            "solid as spine": (
+                {"spine": {"kind": "mapped_name", "object": "Box"}},
+                "sweep.invalid_spine",
+            ),
+            "mode fixed": ({"mode": "fixed"}, "sweep.invalid_mode"),
+        }
+
+        for label, (overrides, code) in cases.items():
+            with self.subTest(label):
+                # Act
+                with self.assertRaises(features.LoftSweepRefusal) as caught:
+                    self.sweep(**overrides)
+
+                # Assert
+                self.assertEqual(caught.exception.code, code)
+
+    def test_Should_refuse_before_the_bracket_When_the_edge_selector_does_not_resolve(self):
+        # Arrange
+        self.sweep_body()
+
+        # Act
+        message = self.assert_rejected_pre_bracket(
+            self.object_count, self.sweep, spine=sub("Path", "Edge99")
+        )
+
+        # Assert
+        self.assertIn("unresolvable spine selector", message)
+
+    def test_Should_refuse_before_the_bracket_When_the_selector_names_a_profile_edge(self):
+        # Arrange
+        self.sweep_body()
+
+        # Act
+        message = self.assert_rejected_pre_bracket(
+            self.object_count, self.sweep, spine=sub("Ring", "Edge1")
+        )
+
+        # Assert
+        self.assertIn("profile", message)
+
+    def test_Should_refuse_before_the_bracket_When_the_profile_is_not_a_sketch(self):
+        # Arrange
+        self.sweep_body()
+        self.document().addObject("Part::Box", "Box")
+
+        # Act
+        message = self.assert_rejected_pre_bracket(self.object_count, self.sweep, profile="Box")
+
+        # Assert
+        self.assertIn("not a sketch", message)
+
+    def test_Should_leave_undo_usable_When_a_sweep_rolls_back(self):
+        # Arrange
+        body = self.empty_body()
+        self.open_square(body, "Ring", 6.0, 0.0)
+        self.line_spine(body, "Path")
+        self.rect_sketch(body, "Pocket", 0.0, 0.0, 8.0, 8.0)
+        self.assertEqual(self.sweep()["status"], "RECOMPUTE_ERROR")
+        padded = features.feature_pad(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            profile="Pocket",
+            name="Block",
+            length=mm(5.0),
+        )
+        self.assert_ok(padded)
+
+        # Act
+        undone = self.registry.document_undo(doc=self.handle)
+
+        # Assert
+        self.assertEqual(undone["status"], "OK", undone.get("detail"))
+        self.assertIsNone(self.document().getObject("Block"))
 
     def test_Should_reach_the_sweep_When_preview_dry_run_names_it(self):
         # Arrange

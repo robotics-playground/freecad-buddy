@@ -2,7 +2,7 @@
 title: 'feature_loft and feature_sweep tools'
 type: 'feature'
 created: '2026-11-24'
-status: 'in-progress'
+status: 'in-review'
 route: 'dispatch'
 review_loop_iteration: 0
 baseline_commit: 'dd7e8355eacffc58041fd89eba39e13d6177d60f'
@@ -89,6 +89,35 @@ context:
 ## Spec Change Log
 
 ## Review Triage Log
+
+Lenses: Blind Hunter ac866481e169b08a1 (opus, high), Edge Case Hunter afc3620d14122415a (opus, high), Verification Gap a195efefcdce32b94 (sonnet, medium). A first launch of all three ended on a usage limit with no findings (partial ids a8dcf8d3a05d10c2a and two with no output); the three above are the relaunch.
+
+| Lens | Finding | Verdict | Route and evidence |
+| --- | --- | --- | --- |
+| Blind, Edge, Gap | Tangent sampling ran before the cost guard, unbounded (401 calls per edge) | medium | patch: cost first, only BSpline-like edges sampled, at most 100; tests `Should_refuse_with_a_code_When_the_spine_has_more_curved_edges...` |
+| Blind | Refusals other than too_complex carry no `detail.code` (Q4) | medium | patch: `loft.invalid_sections`, `loft.wire_count_mismatch`, `loft.closed_needs_sections`, `sweep.invalid_spine`, `sweep.invalid_mode`; code tests |
+| Blind | "At the limit" timings were above the limit | low | patch: re-measured accepted cases (7,619 BSpline 4.0 s, 7,839 6.7 s), comment and doc corrected |
+| Blind, Edge | Sweep cost ignores BSpline profile poles | medium | patch: profile edge counts poles; measured 200-pole profile on a 20-turn helix 1.3 s; test |
+| Edge | Thousands of one-edge sections pass the loft cost (cost = count) | medium | patch: measured 1,500 circles 19 s; `_LOFT_MAX_SECTIONS` 500 (1.6 s); test |
+| Blind | Corners of the accepted range unmeasured | low | rejected: the product limit and the section limit bound both corners; each measured |
+| Blind | Spine outside the Body not refused | false | probed: a `Part::Feature` helix at document root sweeps and builds (new test `Should_sweep_along_a_helix...`) |
+| Edge | Body as spine selector forms a cycle | medium | patch: `sweep.invalid_spine`; test |
+| Edge | Sketch spine with a point is refused | false | FreeCAD itself raises "neither an edge nor a wire" for a vertex in the compound (`FeaturePipe.cpp:735`) |
+| Edge | Degree-1 BSpline with a corner refused as degenerate | low | rejected: a fix needs derivative magnitudes and adds complexity; the doc states the 90 degree rule |
+| Edge, Gap | Zero-velocity point without a reversal not detected | maybe-false | defer: would be medium; settle with a probe of a cusp-free zero-velocity BSpline |
+| Edge | `edge.Curve` can raise past `getattr` | low | patch: whole read in `try` |
+| Edge | Test of the degenerate spine has no watchdog | low | rejected: a hang holds the GIL, so a thread timer cannot fire; the pre-bracket refusal is asserted |
+| Edge, Gap | Doc "a tenth of its poles" is rounded down | low | patch: doc says rounded down |
+| Gap | Sweep cost BSpline spine, limit boundary untested | medium | patch: tests for `_sweep_cost` on a helix and a BSpline profile, and for the limit |
+| Gap | Accept side of the degenerate check untested | medium | patch: helix spine test (194 poles) builds |
+| Blind | Untested refusals: profile not a sketch, empty sketch, `Edge99`, profile-edge selector | low | patch: tests |
+| Blind, Gap | Sweep rollback lacks the undo-after-refusal test (L14) | medium | patch: test |
+| Gap | Unconstrained section gives `SPEC_FAILED`, untested | low | patch: test `Should_roll_back_with_spec_failed...` |
+| Blind | Closed-loft test passes for any different volume | low | rejected: the closed volume has no independent derivation; the Closed property, validity and difference are asserted |
+| Blind | Schema lacks `uniqueItems` and a conditional for `closed` | low | rejected: runtime refusals cover both with codes |
+| Blind | Doc schema text differs from code | low | patch: descriptions aligned |
+| Blind | Profile shape fetched twice in the loft precheck | low | rejected: no measurable cost |
+
 
 ## Verification
 
