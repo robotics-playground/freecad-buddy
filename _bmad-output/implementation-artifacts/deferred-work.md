@@ -2348,6 +2348,13 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: Lid on a row of unit boxes: 13.6 s at 100 boxes and 108 s at 200 boxes at face product 7,200 (red team RT-5). A section plus fuse proof skipped `distToShape` for touching pairs (1.4 s for 200 boxes) but read distance 0 across small real gaps at an edge, a vertex or a curved surface (verify-13-fu-r2 D1), so it was removed.
   blocker: no measured cost bound for `distToShape` with many contact solutions; decision 45 documents long GIL-holding calls as a limit.
   unblock: a bound that keeps the true distance, or the worker isolation decision (AD-27, decision 45) that lets a timed call stop.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-16-set-parameters-placement-strings.md`
+  summary: `skills/freecad-scripting-idioms/references/gap-list.md:33` and `:42` still say `feature_set_parameters` refuses a placement and a string and route them to `script_exec`.
+  evidence: Story 13-16 makes the tool write `Placement`, `AttachmentOffset` and `Label`; `SKILL.md:74-78` now says so. The plan assigns the gap-list row removal to Story 13-19.
+  blocker: Story 13-19 owns the gap list.
+  unblock: Story 13-19 removes row 33 and the `Label` row, and narrows row 42 ("string or link") to the link and file types, which `feature_set_parameters` still refuses.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-15-tnp-expected-reattachment.md`
   summary: A curved element (a cylinder or fillet face) that rides its moved support may still grade `REPOINTED` in the GUI, because `Shape.BoundBox` can use the display triangulation and a remesh shifts the box by the mesh deflection, more than the 1e-7 element tolerance.
   evidence: review r1 (verification-gap lens) of Story 13-15 cites `TopoShape.cpp:1126-1148` (`BRepBndLib::Add`); related to the entry on the GUI display mesh and `tnp_guard.py` witness above. Every Story 13-15 test uses a planar face or a straight edge.

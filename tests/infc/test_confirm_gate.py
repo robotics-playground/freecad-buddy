@@ -794,6 +794,49 @@ class OneCallPerMutationTest(_GateFixture):
         self.assertEqual(self.sink.records, [])
         self.assertTrue(self.document.getObject("Pad").Visibility)
 
+    def test_Should_keep_the_gate_When_only_a_label_is_written(self):
+        # Arrange
+        parameters = {"Label": "Renamed"}
+
+        # Act
+        message = self.assert_refused_without_touching_the_document(
+            self.set_pad_parameters, parameters
+        )
+
+        # Assert
+        self.assertIn("requires a confirm", message)
+        self.assertEqual(self.sink.records, [])
+        self.assertEqual(self.document.getObject("Pad").Label, "Pad")
+
+    def test_Should_return_unchanged_without_a_confirm_When_the_label_is_already_held(self):
+        # Arrange
+        parameters = {"Label": "Pad"}
+
+        # Act
+        envelope = self.set_pad_parameters(parameters)
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertEqual(envelope["structured_content"]["unchanged"], ["Label"])
+        self.assertEqual(self.sink.records, [])
+
+    def test_Should_keep_the_gate_When_only_a_placement_is_written(self):
+        # Arrange
+        parameters = {"Placement": {"base": {"x": {"value": 5.0, "unit": "mm"}}}}
+
+        # Act
+        message = self.assert_refused_without_touching_the_document(
+            features.feature_set_parameters,
+            self.registry,
+            doc=self.handle,
+            feature="Body",
+            parameters=parameters,
+        )
+
+        # Assert
+        self.assertIn("requires a confirm", message)
+        self.assertEqual(self.sink.records, [])
+
     def test_a_non_boolean_visibility_is_refused_by_the_precheck(self):
         message = self.assert_refused_without_touching_the_document(
             self.set_pad_parameters, {"Visibility": "no"}
