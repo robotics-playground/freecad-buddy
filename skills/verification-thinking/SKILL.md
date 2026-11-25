@@ -61,7 +61,7 @@ it — otherwise none of these checks can run.
   an unverified claim, and the point of verifying is to falsify a wrong part.
 - Measure **gap and overlap between parts** with `query_interference`
   `{"objects": ["Pin", "Housing"]}` (every pair; Bodies of one container).
-  `min_distance` is the gap. Touching parts read overlap 0, `boolean_failed` false.
+  `min_distance` is the gap. Touching solids usually read overlap 0, `boolean_failed` false.
   `boolean_failed` true means *unmeasured*, never zero: with `min_distance` near 0,
   report "contact, overlap unmeasured" (`references/measuring-clearance-and-sections.md`).
 - Measure a **cut through a part** with `query_section`

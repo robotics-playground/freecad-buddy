@@ -709,6 +709,8 @@ _MAX_PAIR_FACE_PRODUCT = 150_000
 # A call stops between pairs once this much time has passed. Worst case is this deadline plus one
 # pair at the per-pair limit (about 12 s on the development host: 129,600 -> 9.5 s, 230,400 ->
 # 17.8 s in the dense layout, and the limit is 150,000), which stays under the 60 s query budget.
+# The fuse cross-check of a touching pair adds little to that: 0.35 s at 384 x 384 faces (boxes in
+# rows and grids that touch), against 19 s for ``distToShape`` on the same pair.
 # Face counts are a poor cost proxy across layouts (87-face plates cost about 12 microseconds per
 # unit, dense boxes about 80), so the sum of a call is bounded by time, not by faces.
 _CALL_DEADLINE_SECONDS = 40.0

@@ -643,17 +643,38 @@ class QueryInterferenceTest(unittest.TestCase):
         depth = 1e-7
         self._add_box("A", size=100.0)
         self._add_box("B", 100.0 - depth, 0, 0, size=100.0)
-        shape_a = self.document.A.Shape.copy()
-        shape_b = self.document.B.Shape.copy()
+        common = self.document.A.Shape.copy().common(self.document.B.Shape.copy())
+        self.assertTrue(common.isNull() or not common.Volume, "the fixture needs an empty common")
 
         # Act
         envelope = self._measure(objects=["A", "B"])
 
         # Assert
         record = envelope["structured_content"]["pairs"][0]
-        self.assertTrue(shape_a.common(shape_b).isNull() or not shape_a.common(shape_b).Volume)
         self.assertTrue(record["boolean_failed"])
         self.assertIsNone(record["common_volume"])
+
+    def test_Should_flag_a_failed_boolean_When_the_overlap_is_just_above_the_tolerance(self):
+        # Arrange
+        overlaps = {"boxes of 100 mm": (100.0, 1e-9), "boxes of 1000 mm": (1000.0, 1e-8)}
+        for label, (size, depth) in overlaps.items():
+            with self.subTest(case=label):
+                self.tearDown()
+                self.setUp()
+                self._add_box("A", size=size)
+                self._add_box("B", size - depth, 0, 0, size=size)
+                common = self.document.A.Shape.copy().common(self.document.B.Shape.copy())
+                self.assertTrue(
+                    common.isNull() or not common.Volume, "the fixture needs an empty common"
+                )
+
+                # Act
+                envelope = self._measure(objects=["A", "B"])
+
+                # Assert
+                record = envelope["structured_content"]["pairs"][0]
+                self.assertTrue(record["boolean_failed"])
+                self.assertIsNone(record["common_volume"])
 
     def test_Should_flag_a_failed_boolean_When_the_fuse_loses_the_volume_of_a_solid_inside_another(
         self,
@@ -801,6 +822,8 @@ class QueryInterferenceTest(unittest.TestCase):
 
         def shapes_fusing_to(volume):
             class Shape(_FakeSolid):
+                Volume = 500.0
+
                 def common(self, other):
                     raise RuntimeError("boolean failed")
 
@@ -813,15 +836,16 @@ class QueryInterferenceTest(unittest.TestCase):
             return Shape(), Shape()
 
         tolerance = queries._TOUCH_VOLUME_REL_TOL
-        inside_tolerance = 2.0 * (1.0 - tolerance * 0.5)
-        above_tolerance = 2.0 * (1.0 - tolerance * 2.0)
+        total = 1000.0
+        inside_tolerance = total - tolerance * total * 0.5
+        above_tolerance = total - tolerance * total * 2.0
 
         # Act
-        at = queries._measure_interference(*shapes_fusing_to(inside_tolerance))
+        inside = queries._measure_interference(*shapes_fusing_to(inside_tolerance))
         above = queries._measure_interference(*shapes_fusing_to(above_tolerance))
 
         # Assert
-        self.assertFalse(at[2])
+        self.assertFalse(inside[2])
         self.assertTrue(above[2])
 
     def test_Should_leave_a_fresh_fingerprint_digest_equal_When_touching_pairs_are_measured(self):

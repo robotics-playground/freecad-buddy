@@ -2,7 +2,7 @@
 title: 'Epic 13 follow-ups: touching solids in query_interference, 13-18 low findings'
 type: 'bugfix'
 created: '2026-11-25'
-status: 'in-progress'
+status: 'done'
 route: 'dispatch'
 baseline_commit: '3df33fbdb1d4749d4e76caef9c4d813a141a3a96'
 review_loop_iteration: 0
@@ -64,9 +64,34 @@ context:
 
 ## Implementation Notes
 
+- The leader authorized one edit to `tool_catalog.py` (the `query_interference` description) after plan approval; the frozen "Never" line predates that decision.
+- Tolerance 1e-12 relative to the summed volume; mutants 1e-11 and 1e-9 turn two and three tests red.
+- Sweep limit mutants 10,000 and 2,999 each turn the boundary tests red.
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+Round 1 (lenses review-blind-hunter-r1-s13-fu, review-edge-cases-hunter-r1-s13-fu, review-verification-gap-finder-r1-s13-fu). Verdict, route.
+
+| Finding | Verdict | Route | Evidence |
+| --- | --- | --- | --- |
+| Tolerance loosened up to 3.3e-10 keeps all tests green (Blind, Edge, Gap) | medium | patch | Real; fake-volume test scaled with the constant. Added real overlap cases 3.3e-12 (100 mm, 1,000 mm) and scaled fake test; mutants 1e-11 and 1e-9 red |
+| Fuse uses the same intersector as `common`, so "proves" is too strong (Blind, Edge) | low | patch | Not reproduced in 25 probes by the Edge lens; design now states the limit |
+| Absolute limit follows the large part for small-against-large (Blind) | low | patch | T-2 and design state it |
+| Cost comment omits the fuse (Blind, Edge) | low | patch | Comment adds 0.35 s against 19 s; fuse after the deadline check unchanged |
+| Catalog sentence implies a fuse at unknown distance (Blind) | low | patch | Reworded |
+| "decision 41" ambiguous (Blind) | low | patch | Now "Epic 13 decision 41" in T-2 and design |
+| Setup check inside Assert, common run twice (Blind) | low | patch | Moved to Arrange |
+| TC-17 hash, `Big1/Big2` empty-common setup, no-op "document unchanged" clause (Blind, Gap) | low | patch | Hash `queries.py`; setup check added; fingerprint check |
+| Pronoun "It" in the loft paragraph (Blind) | low | patch | Reworded |
+| SKILL.md absolute claim vs BSpline limit (Blind) | low | patch | "usually" |
+| Require `fused.Solids` like the skill script (Blind) | low | reject | Non-solid fuse has a volume gap anyway; fix adds a guard |
+| Volumes recomputed per touching pair (Blind) | low | reject | Runs only after `distToShape` on contact pairs; fix adds caching |
+| Skip fuse after deadline (Edge) | low | reject | Deadline is checked before every pair; fuse measured at 2% of pair cost |
+| Mixed timing runs; 5,000-line recompute beside 3,000-line call (Blind) | low | reject | Rows are labelled recompute and whole call |
+| Compound args, untrusted pair never fuses, BSpline touch untested (Blind) | low | reject | Compound-internal overlap is a documented non-goal; structure prevents the untrusted fuse; BSpline noise is not stable to pin |
+| `tool_catalog.py` edit forbidden by spec; tasks unchecked (Blind) | false | reject | Leader authorized the edit; the lens did not see the spec file, which has the tasks checked |
 
 ## Design Notes
 
