@@ -4,6 +4,11 @@ Quality bar: quality-bar-13-16.md.
 
 | Id | Q | Severity | Source | Status | Proof |
 | --- | --- | --- | --- | --- | --- |
+| RT-1 | Q6 | high | redteam-13-16 | fixed-proven (195868c5; verifier r2 PASS, mutants red) | rt2 P8b/P8c, rt3 P10: 1/3000 or 0.5 deg pre-value -> SPEC_FAILED rolled_back false while the document is restored |
+| RT-2 | Q2 | medium (product) | redteam-13-16 | fixed-proven (195868c5; verifier r2 PASS, mutants red) | rt1 P7: 10**400 -> RECOMPUTE_ERROR via OverflowError |
+| RT-3 | Q2, Q6 | medium (product) | redteam-13-16 | fixed-proven (195868c5; verifier r2 PASS, mutants red) | rt6: base x 1e150 commits, after-fingerprint raises, SPEC_FAILED with the change kept |
+| RT-4 | Q4 | medium (test double) | redteam-13-16 | fixed-proven (195868c5; verifier r2 PASS, mutants red) | stub clamp FreeCAD never does; real 2**31 -> SPEC_FAILED SystemError |
+| L-1, L-2 | Q1 | low | redteam-13-16 | fixed (195868c5) | stored placement not reported; stub hidden-offset test |
 | R3-M1 | Q5 | medium (product) | r3 blind a6bfb8fa3172353c2 / edge a1d2efbdedff6878a | fixed-proven (15a097d6; mutant red) | `not_attached` tested the Hidden status; an object attached before its support had a shape keeps the offset Hidden yet applies it -> a valid write refused; now tests MapMode |
 | R3-M2 | Q4 | medium (product) | r3 lenses | fixed-proven (15a097d6; mutant red) | isclose 1e-9 accepted a clamped integer (2**31 vs 2**31-1); integers compare exactly |
 | R3-L | various | low | r3 lenses | fixed | probe rounding to 15 significant digits, NaN equality, limit message, clamp test, hints, doc fixes |
@@ -27,3 +32,9 @@ r2 found a high -> round 3 (last) after the builder merges the integration branc
 | r3 | 5af36b75 -> merge 0253cdd7 -> 15a097d6 | blind a6bfb8fa3172353c2, edge a1d2efbdedff6878a, gap a39c40cbf481743d3 | 1 -> 0 | 1 (H1) | 2 (fixed in round with mutants) | 0 |
 
 Three rounds used; no open high or product medium. As for 13-fu and 13-13: verifier + red team attack the last batch instead of a fourth lens round.
+| RT | 15a097d6 | redteam-13-16 | 0 -> 4 (RT-1 high, RT-2, RT-3, RT-4) | 2 (R3) | 4 | 0 |
+
+Fresh builder-13-16b fixes triage-13-16-rt.md; verifier-13-16 re-runs.
+| v2 | 195868c5 (+ doc fix) | verifier-13-16 r1 (15a097d6 PASS, container TC-20) + r2 (195868c5 PASS) | 4 -> 0 | 4 | 0 | 0 |
+
+Closed; merged into feat.
