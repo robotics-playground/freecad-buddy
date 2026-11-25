@@ -28,21 +28,23 @@ class _PartFixture(_FeatureFixture):
         return self.add_shape(name, Part.makeBox(size, size, size, App.Vector(x, y, z)))
 
     def crossing_family(self, axis, count, pitch):
-        """``count`` parallel cylinders of radius 1 and length 100, ``pitch`` apart.
+        """``count`` parallel cylinders of radius 1, ``pitch`` apart, long enough to span the span.
 
-        The "x" family runs along y at x offsets and the "y" family along x at y offsets, so every
-        solid of one family crosses every solid of the other.
+        The "x" family runs along y at x offsets and the "y" family along x at y offsets; each
+        cylinder is ``pitch * count + 2`` long, so every solid of one family crosses every solid
+        of the other.
         """
+        length = pitch * count + 2.0
         solids = []
         for index in range(count):
             offset = pitch * index
             if axis == "x":
                 solids.append(
-                    Part.makeCylinder(1.0, 100.0, App.Vector(offset, 0, 0), App.Vector(0, 1, 0))
+                    Part.makeCylinder(1.0, length, App.Vector(offset, 0, 0), App.Vector(0, 1, 0))
                 )
             else:
                 solids.append(
-                    Part.makeCylinder(1.0, 100.0, App.Vector(0, offset, 0), App.Vector(1, 0, 0))
+                    Part.makeCylinder(1.0, length, App.Vector(0, offset, 0), App.Vector(1, 0, 0))
                 )
         return Part.Compound(solids)
 
@@ -625,6 +627,29 @@ class PartBooleanTest(_PartFixture):
             act()
         self.assertEqual(caught.exception.code, "part_boolean.empty_result")
 
+    def test_Should_report_the_invalid_code_When_an_input_fails_to_recompute(self):
+        # Arrange
+        # A box of length 0 fails its own recompute ("Length of box too small"), and the cut
+        # that uses it is left Touched with no solid, not Invalid.
+        self.add_box("A")
+        document = self.document()
+        broken = document.addObject("Part::Box", "B")
+        broken.Length = 0.0
+        cut = document.addObject("Part::Cut", "Result")
+        cut.Base, cut.Tool = document.getObject("A"), broken
+        document.recompute()
+        check = features._part_boolean_result_check("Result", "cut", ["A", "B"])
+
+        # Act
+        def act():
+            check(document)
+
+        # Assert
+        self.assertNotEqual(set(cut.State) & {"Invalid", "Error", "Touched"}, set())
+        with self.assertRaises(transaction.RecomputeFailure) as caught:
+            act()
+        self.assertEqual(caught.exception.code, "part_boolean.invalid_result")
+
     def test_Should_name_the_inputs_When_the_result_is_empty(self):
         # Arrange
         self.add_box("A")
@@ -662,6 +687,8 @@ class PartBooleanTest(_PartFixture):
             act()
         self.assertEqual(caught.exception.code, "part_boolean.invalid_result")
         self.assertIn("Bowtie", str(caught.exception))
+        self.assertTrue(cut.getStatusString())
+        self.assertIn(cut.getStatusString(), str(caught.exception))
 
     def test_Should_roll_back_and_leave_no_intermediate_When_a_several_tool_cut_removes_the_base(
         self,
@@ -839,6 +866,8 @@ class PartBooleanRefusalTest(_PartFixture):
             "tool repeated": {"tools": ["B", "B"]},
             "empty tools": {"tools": []},
             "tools not a list": {"tools": "B"},
+            "tools is an int": {"tools": 5},
+            "tools is a bool": {"tools": True},
             "tools is null": {"tools": None},
             "twenty-one tools": {"tools": [f"T{index}" for index in range(21)]},
         }
@@ -934,9 +963,12 @@ class PartBooleanRefusalTest(_PartFixture):
         # check must answer first so isValid() never runs on an input the tool refuses anyway.
         self.add_box("A")
         boxes = [Part.makeBox(1, 1, 1, App.Vector(20 + 2 * i, 0, 0)) for i in range(501)]
-        self.add_shape("Many", Part.Compound(boxes).reversed())
+        many = self.add_shape("Many", Part.Compound(boxes).reversed())
 
         # Act and Assert
+        self.assertFalse(
+            shape_trust.is_measurable_solid(many.Shape), "the fixture must be an untrusted shape"
+        )
         self.assert_refusal(lambda: self.boolean(tools=["Many"]), "part_boolean.too_complex")
 
     def test_Should_refuse_crossing_tools_When_their_pairs_with_each_other_pass_the_limit(self):
@@ -954,6 +986,44 @@ class PartBooleanRefusalTest(_PartFixture):
         )
         self.assertIn("606 faces", message)
         self.assertIn("10200 solid pairs", message)
+
+    def test_Should_refuse_an_input_that_is_not_recomputed_When_its_shape_may_be_out_of_date(
+        self,
+    ):
+        # Arrange
+        self.add_box("A")
+        document = self.document()
+        stale = document.addObject("Part::Box", "B")
+        stale.Length = 20.0
+        before = self.fingerprint()
+
+        # Act
+        def act():
+            return self.boolean()
+
+        # Assert
+        self.assertIn("Touched", stale.State, "the fixture must be a touched object")
+        with self.assertRaises(features.PartToolRefusal) as caught:
+            act()
+        self.assertEqual(caught.exception.code, "part_boolean.untrusted_shape")
+        self.assertIn("recompute", str(caught.exception))
+        self.assertEqual(self.fingerprint(), before)
+
+    def test_Should_refuse_the_intermediate_name_When_it_is_another_objects_label(self):
+        # Arrange
+        self.add_box("A")
+        self.add_box("B", x=5.0)
+        self.add_box("C", x=-5.0)
+        self.add_box("D", x=50.0).Label = "Result_tools"
+
+        # Act
+        def act():
+            return self.boolean(tools=["B", "C"])
+
+        # Assert
+        with self.assertRaises(ValidationError) as caught:
+            act()
+        self.assertIn("Label of D", str(caught.exception))
 
     def test_Should_accept_exactly_twenty_tools_When_they_are_disjoint_boxes(self):
         # Arrange

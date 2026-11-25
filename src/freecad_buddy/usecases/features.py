@@ -3893,16 +3893,20 @@ _PART_PRIMITIVES = {
 # A cone may end in a point, so its radii may be zero (both zero is refused); every other
 # dimension must be positive.
 _ZERO_ALLOWED_FIELDS = {"cone": frozenset({"radius1", "radius2"})}
-# FreeCAD 1.1.4 keeps a primitive's size in a single-precision slot and clamps a larger value
-# without a message (probe: a Sphere ``Radius`` of 1e39 reads back as 3.4028e38).
-_MAX_PRIMITIVE_MM = 3.4e38
+# Sphere ``Radius`` and Torus ``Radius1``/``Radius2`` carry a quantity constraint capped at
+# ``std::numeric_limits<float>::max()`` (PrimitiveFeature.cpp ``quantityRange``) and clamp a larger
+# value without a message (probe: a Sphere ``Radius`` of 1e39 reads back as 3.4028e38). Box,
+# cylinder and cone sizes use the double range.
+_MAX_CONSTRAINED_MM = 3.4e38
+_CONSTRAINED_KINDS = frozenset({"sphere", "torus"})
 
 
 def _part_name_available(document: object, name: object) -> str:
     """Return ``name`` after checking it is a free Name and no other object's Label.
 
     ``addObject`` gives a new object the Label ``name`` only when no object holds that Label
-    (unless the ``DuplicateLabels`` preference is on); a part tool promises Name = Label.
+    (or the ``DuplicateLabels`` preference is on); a part tool promises Name = Label and refuses
+    in both cases, so its result does not depend on a preference.
 
     :raises ValidationError: the name is unusable, taken as a Name, or held as a Label.
     """
@@ -3942,10 +3946,10 @@ def _part_primitive_values(kind: object, given: dict) -> dict[str, float]:
                 f"{field} must be {'0 or more' if field in zero_allowed else 'above 0'} mm, "
                 f"got {value:g}",
             )
-        if value > _MAX_PRIMITIVE_MM:
+        if kind in _CONSTRAINED_KINDS and value > _MAX_CONSTRAINED_MM:
             raise PartToolRefusal(
                 "part_primitive.dimension",
-                f"{field} must be at most {_MAX_PRIMITIVE_MM:g} mm, got {value:g}: FreeCAD "
+                f"{field} must be at most {_MAX_CONSTRAINED_MM:g} mm, got {value:g}: FreeCAD "
                 "would store a smaller value",
             )
     if kind == "cone" and values["radius1"] == 0 == values["radius2"]:
@@ -4043,7 +4047,9 @@ _PART_BOOLEAN_MAX_TOOLS = 20
 # limit. Both are under the 120 s feature timeout. The bridge cannot interrupt a long OCC call, so
 # the limits apply to the input. Pairs are counted across every two inputs, because several tools
 # are intersected with each other too: a plate cut by two families of 100 crossing cylinders (606
-# faces, 200 base-by-tool pairs, 10,200 pairs in all) took 68.9 s.
+# faces, 200 base-by-tool pairs, 10,200 pairs in all) took 68.9 s. All timings are for
+# inputs whose solids do not overlap inside one compound; the trust check does not detect that
+# (deferred-work.md), and a tool compound of mutually crossing solids can run far longer.
 _PART_BOOLEAN_MAX_FACES = 3000
 _PART_BOOLEAN_MAX_SOLID_PAIRS = 1000
 
@@ -4107,6 +4113,14 @@ def _check_part_boolean_inputs(base_obj: object, tool_objs: list[object]) -> Non
                 f"{obj.Name} sits inside {parent.Name}; a boolean takes top-level objects (a "
                 "Body itself is allowed, a Body feature is not)",
             )
+    for obj in objects:
+        stale = _FAILED_STATES & set(obj.State)
+        if stale:
+            raise PartToolRefusal(
+                "part_boolean.untrusted_shape",
+                f"{obj.Name} is {sorted(stale)} and its shape may be out of date; recompute the "
+                "document first",
+            )
     shapes = [getattr(obj, "Shape", None) for obj in objects]
     faces = sum(len(shape.Faces) for shape in shapes if shape is not None)
     solids = [len(shape.Solids) if shape is not None else 0 for shape in shapes]
@@ -4128,6 +4142,10 @@ def _check_part_boolean_inputs(base_obj: object, tool_objs: list[object]) -> Non
             )
 
 
+# The states a recompute leaves on an object whose own execute failed (as ``verify.py`` reads them).
+_FAILED_STATES = frozenset({"Invalid", "Error", "Touched"})
+
+
 def _part_boolean_result_check(
     name: str, operation: str, inputs: list[str]
 ) -> Callable[[object], None]:
@@ -4142,7 +4160,7 @@ def _part_boolean_result_check(
 
     def check(document: object) -> None:
         result = document.getObject(name)
-        if "Invalid" in result.State:
+        if _FAILED_STATES & set(result.State):
             raise transaction.RecomputeFailure(
                 "part_boolean.invalid_result", f"{subject} failed: {result.getStatusString()}"
             )
@@ -4246,5 +4264,7 @@ def feature_part_boolean(
         audit_sink,
         precheck,
         state_probe=_object_state,
-        recompute_check=_part_boolean_result_check(name, str(operation), [base, *(tools or [])]),
+        recompute_check=_part_boolean_result_check(
+            name, str(operation), [base, *(tools if isinstance(tools, list) else [])]
+        ),
     )

@@ -160,6 +160,8 @@ Each has a recommendation; answer only the ones you want to change.
 - Review round 1, decision 51: the solid-pair cost limit counts every cross-input pair (the solids of each input times the solids of each other input), not only base solids times tool solids. Trigger: a plate cut by two families of 100 crossing cylinders (606 faces, 200 base-by-tool pairs) took 68.9 s. The limit stays 1,000. KEEP: the face limit of 3,000, the 20-tool limit.
 - Review round 1: the sections names `part_boolean.invalid_input` (a repeated input, tools not 1 to 20 Names) and `part_boolean.invalid_result` for a boolean object in an error state; a part tool refuses a name that is another object's Label (Name = Label); a primitive size above 3.4e38 mm is refused (FreeCAD clamps it silently).
 
+- Review round 2: the boolean refuses an input in a `Touched`, `Invalid` or `Error` state (`part_boolean.untrusted_shape`, its shape may be out of date); a failed boolean object in any of those states ends `part_boolean.invalid_result`; the 3.4e38 size bound applies to sphere and torus only (the kinds whose constraint FreeCAD clamps). The overlap-inside-one-compound gap stays deferred and now carries the >600 s probe.
+
 ## Review Triage Log
 
 | Round | Finding | Verdict | Route | Evidence |
@@ -170,3 +172,9 @@ Each has a recommendation; answer only the ones you want to change.
 | 1 | Failed boolean reported as empty result | medium | patch | f693e7f8, real Invalid boolean test |
 | 1 | Label clash, size clamp, non-string kind, stale text, tests at limit values, TC-21 | low to medium | patch | f693e7f8 |
 | 1 | Tiny-size tolerance, sliver noise floor, stale input shape, shared reason helper, coded plain errors, matrix totals | low | reject | builder report |
+| 2 | Tool compound of mutually crossing solids passes the limits, probe over 600 s | high (pre-existing predicate) | defer | same root cause as the overlap gap; counting pairs inside inputs would refuse valid 990-cylinder inputs; entry extended with the probe |
+| 2 | Non-list `tools` raises TypeError before the precheck | medium | patch | regression of round 1, tests added |
+| 2 | Touched input measured on a stale shape | medium | patch | Edge probe: Cut 1500 where 500 is right |
+| 2 | Failed boolean left Touched reported as empty result | medium | patch | real failing Part::Box test |
+| 2 | Size bound comment and scope wrong, crossing-family docstring, weak message and ordering tests, TC-21 undo count and TC-21-04 gaps, doc wording | low | patch | round 2 commit |
+| 2 | Lower size bound, plain error for Label clash, acceptance test in refusal class, spec Implementation Notes wording, boundary test just under 3.4e38 | low | reject | round 1 reasons; Implementation Notes are history |

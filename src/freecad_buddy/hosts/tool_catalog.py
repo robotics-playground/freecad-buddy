@@ -964,7 +964,8 @@ def _feature_specs():
             "Create one Part solid (box, cylinder, cone, sphere or torus) at document level, "
             "outside any Body. Each kind takes only its own fields. Refused with detail.code "
             "part_primitive.fields or part_primitive.dimension (a size at or below 0; a cone with "
-            "both radii 0; a torus with radius2 not below radius1).",
+            "both radii 0; a torus with radius2 not below radius1; a sphere or torus radius above "
+            "3.4e38). A name that is another object's Label is refused.",
         ),
         _feature_method(
             "feature_part_boolean",
@@ -994,8 +995,7 @@ def _feature_specs():
             "feature or an App::Part member), part_boolean.untrusted_shape (reversed, invalid, "
             "non-solid input: FreeCAD gives wrong numbers) or part_boolean.too_complex (above "
             "3,000 faces or 1,000 solid pairs across the inputs). An empty or invalid result fails "
-            "as "
-            "RECOMPUTE_ERROR part_boolean.empty_result or part_boolean.invalid_result and rolls "
+            "as RECOMPUTE_ERROR part_boolean.empty_result or part_boolean.invalid_result and rolls "
             "back.",
         ),
         _feature_method(
