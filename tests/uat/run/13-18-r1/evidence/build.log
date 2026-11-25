@@ -1,0 +1,16 @@
+[LoftPart.create] document_create status=OK code=None elapsed=1.015 undo_steps=None rolled_back=None msg= text=None
+[LoftPart.body] feature_body_create status=OK code=None elapsed=0.462 undo_steps=None rolled_back=False msg= text=None
+[LoftPart.fixture] script_exec status=OK code=None elapsed=0.469 undo_steps=None rolled_back=None msg= text=None
+[SweepPart.create] document_create status=OK code=None elapsed=0.191 undo_steps=None rolled_back=None msg= text=None
+[SweepPart.body] feature_body_create status=OK code=None elapsed=0.109 undo_steps=None rolled_back=False msg= text=None
+[SweepPart.fixture] script_exec status=OK code=None elapsed=0.079 undo_steps=None rolled_back=None msg= text=None
+[GroovePart.create] document_create status=OK code=None elapsed=0.216 undo_steps=None rolled_back=None msg= text=None
+[GroovePart.body] feature_body_create status=OK code=None elapsed=0.102 undo_steps=None rolled_back=False msg= text=None
+[GroovePart.fixture] script_exec status=OK code=None elapsed=0.097 undo_steps=None rolled_back=None msg= text=None
+[GroovePart.pad] feature_pad status=OK code=None elapsed=0.422 undo_steps=None rolled_back=False msg= text=None
+[LoftPart.op] feature_loft status=OK code=None elapsed=0.44 undo_steps=None rolled_back=False msg= text=None
+[LoftPart.query] query_object status=OK code=None elapsed=0.068 undo_steps=None rolled_back=None msg= text=None
+[SweepPart.op] feature_sweep status=OK code=None elapsed=0.172 undo_steps=None rolled_back=False msg= text=None
+[SweepPart.query] query_object status=OK code=None elapsed=0.025 undo_steps=None rolled_back=None msg= text=None
+[GroovePart.op] feature_sweep status=OK code=None elapsed=0.227 undo_steps=None rolled_back=False msg= text=None
+[GroovePart.query] query_object status=OK code=None elapsed=0.021 undo_steps=None rolled_back=None msg= text=None

@@ -1,0 +1,13 @@
+== ruff check .
+All checks passed!
+== python scripts/check_imports.py
+check_imports OK
+== python scripts/gen_schemas.py --check
+gen_schemas --check OK
+== python scripts/check_provenance.py
+check_provenance OK
+== python scripts/check_status_vocab.py
+check_status_vocab OK
+== python scripts/check_skill_shape.py
+== format
+1 file already formatted

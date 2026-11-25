@@ -2320,3 +2320,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-18-loft-sweep.md`
   summary: `feature_sweep` does not detect a BSpline spine with a zero-velocity point and no tangent reversal.
   evidence: Review finding (unverified, would be medium): `_check_spine_tangents` refuses only a negative tangent dot product. A zero-velocity cusp without reversal may still hold the interpreter in `AdditivePipe`. A probe of such a curve (derivative length near zero at one sample, tangent continuous) settles it.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-18-loft-sweep.md`
+  summary: Three low follow-ups from the Story 13-18 round-2 verification. (1) No test pins the sweep cost limit: setting it back to 10,000 turns no test red (R2-F1). (2) The design doc says every closed loft tried builds invalid, but 8 squares on a smooth ring build valid and the tool accepts them (R2-F2). (3) The code comments cite lower timings than measured: worst accepted loft 13.7 s (500 sections of 44-gons), sweep 9.3 s (circle along 3,000 lines).
+  evidence: `_bmad-output/implementation-artifacts/verify-13-18.md` "Round 2"; `tests/uat/run/13-18-r2/`.
+  blocker: the user stopped the run after Story 13-18; all three are low and within the 60 s budget.
+  unblock: a small follow-up in the next run (one boundary test, two text corrections).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-18-loft-sweep.md`
+  summary: A self-intersecting sweep built from a BSpline profile returns OK; the boolean self-intersection check is skipped for BSpline inputs because it did not finish in 50 s on a 3-face helix sweep (documented limit, residual R2-R1).
+  evidence: `verify-13-18.md` "Round 2" R2-R1; design `mcp-tools-design.md` §3.7.4.
+  blocker: no bounded-cost self-intersection check for BSpline results is known.
+  unblock: a measured check with a time bound, or the AD-27 bridge-recovery decision (worker isolation would allow a timed check).

@@ -1,0 +1,26 @@
+{
+ "LoftPart": {
+  "doc": "fcb-doc:87uDGGh_fi9Dz-W4RfkxpQ",
+  "fingerprint_before": {
+   "digest": "2622317e4e62f9f30b4fd00eed327da8c38a268b9baf9039d8f0ebca8cc5d13a",
+   "serializer": "exportBinary"
+  },
+  "feature": "Lofted"
+ },
+ "SweepPart": {
+  "doc": "fcb-doc:ND9h20GkEC2BpUZWOSYxBw",
+  "fingerprint_before": {
+   "digest": "32e82de2630b479070db07855841dd5d9cb5e53e7861414cdfcd69949a8c1291",
+   "serializer": "exportBinary"
+  },
+  "feature": "Swept"
+ },
+ "GroovePart": {
+  "doc": "fcb-doc:HzJ30tBQDoSdRrepSze7gA",
+  "fingerprint_before": {
+   "digest": "f7da768f8025b9425f3b308d2c6d083cb366a9076fe5cfb6dec8a0d138e5b8b7",
+   "serializer": "exportBinary"
+  },
+  "feature": "Groove"
+ }
+}

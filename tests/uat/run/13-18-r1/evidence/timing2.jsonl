@@ -1,0 +1,3 @@
+TIMING={"case": "sweep_100x100_lines", "fixture_s": 0.01, "status": "OK", "detail": "{}", "volume": 706.393344704777, "valid": true, "elapsed_s": 13.29}
+TIMING={"case": "sweep_250_helix25", "fixture_s": 0.02, "status": "OK", "detail": "{}", "volume": 11102.131172608591, "valid": true, "elapsed_s": 17.8}
+TIMING={"case": "sweep_circle_10000_lines", "fixture_s": 0.01, "status": "OK", "detail": "{}", "volume": 706.8583470576671, "valid": true, "elapsed_s": 32.09}
