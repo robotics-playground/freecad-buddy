@@ -17,14 +17,18 @@ Result `{pairs: [{a, b, common_volume, min_distance, boolean_failed}]}`.
 | --- | --- |
 | `common_volume` | overlap as `{value, unit: "mm^3"}`; a value of 0 with `boolean_failed` false is a measured zero overlap |
 | `min_distance` | gap as `{value, unit: "mm"}`; 0 for solids that touch or overlap |
-| `boolean_failed` true | the overlap is **unmeasured**, `common_volume` is null. A shape is not a valid solid with positive volume (`min_distance` is null too), or the boolean returned nothing at distance 0 or at an unknown distance. Solids that only touch can give this |
+| `boolean_failed` true | the overlap is **unmeasured**, `common_volume` is null, and a script that reads the same empty boolean as zero is wrong too. `min_distance` null: a shape is not a valid solid with positive volume. `min_distance` 0: the boolean returned nothing at distance 0, which valid solids that only touch also give |
 
 | Refusal | Cause | Fix |
 | --- | --- | --- |
 | `INVALID_INPUT` `interference.too_complex` | a pair whose faces multiplied exceed 150000, or the call ran past 40 s | a pair over the face limit: measure objects with fewer faces. A call over 40 s: send fewer pairs |
 
-When `boolean_failed` is true, run `verify_shape` on each shape (`is_valid_solid`,
-`expect_solid_count`) to find which shape is broken before you report a clearance.
+When `boolean_failed` is true and `min_distance` is null, run `verify_shape` on each shape
+(`is_valid_solid`, `expect_solid_count`) to find the broken shape. When it is true and
+`min_distance` is 0, check both shapes the same way; if both are valid the parts touch: report
+"touching, overlap unmeasured". For a number, use the fuse-volume gap row of
+`freecad-scripting-idioms`: `a.Volume + b.Volume - a.fuse(b).Volume` is the overlap volume, 0
+for parts that only touch.
 
 ## `query_section`
 
@@ -45,6 +49,6 @@ Result `{wires, closed_wires, length, area, bbox}`. A plane that misses the part
 | --- | --- | --- |
 | `section.untrusted_shape` | an invalid or reversed shape, or one with no face | repair the part; check it with `verify_shape` |
 | `section.too_complex` | more than 3,000 faces, or BSpline or Bezier faces with about 800 poles or more in one face (a coil spring) | cut a simpler part, or report the section as unmeasured |
-| `section.plane_on_face` | the plane lies on a planar face | move `offset` 1e-6 mm or more into the part (a plane moved outward misses the part: `wires` 0, `area` 0) |
+| `section.plane_on_face` | the plane lies on a planar face | move `offset` into the part by more than the shape's face tolerance: 1e-6 mm for a native part, up to about 1e-3 mm for an imported one (a plane moved outward misses the part: `wires` 0, `area` 0) |
 
 Solids that overlap or touch inside one compound are not detected: `area` counts each solid.

@@ -6,17 +6,29 @@ the live FreeCAD through `script_exec` (`doc` and `STAGE` injected) or headless 
 
 ## Run it
 
-`script_exec` on the live document. Keep the generator on disk, so each call is short. Run it
-once per stage; only the first stage clears the document:
+On the live document the parameter layer and the clearing use typed tools, and `script_exec`
+builds the parts, because no typed tool makes Part primitives:
+
+1. Clear a document this generator owns: `document_object_delete` `{"objects": ["Params", "bracket"]}`
+   naming every object that `query_tree_summary` lists.
+2. Create every plain variable: `feature_parameters_define` `{"varset": "Params", "parameters":
+   [{"name": "PLATE_T", "type": "float", "value": 5.0}, {"name": "COUNTERSINK", "type": "bool",
+   "value": true}]}` (a call takes at most 100 parameters; use a type `float` for a unitless
+   source constant).
+3. Bind each derived variable: `feature_set_expression` `{"expressions": [{"object": "Params",
+   "path": "BOSS_H", "expression": "Params.PLATE_T + 7"}]}`.
+4. Run the generator once per stage with `script_exec`. Its `params()` reuses the variables that
+   exist and creates the rest, so the enumeration properties (no typed type) appear here. A
+   derived variable whose expression reads an enumeration stays in `params()`: the enumeration
+   does not exist before this step.
+
+Keep the generator on disk, so each call is short:
 
 ```python
 p = r"D:/path/to/build_fcstd.py"
 STAGE = "params"                         # then "part_a", "part_b", ... in later calls
 doc.openTransaction("build " + STAGE)
 try:
-    if STAGE == "params":                # first stage only, on a document this generator owns
-        for o in list(doc.Objects):
-            doc.removeObject(o.Name)
     exec(compile(open(p, encoding="utf-8").read(), p, "exec"),
          {"doc": doc, "STAGE": STAGE, "__name__": "fcb_build"})
     doc.recompute()
@@ -28,8 +40,9 @@ result = [(o.Name, o.Label, o.State) for o in doc.Objects if "Invalid" in o.Stat
 ```
 
 The generator always runs its `params()` function (it reuses existing variables) and builds
-only the part that `STAGE` names. A small model fits in one call: `STAGE = "all"`. Then
-`document_save`.
+only the part that `STAGE` names. A small model fits in one call: `STAGE = "all"`. Headless
+through `freecadcmd` there are no typed tools: `params()` creates every variable and a first
+run clears the document with `doc.removeObject`. Then `document_save`.
 
 ## Expression values
 

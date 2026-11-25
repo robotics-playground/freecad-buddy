@@ -6,7 +6,7 @@ one call) to read the volumes, `query_interference` for overlap between parts, `
 for failing objects. `feature_set_parameters` sets and restores the VarSet values. Run a FreeCAD
 snippet with `script_exec` only for what no typed tool measures: overlap against a reference STEP,
 the reference's own volume, the expression coverage of a large model (`query_parameters` lists at
-most 500 bindings per call), contact between touching parts, and a countersink probe. Every snippet
+most 500 bindings per call), the overlap volume of touching parts, and a countersink probe. Every snippet
 is read-only. The re-export
 script runs outside FreeCAD and writes one reference STEP per case, in the same world frame as the
 FreeCAD part.
@@ -64,8 +64,9 @@ for tag, values in CASES.items():
 ```
 
 Case keys use the source names; map them to `Params` names in the FreeCAD-side test
-(`T` -> `PLATE_T`). An enumeration takes the same text value on both sides:
-`setattr(V, "FASTEN", "tap")`; only expressions compare its index. Check the `default` re-export against any STEP the user gave first:
+(`T` -> `PLATE_T`). An enumeration takes the same text value on both sides (on the FreeCAD side
+`feature_set_parameters` `{"feature": "Params", "parameters": {"FASTEN": "tap"}}`; creating the
+property is a gap); only expressions compare its index. Check the `default` re-export against any STEP the user gave first:
 `build123d.import_step(given)`, equal volume and `overlap_pct` 100.
 
 ## Part equality against the source STEP
@@ -103,7 +104,8 @@ source to find the first step that differs.
 Every primitive size and base position must carry an expression; a plain number there is a
 baked value that no parameter edit reaches. A rotation about z with a non-zero angle and no
 expression is a baked frame angle. A fixed `rot` about x or y (an axis cylinder, a wedge) needs
-no expression.
+no expression. `query_parameters` lists the bindings (`truncated` says when a list is cut at
+500 rows); the script below finds each primitive that lacks one.
 
 ```python
 need = {"Part::Box": ("Length", "Width", "Height"),
@@ -148,7 +150,7 @@ defaults once with `query_parameters` and keep them. Run each case in five steps
 Restore after every case, also when a typed check fails, and before any `document_save`: a case
 that runs on top of the previous case's values compares against the wrong re-export. Run one
 case per `script_exec` call to stay under the 30 s budget: the script runs one `common()` per
-part, about 8 s per case for a 100-object, two-part model, recompute included.
+part, about 8 s per case for a 100-object, two-part model.
 
 Case script. It writes nothing:
 
@@ -181,15 +183,18 @@ branches of every `min()` / `max()`.
 generator sets Labels: read each Name with `query_tree_summary`). Name a Body or a Part, not a
 feature inside it, and keep the objects in one container. It measures every pair;
 `{"pairs": [["Cut", "Cut001"]]}` measures chosen pairs. Pass: `common_volume` at most 0.05 mm3
-and `boolean_failed` false. `boolean_failed` true is unmeasured, not zero. With it true and `min_distance` 0
-the parts touch, and the tool cannot tell contact from overlap: no typed tool measures that, so
-use the script below. Otherwise run `verify_shape` on both parts. For
-`interference.too_complex`, measure objects with fewer faces or send fewer pairs.
+and `boolean_failed` false. `boolean_failed` true is unmeasured, never zero. With `min_distance` null a shape is not a valid
+solid: run `verify_shape` on both parts. With `min_distance` 0 and both parts valid, the parts
+touch and the overlap is unmeasured; `Shape.common()` returns the same empty result and reads 0,
+so it proves nothing. Measure the overlap through the fused volume (no typed tool does):
 
 ```python
 a, b = (doc.getObject(n).Shape for n in ("Cut", "Cut001"))
-result = round(a.common(b).Volume, 3)    # pass: <= 0.05 mm3
+result = round(a.Volume + b.Volume - a.fuse(b).Volume, 3)    # pass: <= 0.05 mm3
 ```
+
+The result is 0 for parts that only touch and the overlap volume for parts that overlap. For
+`interference.too_complex`, measure objects with fewer faces or send fewer pairs.
 
 ## Hole checks
 

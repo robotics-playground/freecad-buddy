@@ -11,7 +11,7 @@ report the operation as blocked.
 
 | Operation | Typed route |
 |-----------|-------------|
-| Read bounding box, volume, area, centre of mass, solid count of one or several objects | `query_mass_properties` (`object`, or `objects` for 1 to 50 names in one call) |
+| Read bounding box, volume, area, centre of mass, solid count of one or several objects | `query_mass_properties` (`object`, or `objects` for 1 to 50 names in one call; `com` is null for a compound such as an `App::Part`) |
 | Measure overlap volume and minimum distance between objects | `query_interference` (`objects` for every pair, or `pairs`) |
 | Cut a shape with a plane: wires, length, area, bbox, polyline points | `query_section` (`object`, `plane`, optional `points`) |
 | Check validity, solid count, watertight, bbox, extent, volume, hole count, diameter, position and spacing, distance and angle between selectors | `verify_shape` (`checks` items `{"fn": ..., "expect": ...}`) |
@@ -19,7 +19,7 @@ report the operation as blocked.
 | List every VarSet property, aliased spreadsheet cell and expression binding of the document | `query_parameters` |
 | Create a VarSet, add or update typed parameters on it (length, angle, float, integer, bool, string) | `feature_parameters_define` |
 | Bind or clear an expression on a numeric property path (a VarSet parameter on a feature property or a sketch constraint) | `feature_set_expression` |
-| Delete objects, with or without the objects that depend on them | `document_object_delete` (`objects`, `with_dependents`) |
+| Delete whole objects, Tip features, and objects nothing else depends on, or delete them with their dependents. Read the `delete.has_dependents` list first and stop if it names a feature to keep | `document_object_delete` (`objects`, `with_dependents`) |
 | Read a placement, a sketch's geometry and constraints, dependency links, failing objects | `query_placement`, `query_sketch_info`, `query_dependencies`, `verify_recompute` |
 | Sketch geometry (line, circle, arc, point) and the `sketch_add_constraint` types, including a fixed point by `DistanceX` plus `DistanceY` | `sketch_*` |
 | PartDesign body, pad, pocket, hole, fillet, chamfer, revolve, pattern, mirror, datum | `feature_*` |
@@ -32,6 +32,8 @@ report the operation as blocked.
 |-----------|------------------|-------------------|
 | Write a placement or `AttachmentOffset` | none (`feature_set_parameters` refuses `App::PropertyPlacement`) | set `obj.Placement` or `obj.AttachmentOffset` |
 | Rename a `Label` | none | set `obj.Label` |
+| Remove one feature from the middle of a Body and keep the later features | none (`document_object_delete` refuses it with `delete.has_dependents`, and `with_dependents` true deletes every later feature) | `body.removeObject(feature)` relinks the next `BaseFeature`; then `doc.removeObject(feature.Name)`. Open a transaction, run `verify_*` after |
+| Overlap volume of parts that touch (`query_interference` gives `boolean_failed` true, `min_distance` 0) | none | `a.Volume + b.Volume - a.fuse(b).Volume`; `common()` reads 0 here and proves nothing |
 | Add an enumeration property to a VarSet, write a spreadsheet cell or alias | none (`feature_parameters_define` has no enumeration type) | `addProperty`, `sheet.set`, `setAlias` |
 | Part primitives and booleans (`Part::Box`, `Part::Cut`, `Part::Common`) | none | `doc.addObject` |
 | Loft, sweep, helix, thickness | none | `doc.addObject` or `body.newObject` |

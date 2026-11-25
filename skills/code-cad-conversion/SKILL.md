@@ -41,11 +41,11 @@ first. If `query_capabilities` reports `exec_enabled: false`, use the headless r
   sibling skills. Editability comes from the expressions, not the workbench; a
   PartDesign rebuild of a CSG source changes the geometry definition and loses
   the one-to-one map you need to prove equality.
-- **Build with a generator file run by `script_exec`.** One Python file on disk,
-  run with `doc` injected (`references/generator-kit.md`, "Run it"), inside a
-  transaction that aborts on error. Keep each call under the 30 s budget: split
-  into stages (parameters, then one part per call); only the first stage clears
-  the document. After a `TIMEOUT`, run `query_tree_summary` before the next
+- **Build with typed parameters and a generator file run by `script_exec`.**
+  Clear, `feature_parameters_define` and `feature_set_expression` set up `Params`
+  (`references/generator-kit.md`, "Run it"); one Python file on disk, run with `doc`
+  injected inside a transaction that aborts on error, builds the parts. Keep each
+  call under the 30 s budget: one part per call. After a `TIMEOUT`, run `query_tree_summary` before the next
   mutating call.
 - **One VarSet `Params`, source names kept.** Use the source constant names, so
   the two files compare line by line. Each float is `App::PropertyFloat`

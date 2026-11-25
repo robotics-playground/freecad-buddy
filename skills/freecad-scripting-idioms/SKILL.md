@@ -86,8 +86,9 @@ MCP client at it — otherwise none of these steps can run.
   in-memory copy, so the next typed call or `document_save` works on stale state
   or overwrites the script's change.
 - The fallback for a gap is **`script_exec` on the live document**, with the
-  transaction and `verify_*` rule above. In a script, `body.newObject(...)`
-  inserts after the Tip and becomes the new Tip. Only when `script_exec` is absent
+  transaction and `verify_*` rule above. In a script, `body.removeObject(feature)`
+  relinks the next feature's `BaseFeature` (the typed delete cannot keep later
+  features), and `body.newObject(...)` inserts after the Tip and becomes the new Tip. Only when `script_exec` is absent
   (`query_capabilities` reports `exec_enabled: false`), use a **headless script on
   the closed document**: close it in the GUI, edit and save with `freecadcmd`,
   reopen with `document_open`, then run the full verification and one

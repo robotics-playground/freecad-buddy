@@ -53,7 +53,7 @@ MCP client at it — otherwise the parametric model can't be built or verified.
   expression drives: clear that binding first), `expression.cycle` (two bindings
   depend on each other; the call rolled back), `expression.unit_mismatch` (an angle
   on a length). Creating an enumeration property and writing spreadsheet cells have no typed tool:
-  `freecad-scripting-idioms` `references/gap-list.md` names the `script_exec` route.
+  the gap list of `freecad-scripting-idioms` names the `script_exec` route.
 - Use a **master (skeleton) sketch** for the part's controlling geometry — key
   planes, axes, hole-circle radii, overall envelope — and attach features to it,
   because the skeleton carries the design intent and a change to it moves everything

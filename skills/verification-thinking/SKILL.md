@@ -59,15 +59,15 @@ it — otherwise none of these checks can run.
   callout) states — with `query_mass_properties` for bbox/volume and
   `query_placement` for distances and offsets — because an unchecked dimension is
   an unverified claim, and the point of verifying is to falsify a wrong part.
-- Measure **overlap and gap between parts** with `query_interference`
-  `{"objects": ["Housing", "Lid"]}` (every pair; name Bodies of one container, not features).
-  `common_volume` is the overlap and `min_distance` the gap. `boolean_failed` true
-  means *unmeasured*, never zero. Limits and refusals such as
-  `interference.too_complex`: `references/measuring-clearance-and-sections.md`.
+- Measure **gap and overlap between parts** with `query_interference`
+  `{"objects": ["Pin", "Housing"]}` (every pair; Bodies of one container).
+  `min_distance` is the gap. `boolean_failed` true means *unmeasured*, never zero:
+  parts that touch give it with `min_distance` 0, so report "touching, overlap
+  unmeasured" (`references/measuring-clearance-and-sections.md`).
 - Measure a **cut through a part** with `query_section`
   `{"object": "Body", "plane": {"normal": "z", "offset": {"value": 12.5, "unit": "mm"}}}`.
   A null `area` is *unmeasured*, never zero. On `section.plane_on_face`, move `offset`
-  1e-6 mm or more into the part.
+  into the part (the reference gives the distance).
 - Run a baseline inspection at each milestone before the spec checks:
   `query_tree_summary` (`focus` on the body) for names and `!<status>` errors,
   `query_mass_properties` `{"objects": ["Body", "Lid"]}` for a scale sanity check of

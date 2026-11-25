@@ -40,9 +40,10 @@ point your MCP client at it) and confirm the Phase-5 tool set is present.
   do this — a silent mm-as-m error scales the robot 1000×, and degrees-as-radians is
   the classic joint-limit bug.
 - Compute each link's `<inertial>` from FreeCAD's **native mass properties**
-  (`query_mass_properties` gives mass, center of mass, and the inertia tensor), not
-  from a guessed primitive, because the whole point of exporting from CAD is that the
-  inertials are real; record the method if any value is approximated.
+  (`query_mass_properties` gives volume and center of mass; `com` is null for a
+  compound, so measure each solid's Body), take mass from the material density, and
+  record the method for the inertia tensor, which no tool returns, and for any value
+  you approximate. A guessed primitive is not an inertial.
 - Record the **reference frame** every origin is expressed in: a joint `<origin>` is
   parent-link-frame → joint-frame, the child link frame coincides with the joint
   frame, and `<axis>` is in the joint frame — not the world, not the mesh frame.
@@ -74,7 +75,7 @@ Input: "Export this 2-link arm assembly to URDF."
 Reasoning → export:
 1. Map: base body → `base_link`, upper body → `link_1`; the assembly's revolute
    joint between them → a URDF `<joint type="revolute">`.
-2. Inertials: one `query_mass_properties` call with `objects` for every body → volume and COM (the tool returns no mass or inertia: take mass from the material density) →
+2. Inertials: one `query_mass_properties` call with `objects` for every body → volume and COM (no mass or inertia in the result; COM is null for a compound) → mass from density, inertia approximated and recorded →
    `<inertial>` in kg and metres (convert from FreeCAD mm/g-equivalents at the pinned
    boundary).
 3. Joint: `<origin>` from the assembly transform (`query_placement`) expressed in the
