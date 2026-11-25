@@ -22,8 +22,16 @@ Layer 1 does not grade a moved witness `REPOINTED` when all of these hold:
   another piece (red-team probe: a plate-length edit moved a datum from x 16 to x 33 and passed).
   `;:G0` and `;:G00` are fixed names of coplanar or parallel faces (`:1622-1625`) and stay
   eligible, as does a bare `;:G`/`;:U` (index 1) when the shape holds no element with an indexed
-  marker after the same leading text. The check reads both mapped names and both history source
-  names, and the sibling flag on both sides.
+  marker after the same leading text. The check reads both mapped names, both history source
+  names and the sibling flag on both sides. `;:G0#`, `;K<n>` and `;:I<n>` count too
+  (`TopoShapeExpansion.cpp:1711-1727`, `PartFeature.cpp:291`).
+- No positional counter appears anywhere in the element's lineage. FreeCAD folds the older part of
+  a mapped name into a `#id` (`ElementMap.cpp:668`) and `TopoShape.getElementHistory` steps back
+  one object, so two features that leave an element unchanged hide `;:M3` from the name and the
+  history source (review round 5: the plate datum moved from x 16 to x 33 and passed). The
+  capture reads `Part.Feature.getElementHistory(name, recursive=True, showName=True)` and tests
+  every name and intermediate name in the chain; an unreadable lineage is not excused. An element
+  with a modified ancestor (for example after a Pocket) therefore stays `REPOINTED` when it moves.
 
 The excused entry still goes to Layer 2. Every other witness move stays `REPOINTED`.
 
@@ -72,7 +80,10 @@ element moves in a way the support bounding box does not show. A vertical edge a
 `REPOINTED`, from the mapped-name check: its hashed `#id` segment changes while the edge does
 not. That is outside this rule.
 
-A third residual: a bare `;:G`/`;:U` is excused when no indexed sibling shares its leading text on
+A third residual: `;:L#id` hashes the names of lower elements (`TopoShapeExpansion.cpp:1972`); a
+counter among the hashed names is not seen unless the lineage walk shows it. No probe produced it.
+
+A fourth residual: a bare `;:G`/`;:U` is excused when no indexed sibling shares its leading text on
 either side. A piece that gains siblings under another leading text is not seen. No probe
 produced it.
 
@@ -98,5 +109,5 @@ Decision 014; `verification-design.md` §3.2 Layer 1; spec
 - `Fillet.Base` entries that FreeCAD renumbers after a Pad change (`Edge1`, `Edge2`) still grade
   `BROKEN`; only the entries that keep their element identity pass.
 - `snapshot_references` reads `ElementMap` once per target per walk, and only when an entry has a bare
-  `;:G`/`;:U` name (200 references on one heavy support: 0.022 s, unchanged).
+  `;:G`/`;:U` name (200 references on one heavy support: 0.022 s before, 0.034 s with the lineage read).
 - An entry with no readable history or no mapped name keeps today's verdict: no history, no excuse.

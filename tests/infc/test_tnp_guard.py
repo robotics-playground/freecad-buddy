@@ -1699,6 +1699,29 @@ class FollowsSupportTest(unittest.TestCase):
         # Assert
         self.assertFalse(result)
 
+    def test_Should_not_excuse_the_move_When_the_history_source_name_carries_a_counter(self):
+        # Arrange
+        source = (1, "#60:3;:M3;CUT;:H1:8,E")
+        before = self._entry(history=source)
+        after = self._entry(shift=(0.0, 0.0, 5.0), history=source)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_the_lineage_holds_a_counter(self):
+        # Arrange
+        before = dict(self._entry(), lineage_counter=True)
+        after = dict(self._entry(shift=(0.0, 0.0, 5.0)), lineage_counter=True)
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
     def test_Should_not_excuse_the_move_When_a_bare_name_has_split_siblings_before(self):
         # Arrange
         before = dict(self._entry(), split_siblings=True)
@@ -1783,6 +1806,9 @@ class SplitSiblingTest(_BodyFixture):
     def test_Should_detect_siblings_When_the_stem_has_an_indexed_marker(self):
         # Arrange
         stems = frozenset(["#26:1"])
+        stems_from_shape = tnp_guard._split_sibling_stems(
+            type("_Shape", (), {"ElementMap": {"#26:1;:G2;XTR;:H1:7,F": "Face2"}})()
+        )
 
         # Act
         results = [
@@ -1790,10 +1816,26 @@ class SplitSiblingTest(_BodyFixture):
             tnp_guard._has_split_siblings("#26:2;:U;FLT;:H1:7,E", stems),
             tnp_guard._has_split_siblings("#26:1;:G0;XTR;:H1:8,F", stems),
             tnp_guard._has_split_siblings(None, stems),
+            tnp_guard._has_split_siblings("#26:1;:G;XTR;:H1:7,F", stems_from_shape),
         ]
 
         # Assert
-        self.assertEqual(results, [True, False, False, False])
+        self.assertEqual(results, [True, False, False, False, True])
+
+    def test_Should_cache_the_stems_per_target_name_When_two_targets_share_one_walk(self):
+        # Arrange
+        fillet, names = self._fillet_names()
+        indexed = self._bare_element(fillet, names, with_siblings=True)
+        shared = {}
+        pad_face_with_bare_marker = "Face1"
+
+        # Act
+        tnp_guard._capture_entry(self.pad, pad_face_with_bare_marker, shared)
+        entry = tnp_guard._capture_entry(fillet, indexed, shared)
+
+        # Assert
+        self.assertTrue(entry["split_siblings"])
+        self.assertEqual(sorted(shared), ["Fillet", "Pad"])
 
 
 class SplitPieceCounterTest(_BodyFixture):
@@ -1824,8 +1866,12 @@ class SplitPieceCounterTest(_BodyFixture):
             sketch.addConstraint(Sketcher.Constraint("Coincident", index, 2, (index + 1) % 4, 1))
         return sketch
 
-    def _build_slotted_plate(self):
-        """A plate whose length drives a groove pattern; the groove count changes with it."""
+    def _build_slotted_plate(self, pass_through=0):
+        """A plate whose length drives a groove pattern; the groove count changes with it.
+
+        ``pass_through`` bottom holes follow the pattern and leave its top elements unchanged, so
+        FreeCAD hashes the older mapped name and each history step shows one feature less.
+        """
         self.plate = self.document.addObject("PartDesign::Body", "Plate")
         xy_plane = next(f for f in self.plate.Origin.OriginFeatures if f.TypeId == "App::Plane")
         sketch = self._rectangle("PlateSketch", 0, 0, self.PLATE_LENGTH, self.PLATE_WIDTH, xy_plane)
@@ -1870,7 +1916,21 @@ class SplitPieceCounterTest(_BodyFixture):
         pattern.setExpression("Length", "PlateSketch.Constraints.L - 12 mm")
         pattern.setExpression("Occurrences", "floor(PlateSketch.Constraints.L / 13 mm)")
         self.document.recompute()
-        return pattern
+        self.plate.Tip = pattern
+        last = pattern
+        for index in range(pass_through):
+            hole_sketch = self._rectangle(
+                f"HoleSketch{index}", 1 + 3 * index, 1, 2 + 3 * index, 2, xy_plane
+            )
+            hole = self.document.addObject("PartDesign::Pocket", f"Hole{index}")
+            self.plate.addObject(hole)
+            hole.Profile = hole_sketch
+            hole.Length = 1.0
+            hole.Reversed = True
+            self.document.recompute()
+            self.plate.Tip = hole
+            last = hole
+        return last
 
     def _strip_edge(self, pattern):
         """The top edge of the strip between the first and second groove (x 10 to 22)."""
@@ -1883,19 +1943,16 @@ class SplitPieceCounterTest(_BodyFixture):
             and abs(edge.BoundBox.XMax - 22.0) < 1e-6
         )
 
-    def test_Should_flag_repointed_When_a_pattern_edit_changes_the_split_piece_count(self):
-        # Arrange
-        pattern = self._build_slotted_plate()
-        edge = self._strip_edge(pattern)
+    def _datum_verdicts_after_length_edit(self, pass_through):
+        last = self._build_slotted_plate(pass_through)
+        edge = self._strip_edge(last)
         datum = self.document.addObject("PartDesign::Point", "DatumPoint")
         self.plate.addObject(datum)
-        datum.AttachmentSupport = [(pattern, (edge,))]
+        datum.AttachmentSupport = [(last, (edge,))]
         datum.MapMode = "CenterOfMass"
         self.document.recompute()
         posture = confirm.set_auto_approve(True)
         self.addCleanup(confirm.set_auto_approve, posture)
-
-        # Act
         envelope = sketches.sketch_set_datum(
             self.registry,
             doc=self.handle,
@@ -1903,11 +1960,33 @@ class SplitPieceCounterTest(_BodyFixture):
             constraint="L",
             value={"value": self.EDITED_LENGTH, "unit": "mm"},
         )
-
-        # Assert
         audit = envelope["structured_content"]["mutation"]["post_verify"]["tnp_audit"]
         findings = [f for f in audit["findings"] if f["owner"] == "DatumPoint"]
-        self.assertIn("REPOINTED", [f["verdict"] for f in findings])
+        return envelope, audit, [f["verdict"] for f in findings]
+
+    def test_Should_flag_repointed_When_a_pattern_edit_changes_the_split_piece_count(self):
+        # Arrange
+        pass_through = 0
+
+        # Act
+        envelope, audit, verdicts = self._datum_verdicts_after_length_edit(pass_through)
+
+        # Assert
+        self.assertIn("REPOINTED", verdicts)
+        self.assertNotEqual(audit["status"], "CLEAN")
+        self.assertEqual(envelope["status"], "SPEC_FAILED")
+
+    def test_Should_flag_repointed_When_the_counter_is_hidden_behind_two_pass_through_features(
+        self,
+    ):
+        # Arrange
+        pass_through = 2
+
+        # Act
+        envelope, audit, verdicts = self._datum_verdicts_after_length_edit(pass_through)
+
+        # Assert
+        self.assertIn("REPOINTED", verdicts)
         self.assertNotEqual(audit["status"], "CLEAN")
         self.assertEqual(envelope["status"], "SPEC_FAILED")
 
@@ -1925,6 +2004,12 @@ class PositionalCounterTest(unittest.TestCase):
             "g1;:U2;:Hcc3:8,V",
             "g1;:U3;FLT;:Hcc3:8,E",
             "g1;D1a2;:Hcc3:8,F",
+            "g1;:G10#64;CUT;:Hcc3:c,E",
+            "g1;:U12;FLT;:Hcc3:8,E",
+            "g1;:G0#5;CUT;:Hcc3:a,F",
+            "g1;:G00#5;CUT;:Hcc3:a,F",
+            "g1;K2;:Hcc3:8,F",
+            "g1;:I4;:Hcc3:8,F",
         ]
 
         # Act
@@ -1943,7 +2028,8 @@ class PositionalCounterTest(unittest.TestCase):
             "g1;:G00;XTR;:Hcc3:8,F",
             "g1;:G;XTR;:Hcc3:8,F",
             "g1;:U;XTR;:Hcc3:8,E",
-            "g1;:X2;:C3;:I4,F",
+            "g1;:X2;:C3,F",
+            "g1;D1ax;:Hcc3:8,F",
             "",
         ]
 

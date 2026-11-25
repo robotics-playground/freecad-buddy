@@ -57,10 +57,14 @@ _WITNESS_EPSILON = 1e-7
 # random duplicate rename ";D<hex>" (ElementMap.cpp:753 renameDuplicateElement). No other marker
 # starts with M, G or U. The number is printed only when the index exceeds 1 (:1782-1784); the
 # indices 0 and 00 name coplanar or parallel faces with a fixed name (:1622-1625, :1776-1781), so
-# ";:G0" is stable. A hash id of a multi-source name follows the marker directly, so a "#" after
-# ";:G" or ";:U" marks the same positional form. A bare ";:G" or ";:U" is index 1 and is
-# positional only while a sibling with an index exists (``_split_sibling_stems``).
-_POSITIONAL_COUNTER = re.compile(r";:MG|;:M|;:[GU](?:[1-9]|#)|;D[0-9a-f]+(?=;|$)")
+# ";:G0" is stable, but its extra sources are numbered ";K" (:1711-1727) and then hashed, so
+# ";:G0#" is positional. A hash id of a multi-source name follows the marker directly, so a "#"
+# after ";:G" marks the same positional form. ";K<n>" and ";:I<n>" (PartFeature.cpp:291) number
+# extra sources and ancestor faces. A bare ";:G" or ";:U" is index 1 and is positional only while
+# a sibling with an index exists (``_split_sibling_stems``).
+_POSITIONAL_COUNTER = re.compile(
+    r";:MG|;:M|;:[GU](?:[1-9]|0{0,2}#)|;K[0-9]|;:I[0-9]|;D[0-9a-f]+(?=;|$)"
+)
 _INDEXED_MARKER = re.compile(r";:[GU](?:[1-9]|#)")
 _BARE_MARKER = re.compile(r";:[GU](?![0-9#])")
 
@@ -85,6 +89,9 @@ class RefEntry(TypedDict):
     missing: bool
     witness: Witness | None
     history: tuple[int, str] | None
+    # True when a positional piece counter appears anywhere in the element's recorded lineage, or
+    # the lineage cannot be read (``_lineage_has_counter``). Absent in an older snapshot record.
+    lineage_counter: NotRequired[bool]
     # True when the mapped name carries a bare ";:G" or ";:U" and the same shape holds a sibling
     # with an indexed marker after the same text. Absent in a record from an older snapshot.
     split_siblings: NotRequired[bool]
@@ -265,6 +272,34 @@ def _has_split_siblings(name: str | None, stems: frozenset[str]) -> bool:
     )
 
 
+def _lineage_has_counter(target: object, name: str) -> bool:
+    """Whether any name in the element's whole history chain carries a positional counter.
+
+    FreeCAD folds the older part of a mapped name into a ``#id`` hash (``ElementMap.cpp:668``), and
+    ``TopoShape.getElementHistory`` steps back one object only, so a counter can sit two features
+    behind the visible name. ``Part.Feature.getElementHistory(recursive=True)`` walks to the origin
+    and returns each source name and its intermediate names. A lineage that cannot be read counts
+    as positional: no proof of identity, no excuse.
+    """
+    getter = getattr(target, "getElementHistory", None)
+    if not callable(getter):
+        return True
+    try:
+        chain = getter(name, recursive=True, showName=True)
+    except Exception:  # noqa: BLE001 - an unreadable lineage proves nothing about identity
+        return True
+    if not chain:
+        return False
+    try:
+        return any(
+            _has_positional_counter(candidate)
+            for item in chain
+            for candidate in [item[1], *item[2]]
+        )
+    except Exception:  # noqa: BLE001 - an unexpected record shape proves nothing about identity
+        return True
+
+
 def _follows_support(
     before: RefEntry, after: RefEntry, support_shift: AxisShifts | None, tolerance: float
 ) -> bool:
@@ -279,7 +314,8 @@ def _follows_support(
     shift opposite to its own face but inside that range is excused.
 
     A mapped name or history source name that carries a positional piece counter
-    (``_has_positional_counter``), or a bare ``;:G``/``;:U`` name whose shape holds indexed
+    (``_has_positional_counter``) anywhere in its lineage (``lineage_counter``), or a bare
+    ``;:G``/``;:U`` name whose shape holds indexed
     siblings (``split_siblings``), is never excused: after a piece-count change the same name can
     denote another piece, so equality of the two names no longer shows the same element.
     """
@@ -291,6 +327,8 @@ def _follows_support(
         and before["mapped"] == after["mapped"]
         and before["history"] is not None
         and before["history"] == after["history"]
+        and not before.get("lineage_counter", False)
+        and not after.get("lineage_counter", False)
         and not before.get("split_siblings", False)
         and not after.get("split_siblings", False)
         and not any(
@@ -370,6 +408,8 @@ def _capture_entry(
     if element is not None:
         entry["witness"] = _witness(element)
     entry["history"] = _history(shape, entry["mapped"])
+    if entry["mapped"]:
+        entry["lineage_counter"] = _lineage_has_counter(target, entry["mapped"])
     if entry["mapped"] and _BARE_MARKER.search(entry["mapped"]):
         cache = sibling_stems if sibling_stems is not None else {}
         key = getattr(target, "Name", None)
