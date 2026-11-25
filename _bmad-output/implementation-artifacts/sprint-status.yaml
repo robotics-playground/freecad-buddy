@@ -200,7 +200,7 @@ development_status:
   13-9-varset-parameters-and-query-parameters: done
   13-10-feature-set-expression-tool: done
   13-11-document-object-delete-tool: done
-  13-12-skill-routing-measure-parameter-delete-tools: review
+  13-12-skill-routing-measure-parameter-delete-tools: done
   13-13-script-exec-observe-only-bracket-and-error-status: ready-for-dev
   13-14-typed-verify-shape-check-schema: done
   13-15-tnp-audit-expected-reattachment-moves: ready-for-dev
