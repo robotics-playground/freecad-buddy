@@ -2,16 +2,16 @@
 
 Goal: Build SPEC-mcp-usage-improvement (`_bmad-output/specs/spec-mcp-usage-improvement/SPEC.md`): typed tools cover the frequent operations so `script_exec` becomes an escape route for rare work (CAP-1 .. CAP-9).
 Done: 13-1 .. 13-12, 13-14, 13-18, 13-20 (15 of 20)
-In progress: none (run stopped by the user after 13-12 and 13-18)
-Remaining: 13-16, 13-19 (not started); see epic-13-handover.md
-Branch / head: integration feat/epic-13-mcp-usage-improvement @ 116377e, checked out in worktree D:/Work/Personal/Sources/freecad-buddy-int (leader merges there)
+In progress: 13-13 (builder-13-13, review r2, wt-13-13); 13-15 (r3 passed @5115b2ac; verifier-13-15 + redteam-13-15 running; verifier owns the container); 13-fu (red team FAIL RT-1 high; builder-13-fu fix round, triage-13-fu-rt.md; verifier-13-fu idle, re-runs after fix when the container is free)
+Remaining: 13-16 (after 13-15), 13-17 (spec approved, wt-13-17; after 13-16), 13-18 follow-up, 13-7 follow-up (decision 41), 13-19, epic close
+Branch / head: integration feat/epic-13-mcp-usage-improvement @ 3df33fbd, checked out in worktree D:/Work/Personal/Sources/freecad-buddy-int (leader merges there)
 Blockers: none
-Open decisions (user): accept 13-5; 13-15 TNP rule (3 questions); 13-7 touching solids option b
-Open for the user to confirm: decisions 15-17 (leader)
-Agents alive: none
-Next: user requested stop after 13-12 and 13-18; next run starts from epic-13-handover.md
-Plan: epic-13-plan.md. Context: epic-13-context.md. Decisions: epic-13-decisions.md.
-Updated: 2026-11-25 at 9448ac5f
+Open decisions (user): none (handover rows 1-7 answered: decisions 40-46)
+Open for the user to confirm: decision 47 (13-15 residual false positives accepted, leader)
+Agents alive: builder-13-13, builder-13-15, builder-13-fu, verifier-13-fu, verifier-13-15, redteam-13-15
+Next: approve plans; container UAT one Story at a time (verifier owns the container while it runs)
+Plan: epic-13-plan.md. Context: epic-13-context.md. Decisions: epic-13-decisions.md. Handover: epic-13-handover.md.
+Updated: 2026-11-25 at 3df33fbd
 
 ## Environment
 Skill version: bmad-leader SKILL.md sha256 `936e3e227d5e`.
