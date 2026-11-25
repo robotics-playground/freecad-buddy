@@ -13,3 +13,6 @@ Quality bar: `quality-bar-13-10.md` (this folder). Lens triage: `spec-13-10-set-
 | Round | Head | Lenses (session ids) | Open high + product medium: before → after | Closed with proof | New | Regressed |
 | --- | --- | --- | --- | --- | --- | --- |
 | r1 | f2a19ce8 | blind aa27ed9c6e117ea3a; edge a1e6daed23b7deb99; gap a8f1916c11f603145 | ? → 0 (claimed) | 23 | 23 | 0 |
+| r2 | eca29153, 9a23aca5, merge 55d55b24 | blind a196bc6602c80f3ce; edge adff17f15a8cf2ba4; gap aaf3ec8e6d09a8775 | V1 + RT-8 high, V3, RT-1..RT-4 medium → 0 | V1..V4, RT-1, RT-2, RT-4, RT-5, RT-8 (verifier r2: each revert red; run A undo chain 8/8; CAP-2 typed run) | lens r2 rows | 0 |
+
+Verifier r1 FAIL at f2a19ce8 (V1 app transaction left open; V2 stale hash; V3); red team FAIL (RT-8 high: spreadsheet range held a call 1,087 s); verifier r2 PASS at 55d55b24 (combined with 13-11). Decisions 37, 38. N1 (low): the feature-level cycle test does not pin V1; shared transaction tests and the live run do.

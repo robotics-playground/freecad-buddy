@@ -1,0 +1,2 @@
+ran=56 failures=1 errors=0
+RED infc.test_tnp_guard.ExpressionBindingTest.test_Should_flag_broken_When_no_written_reading_is_given :: + ['BROKEN']

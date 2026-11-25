@@ -1,0 +1,4 @@
+ran=56 failures=3 errors=0
+RED infc.test_feature_expressions.RollbackTest.test_Should_restore_from_the_snapshot_When_the_abort_leaves_the_binding_in_place :: AssertionError: False is not true
+RED infc.test_feature_expressions.RollbackTest.test_Should_roll_back_a_self_reference_When_an_item_binds_a_property_to_itself :: AssertionError: 'OK' == 'OK'
+RED infc.test_feature_expressions.RollbackTest.test_Should_roll_back_every_item_and_prove_it_When_a_later_item_closes_a_cycle :: AssertionError: 'OK' == 'OK'

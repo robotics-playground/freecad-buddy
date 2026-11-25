@@ -1,0 +1,12 @@
+start: app_active=None pending=False undo=0 names=[]
+define OK: app_active=None pending=False undo=1 names=['buddy: define parameters on Params']
+raw box added: app_active=None pending=False undo=1 names=['buddy: define parameters on Params']
+bind OK: app_active=None pending=False undo=2 names=['buddy: set expressions', 'buddy: define parameters on Params']
+cycle SPEC_FAILED rb=True: app_active=('buddy: set expressions', 3) pending=False undo=2 names=['buddy: set expressions', 'buddy: define parameters on Params']
+after raw property change: app_active=('buddy: set expressions', 3) pending=True undo=3 names=['buddy: set expressions', 'buddy: set expressions', 'buddy: define parameters on Params']
+after recompute: app_active=('buddy: set expressions', 3) pending=True undo=3 names=['buddy: set expressions', 'buddy: set expressions', 'buddy: define parameters on Params']
+define-after-leak OK: app_active=None pending=False undo=4 names=['buddy: define parameters on Params', 'buddy: set expressions', 'buddy: set expressions']
+undo-after-define OK undone=buddy: define parameters on Params: app_active=None pending=False undo=3 names=['buddy: set expressions', 'buddy: set expressions', 'buddy: define parameters on Params']
+probe2 stored=[('Length', 'P.a * 2')] app_active=None
+probe2 equivalent OK undo_steps=0 unchanged=1 app_active=('buddy: set expressions', 7) pending=False
+probe2 after raw change app_active=('buddy: set expressions', 7) pending=True

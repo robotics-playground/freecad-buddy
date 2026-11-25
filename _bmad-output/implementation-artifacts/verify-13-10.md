@@ -172,3 +172,79 @@ The datum (attached) moved as expected. So CAP-2's "attachment offset" criterion
 ## 6. Teardown
 
 FreeCAD stopped (`fcb-freecad stop`), `docker compose … down` (container and network removed), both worktrees removed, no background process left. Image `fcb-desktop:local` now holds the build from `f2a19ce8`; the next owner rebuilds. No file outside my scratch folder, the new run folder `tests/uat/run/13-10-r1/` and this report was written.
+
+---
+
+# Round 2
+
+Artifact: `55d55b24` (merge of round-2 fixes `eca29153` + `9a23aca5` with feat `78229202`, which carries 13-11 `document_object_delete`). Rules: decision 38, `triage-13-10-r2.md`.
+Copies: detached worktrees at `55d55b24` (head), `78229202` (feat), `3c8efd8d` (base). All removed at the end.
+Evidence: `tests/uat/run/13-10-r2/` in the main repo (`evidence/`, `scripts/`).
+
+## Verdict
+
+**PASS.** Every round-1 finding (V1–V4) and red-team row (RT-1, RT-2, RT-4, RT-5, RT-8) is fixed. For each row, reverting its fix turns a named test red. The run that broke in round 1 (cycle, then the undo chain) now undoes all 8 steps back to an empty document in the container. The envelopes of other tools match feat `78229202`. `sketch_remove_geometry` again grades as at base.
+
+Open notes (none block the merge):
+
+- N1 (low, test quality): `ClosureTest.test_Should_leave_no_transaction_open_and_keep_undo_working_When_a_cycle_is_refused` stays green when the V1 fix is reverted. A successful call between the cycle and the undo masks the leak. The shared tests in `ApplicationTransactionTest` and the live run A cover the path. A stronger test would undo directly after the cycle, then undo again.
+- N2 (pre-existing, not this story): two timing tests fail at random under load. `test_marshal_self_submit.py::test_submitting_to_a_loop_this_thread_must_pump_deadlocks` failed in one full run. `test_mcp_cache_proxy.py::test_should_answer_both_calls_when_two_parallel_calls_meet_a_lost_session` failed in another full run and in 1 of 3 runs alone. This story does not change either file or its subject.
+
+## Gates and counts (head `55d55b24`)
+
+| Command | Result |
+| --- | --- |
+| `ruff check .`, `check_imports`, `check_status_vocab`, `gen_schemas --check`, `check_skill_shape`, `check_provenance` | all exit 0 |
+| `ruff format --check` on the 10 Python files changed in round 2 | all formatted |
+| `uv run --extra dev pytest tests/external -q` (Git Bash) | 2106 passed, 6 skipped, 1 failed (N2, a different flaky test in each of 2 runs). `test_gate_g2_exit.py` passes, so V2 is closed. |
+| infc `tests/run_tests.py`, `FREECAD_USER_HOME` temp | **Ran 1186 tests, OK (skipped=1)** |
+| G2 scorer `score_g2_infc.py` | `audit_references` planted 3, detected 3, false alarm 0, same as base. Committed `validator_sha` is current. |
+
+## Fix proof: revert each fix, named test turns red
+
+Driver `scripts/mutant2.sh`, scope `test_feature_expressions` + `ExpressionBindingTest` + `ApplicationTransactionTest` (82 tests). Unmutated: 82 ran, 0 failures. Results: `evidence/mut-*.out`.
+
+| Row | Revert | Red tests |
+| --- | --- | --- |
+| V1 | `shim.close_pending_transaction` closes nothing | `ApplicationTransactionTest.…_When_the_op_writes_nothing_and_commits`, `…_When_the_op_raises_before_its_first_write`, `…_close_the_transaction_of_the_bracket_name_When_it_is_left_open`, `ClosureTest.…_When_every_item_is_equivalent_text` (4) |
+| RT-8 cell target | drop the `Spreadsheet::Sheet` refusal | `RoundTwoRefusalTest.…_unsupported_code_When_the_target_is_a_spreadsheet_cell` |
+| RT-8 range | drop the `_CELL_RANGE` refusal | `RoundTwoRefusalTest.…_range_code_When_the_text_holds_a_cell_range` (6 subtests) |
+| V3 | drop the Hidden `AttachmentOffset` refusal | `RoundTwoRefusalTest.…_unsupported_code_When_the_object_is_not_attached` |
+| RT-4 / RT-2 precheck | `_range_problem` returns None | `…_When_a_pad_length_is_negative`, `…_When_a_revolution_angle_exceeds_a_full_turn`, `…_When_an_integer_leaves_the_int32_range` (2 subtests), `…_When_a_percent_parameter_exceeds_100` |
+| RT-4 in-bracket | `recompute_check` raises nothing | `IntegrityTest.…_not_finite_code_When_a_sibling_item_makes_a_value_infinite`, `…_range_code_When_a_new_binding_drives_another_out_of_range` |
+| RT-1 | `undo_steps` from `applied and UndoMode` again | `ClosureTest.test_Should_report_the_recorded_step_When_a_no_change_call_runs_on_touched_objects` |
+| RT-5 | exemption without the `removed_bindings` key | `OtherToolTest.…_When_another_tool_removes_its_constraint`, `ExpressionBindingTest.…_When_the_op_removed_a_binding_without_reporting_it` |
+| V4 | cycle raises `RuntimeError` again | `ClosureTest.…_When_a_cycle_is_refused`, `RollbackTest.…_When_a_later_item_closes_a_cycle` |
+
+## L12 envelopes
+
+`scripts/envelopes2.py` (head vs feat `78229202`, `evidence/env2-*.json`). The application transaction was `None` and `HasPendingTransaction` was false after every call:
+
+| Call | Head vs feat |
+| --- | --- |
+| `feature_parameters_define` new, then the same values again (no-op) | equal |
+| `feature_pad` | equal |
+| `document_object_delete`: refused with dependents (`delete.has_dependents`), plain delete, delete with dependents (an expression holder), unknown object | equal |
+| `document_undo` | equal except the random document handle |
+
+`scripts/envelopes.py` (head vs base `3c8efd8d`, `evidence/env-*.json`). `feature_pad`, `feature_fillet`, `sketch_add_constraint` and `feature_set_parameters` are equal (the last differs only in the per-run mapped-name hash). `sketch_remove_geometry` of a bound constraint gives `SPEC_FAILED` with `ExpressionEngine[.Constraints.extra_len]=BROKEN` at head and at base, 0 diffs. RT-5 behaves as at base.
+
+## Container (rebuilt from `55d55b24`; FreeCAD 1.1.4, 52 tools; typed tools only)
+
+**Run A replay** (`evidence/runA-transcript.json`, `runA.log`; the round-1 order that broke). Steps: build, bind, VarSet edit, read-back. Then, before any undo:
+
+- same-text no-op: `undo_steps 0`
+- equivalent text `" Params.height"`: OK, `unchanged`, `undo_steps 0`, with a mutation block
+- `feature_parameters_define` no-op
+- refusals: `expression.unsupported_property` for the unattached `Profile .AttachmentOffset.Base.z` (V3); `expression.range_unsupported` for `sum(A1:ZZ16384) + 1 mm` in 0.014 s (RT-8); `expression.value_out_of_range` for `-5 mm` on Length (RT-4); `expression.unsupported_property` for `.Shape.Volume` (RT-7); and the round-1 unit, inf, dead-path, whole-Placement and 1999-char refusals
+- cycle: `RECOMPUTE_ERROR` with code `expression.cycle`, rolled back (V4)
+
+Then the undo chain: **all 8 `document_undo` calls OK, `matches_pre_op: true`**. Undo names were `define parameters on Params` / `set expressions 1` / datum / pad / geometry / sketch / body / define. After the undo of the edit: 20/8/10/0/5 and 4 bindings. After the undo of the bind: 0 bindings. End: 0 objects.
+
+Screenshots: `01-A-built`, `02-A-edited` (larger pad, datum higher), `03-A-undo-edit` (back to the built state), `04-A-undone-to-start` (empty document; the tree shows only the document). No scratch probe document appeared in the GUI.
+
+**CAP-2 run B** (`evidence/cap2b-transcript.json`; build, bind, edit, read-back, 8 undos). Bind OK, `undo_steps 1`. Edit: Pad 30 x 12 x 15, Datum z 9. All 8 undos OK with `matches_pre_op: true`. End: 0 objects (`05-B-edited`, `06-B-undone-to-start`). The script's post-chain calls address objects that the undo had already removed. They return `unknown object`, as in round 1, and grade nothing.
+
+## Teardown
+
+FreeCAD stopped, `docker compose … down`, three worktrees removed, nothing running. Image `fcb-desktop:local` holds the build from `55d55b24`.
