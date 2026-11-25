@@ -209,7 +209,7 @@ development_status:
   13-18-loft-and-sweep-tools: done
   13-19-skill-routing-part-loft-sweep-placement-tools: done
   13-20-usage-report-and-bridge-hygiene: done
-  epic-13-retrospective: optional
+  epic-13-retrospective: done
 
 action_items:
   - epic: 1
