@@ -985,8 +985,8 @@ class PartBooleanRefusalTest(_PartFixture):
             "part_boolean.too_complex",
         )
         self.assertIn("606 faces", message)
-        self.assertIn("10200 solid pairs", message)
-        self.assertIn("0 overlapping inside one input", message)
+        self.assertIn("10200 solid pairs across the inputs", message)
+        self.assertIn("not counted overlapping inside one input", message)
 
     def test_Should_refuse_an_input_that_is_not_recomputed_When_its_shape_may_be_out_of_date(
         self,
@@ -1043,9 +1043,32 @@ class PartBooleanRefusalTest(_PartFixture):
             lambda: self.boolean(base="Plate", tools=["Crossing"]), "part_boolean.too_complex"
         )
         self.assertIn("606 faces", message)
-        self.assertIn("at least 1201 solid pairs", message)
-        self.assertIn("200 across the inputs", message)
-        self.assertIn("at least 1001 overlapping inside one input", message)
+        self.assertIn("200 solid pairs across the inputs", message)
+        self.assertIn("at least 801 overlapping inside one input", message)
+
+    def test_Should_skip_the_pass_inside_the_inputs_When_the_faces_are_above_the_limit(self):
+        # Arrange
+        # The pass is quadratic when solids share one x range, so it must not run on an input
+        # that the face count already refuses (6,000 spheres in a column took 11 s).
+        self.add_box("A")
+        many = Part.Compound(
+            [Part.makeBox(1, 1, 1, App.Vector(20 + 2 * i, 0, 0)) for i in range(501)]
+        )
+        self.add_shape("Many", many)
+        calls = []
+        original = features._overlapping_solid_pairs
+        features._overlapping_solid_pairs = lambda *args: calls.append(args) or 0
+        try:
+            # Act
+            message = self.assert_refusal(
+                lambda: self.boolean(tools=["Many"]), "part_boolean.too_complex"
+            )
+        finally:
+            features._overlapping_solid_pairs = original
+
+        # Assert
+        self.assertEqual(calls, [])
+        self.assertIn("not counted overlapping", message)
 
     def test_Should_count_only_solids_whose_boxes_overlap_When_pairs_inside_an_input_are_counted(
         self,
@@ -1061,17 +1084,51 @@ class PartBooleanRefusalTest(_PartFixture):
                 Part.makeBox(2, 2, 2, App.Vector(1, 5, 0)),
             ]
         )
+        offset_in_z = Part.Compound(
+            [
+                Part.makeBox(2, 2, 2, App.Vector(0, 0, 0)),
+                Part.makeBox(2, 2, 2, App.Vector(1, 0, 5)),
+            ]
+        )
+        below_in_y = Part.Compound(
+            [
+                Part.makeBox(2, 2, 2, App.Vector(0, 5, 0)),
+                Part.makeBox(2, 2, 2, App.Vector(1, 0, 0)),
+            ]
+        )
+        below_in_z = Part.Compound(
+            [
+                Part.makeBox(2, 2, 2, App.Vector(0, 0, 5)),
+                Part.makeBox(2, 2, 2, App.Vector(1, 0, 0)),
+            ]
+        )
+        # The y miss comes first in x order, an overlapping box after it must still be counted.
+        miss_then_hit = Part.Compound(
+            [
+                Part.makeBox(2, 2, 2, App.Vector(0, 0, 0)),
+                Part.makeBox(2, 2, 2, App.Vector(0.5, 9, 0)),
+                Part.makeBox(2, 2, 2, App.Vector(1, 1, 1)),
+            ]
+        )
 
         # Act
         counts = [
             features._overlapping_solid_pairs(shape, 1000)
-            for shape in (apart, touching_boxes, offset_in_y)
+            for shape in (
+                apart,
+                touching_boxes,
+                offset_in_y,
+                offset_in_z,
+                below_in_y,
+                below_in_z,
+                miss_then_hit,
+            )
         ]
         capped = features._overlapping_solid_pairs(touching_boxes, 2)
 
         # Assert
-        self.assertEqual(counts, [0, 5, 0])
-        self.assertGreater(capped, 2)
+        self.assertEqual(counts, [0, 5, 0, 0, 0, 0, 1])
+        self.assertEqual(capped, 3)
 
     def test_Should_accept_exactly_twenty_tools_When_they_are_disjoint_boxes(self):
         # Arrange

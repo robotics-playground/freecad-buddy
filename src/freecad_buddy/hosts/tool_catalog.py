@@ -997,9 +997,10 @@ def _feature_specs():
             "twice, tools not 1 to 20 Names), part_boolean.not_top_level (a Body "
             "feature or an App::Part member), part_boolean.untrusted_shape (reversed, invalid, "
             "non-solid input: FreeCAD gives wrong numbers) or part_boolean.too_complex (above "
-            "3,000 faces or 1,000 solid pairs: across the inputs plus those whose boxes overlap "
-            "inside one input). An empty or invalid result fails as RECOMPUTE_ERROR "
-            "part_boolean.empty_result or part_boolean.invalid_result and rolls back.",
+            "3,000 faces or 1,000 solid pairs: across the inputs plus pairs of solids whose "
+            "bounding boxes overlap inside one input). An empty or invalid result fails as "
+            "RECOMPUTE_ERROR part_boolean.empty_result or part_boolean.invalid_result and "
+            "rolls back.",
         ),
         _feature_method(
             "feature_parameters_define",

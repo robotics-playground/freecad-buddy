@@ -4140,21 +4140,24 @@ def feature_part_primitive(
 _PART_BOOLEAN_OPERATIONS = ("cut", "fuse", "common")
 _PART_BOOLEAN_MAX_TOOLS = 20
 # Measured on FreeCAD 1.1.4 (whole call: recompute with refine, post_verify, two fingerprints and
-# the snapshot): a box cut by 1,000 disjoint cylinders (3,006 faces) took 8.9 s; the same with
-# 2,000 (6,006 faces) 34 s. Face count alone does not bound the cost: the common of two families
-# of crossing cylinders took 13.4 s at 180 faces (900 solid pairs) and 37.7 s at 216 faces
-# (1,296 pairs). The slowest case measured within both limits is 13.4 s (the 30 x 30 crossing
-# cylinders, 900 pairs); an interleaved box cut took 22.4 s at 3,072 faces, just above the face
-# limit. Both are under the 120 s feature timeout. The bridge cannot interrupt a long OCC call, so
-# the limits apply to the input. Pairs are counted across every two inputs, because several tools
-# are intersected with each other too: a plate cut by two families of 100 crossing cylinders (606
-# faces, 200 base-by-tool pairs, 10,200 pairs in all) took 68.9 s. The same crossing solids in
-# one tool compound (a plate cut by one compound of 100 + 100 crossing cylinders) ran longer than
-# 600 s, because Part::Cut fuses the tool solids pairwise, so the pairs of solids whose bounding
-# boxes overlap inside each input are added to the count. That pass sorts the solids on x: 0.031 s
-# for the 990 disjoint cylinders (count 0), 0.006 s for the 100 + 100 crossing compound (stopped
-# above the limit), 0.002 s for the 30 + 30 compound (count 900). A plate cut by that 30 + 30
-# compound (60 pairs across, 900 inside, 960 in all, just under the limit) took 21.9 s.
+# the snapshot). The bridge cannot interrupt a long OCC call, so the limits apply to the input.
+# Faces: a box cut by 1,000 disjoint cylinders (3,006 faces) took 8.9 s, the same with 2,000
+# (6,006 faces) 34 s; an interleaved box cut took 22.4 s at 3,072 faces, just above the limit.
+# Solid pairs do not follow the face count: the common of two families of crossing cylinders took
+# 13.4 s at 180 faces (900 pairs) and 37.7 s at 216 faces (1,296 pairs). Pairs are counted across
+# every two inputs, because several tools are intersected with each other too: a plate cut by two
+# families of 100 crossing cylinders (606 faces, 10,200 pairs in all) took 68.9 s. They are also
+# counted inside each input, as the pairs of solids whose bounding boxes overlap, because
+# Part::Cut fuses the tool solids pairwise: a plate cut by one compound of 100 + 100 crossing
+# cylinders ran longer than 600 s. That term applies to every input and operation, although
+# FreeCAD expands a compound into separate arguments only for a fuse and for the tools of a cut;
+# it is conservative, and unmeasured for a common and for a cut base. The pass sorts the solids
+# on x: 0.031 s for the 990 disjoint cylinders (count 0), 0.006 s for the 100 + 100 crossing
+# compound (stopped above the limit). The slowest case measured within the limits is 21.9 s: a
+# plate cut by one compound of 30 + 30 crossing cylinders (60 pairs across, 900 inside, 960 in
+# all). All are under the 120 s feature timeout. The limits do not count intersecting face
+# pairs: two single-solid combs with crossing teeth (652 faces, 1 pair) ran longer than 88 s
+# (deferred-work.md).
 _PART_BOOLEAN_MAX_FACES = 3000
 _PART_BOOLEAN_MAX_SOLID_PAIRS = 1000
 
@@ -4205,8 +4208,11 @@ def _overlapping_solid_pairs(shape: object, cap: int) -> int:
 
     Two solids that cannot touch cost the kernel nothing, so only overlapping boxes count: a
     compound of 990 disjoint cylinders counts 0, and a compound of two crossing families of 100
-    cylinders counts 10,000. A sort on the x extent bounds the work; the count stops as soon as
-    it passes ``cap``, so the pass stays short on an input that is refused anyway.
+    cylinders counts ``cap + 1`` (the count stops as soon as it passes ``cap``). The solids are
+    sorted on x and the inner loop ends at the first solid beyond the current x extent, but
+    solids that share one x range and are apart in y or z make the pass quadratic in the solid
+    count: the caller runs it only on inputs of at most 3,000 faces, hence 3,000 solids, which
+    took 2.7 s for a column of 3,000 spheres (6,000 spheres took 11 s).
     """
     boxes = [solid.BoundBox for solid in shape.Solids]
     order = sorted(range(len(boxes)), key=lambda index: boxes[index].XMin)
@@ -4254,21 +4260,24 @@ def _check_part_boolean_inputs(base_obj: object, tool_objs: list[object]) -> Non
     faces = sum(len(shape.Faces) for shape in shapes if shape is not None)
     solids = [len(shape.Solids) if shape is not None else 0 for shape in shapes]
     across = sum(a * b for a, b in itertools.combinations(solids, 2))
-    inside = sum(
-        _overlapping_solid_pairs(shape, _PART_BOOLEAN_MAX_SOLID_PAIRS)
-        for shape in shapes
-        if shape is not None
-    )
-    pairs = across + inside
-    if faces > _PART_BOOLEAN_MAX_FACES or pairs > _PART_BOOLEAN_MAX_SOLID_PAIRS:
+    # The pass inside the inputs runs only when the cheap counts pass: on an input of many
+    # thousands of solids it would itself hold the interpreter lock for tens of seconds.
+    counted = faces <= _PART_BOOLEAN_MAX_FACES and across <= _PART_BOOLEAN_MAX_SOLID_PAIRS
+    budget = _PART_BOOLEAN_MAX_SOLID_PAIRS - across
+    inside = 0
+    for shape in shapes if counted else ():
+        if shape is not None:
+            inside += _overlapping_solid_pairs(shape, budget - inside)
+        if inside > budget:
+            break
+    if not counted or inside > budget:
+        inside_text = f"at least {inside}" if counted else "not counted"
         raise PartToolRefusal(
             "part_boolean.too_complex",
-            f"the inputs hold {faces} faces (limit {_PART_BOOLEAN_MAX_FACES}) and "
-            f"{'at least ' if inside > _PART_BOOLEAN_MAX_SOLID_PAIRS else ''}{pairs} solid pairs "
-            f"(limit {_PART_BOOLEAN_MAX_SOLID_PAIRS}): {across} across the inputs and "
-            f"{'at least ' if inside > _PART_BOOLEAN_MAX_SOLID_PAIRS else ''}{inside} overlapping "
-            "inside one input; the kernel call would hold the bridge for tens of seconds or "
-            "more. Use fewer or simpler inputs",
+            f"the inputs hold {faces} faces (limit {_PART_BOOLEAN_MAX_FACES}), {across} solid "
+            f"pairs across the inputs and {inside_text} overlapping inside one input (the "
+            f"pairs together are limited to {_PART_BOOLEAN_MAX_SOLID_PAIRS}); the kernel call "
+            "would hold the bridge for tens of seconds or more. Use fewer or simpler inputs",
         )
     for obj, shape in zip(objects, shapes, strict=True):
         if shape is None or not shape_trust.is_measurable_solid(shape):

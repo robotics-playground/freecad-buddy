@@ -2428,3 +2428,9 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   cost evidence (review round 2, Edge probe): a plate cut by one tool compound of two fully crossing families of 100 cylinders (606 faces) passes the face and pair limits and ran longer than 600 s, because `Part::Cut` fuses the tool solids pairwise; the limits count pairs across inputs, not inside one compound. Counting pairs inside an input would refuse a valid compound of 990 disjoint cylinders (8.9 s), so the guard needs the overlap check. Superseded for cost: the in-input bounding-box pair count (Story 13-17 round 3) now bounds the time; this entry is about correct volumes only.
   blocker: the cost of `shape.check(True)` or a pairwise solid check on up to 3,000 faces is not measured, and it holds the interpreter lock.
   unblock: a measured cost model for the check; then add it to `shape_trust.is_measurable_solid` for both callers.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-17-part-primitive-boolean.md`
+  summary: The cost limits of `feature_part_boolean` (3,000 faces, 1,000 solid pairs) do not count intersecting face pairs, so inputs with few solids but many crossing faces pass and can run past the 60 s budget.
+  evidence: review round 3 (Edge probe on FreeCAD 1.1.4): two single-solid combs with crossing teeth, 652 faces and 1 solid pair, ran the common for more than 88 s (killed); 492 faces took 35.4 s. The interpreter lock is held for the whole call.
+  blocker: a measured cost model for the number of face pairs whose bounding boxes overlap (across inputs, and inside a shape for a fuse), with a limit calibrated on combs, crossing plates and curved faces; each probe takes tens of seconds to minutes.
+  unblock: add a face-pair count to `_check_part_boolean_inputs` with the same x-sweep as `_overlapping_solid_pairs`, and a limit that keeps the slowest measured accepted input under 60 s.
