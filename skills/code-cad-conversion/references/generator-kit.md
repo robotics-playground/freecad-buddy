@@ -9,8 +9,9 @@ the live FreeCAD through `script_exec` (`doc` and `STAGE` injected) or headless 
 On the live document the parameter layer and the clearing use typed tools, and `script_exec`
 builds the parts, because no typed tool makes Part primitives:
 
-1. Clear a document this generator owns (skip an empty one): `document_object_delete` `{"objects": ["Params", "Box", "Cut"]}`
-   naming every object Name (not Label) that `query_tree_summary` lists.
+1. Clear a document this generator owns (skip an empty one): `document_object_delete` `{"objects": ["Params", "Box", "Box001", "Cut"]}`
+   naming every object Name (not Label) in the tree, the Cut's Base and Tool objects included:
+   a Name left out is a dependent and `delete.has_dependents` refuses the call.
 2. Create every variable, plain and derived: `feature_parameters_define` `{"varset": "Params",
    "parameters": [{"name": "PLATE_T", "type": "float", "value": 5.0}, {"name": "BOSS_H", "type":
    "float", "value": 0}, {"name": "COUNTERSINK", "type": "bool", "value": true}]}` (a call takes
