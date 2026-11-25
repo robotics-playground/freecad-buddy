@@ -578,7 +578,7 @@ class PartBooleanTest(_PartFixture):
         corners = [(0, 0), (10, 10), (10, 0), (0, 10), (0, 0)]
         wire = Part.makePolygon([App.Vector(x, y, 0) for x, y in corners])
         bowtie = self.add_shape("Result", Part.Face(wire).extrude(App.Vector(0, 0, 10)))
-        check = features._part_boolean_result_check("Result", "cut")
+        check = features._part_boolean_result_check("Result", "cut", ["A", "B"])
 
         # Act
         def act():
@@ -594,7 +594,7 @@ class PartBooleanTest(_PartFixture):
         # Arrange
         reversed_box = Part.makeBox(10, 10, 10).reversed()
         self.add_shape("Result", reversed_box)
-        check = features._part_boolean_result_check("Result", "fuse")
+        check = features._part_boolean_result_check("Result", "fuse", ["A", "B"])
 
         # Act
         def act():
@@ -604,9 +604,64 @@ class PartBooleanTest(_PartFixture):
         self.assertLess(reversed_box.Volume, 0.0, "the fixture must have a negative volume")
         with self.assertRaises(transaction.RecomputeFailure) as caught:
             act()
-        self.assertIn(
-            caught.exception.code, {"part_boolean.empty_result", "part_boolean.invalid_result"}
-        )
+        self.assertEqual(caught.exception.code, "part_boolean.empty_result")
+
+    def test_Should_name_the_inputs_When_the_result_is_empty(self):
+        # Arrange
+        self.add_box("A")
+        self.add_box("B", x=100.0)
+
+        # Act
+        envelope = self.boolean(operation="common")
+
+        # Assert
+        message = envelope["detail"]["message"]
+        for expected in ("common", "Result", "A", "B"):
+            self.assertIn(expected, message)
+
+    def test_Should_report_the_kernel_message_with_the_invalid_code_When_the_boolean_fails(self):
+        # Arrange
+        # FreeCAD's own model check (Mod/Part/Boolean/CheckModel) fails a boolean whose input is
+        # a self-intersecting solid and leaves the object in an error state with no shape.
+        corners = [(0, 0), (10, 10), (10, 0), (0, 10), (0, 0)]
+        wire = Part.makePolygon([App.Vector(x, y, 0) for x, y in corners])
+        self.add_shape("Bowtie", Part.Face(wire).extrude(App.Vector(0, 0, 10)))
+        self.add_box("B", x=5.0)
+        document = self.document()
+        cut = document.addObject("Part::Cut", "Result")
+        cut.Base, cut.Tool = document.getObject("Bowtie"), document.getObject("B")
+        document.recompute()
+        check = features._part_boolean_result_check("Result", "cut", ["Bowtie", "B"])
+
+        # Act
+        def act():
+            check(document)
+
+        # Assert
+        self.assertIn("Invalid", cut.State, "the fixture must be a failed real boolean")
+        with self.assertRaises(transaction.RecomputeFailure) as caught:
+            act()
+        self.assertEqual(caught.exception.code, "part_boolean.invalid_result")
+        self.assertIn("Bowtie", str(caught.exception))
+
+    def test_Should_roll_back_and_leave_no_intermediate_When_a_several_tool_cut_removes_the_base(
+        self,
+    ):
+        # Arrange
+        self.add_box("Plate", size=10.0)
+        self.add_box("Left", x=-1.0, y=-1.0, z=-1.0, size=7.0)
+        self.add_box("Right", x=4.0, y=-1.0, z=-1.0, size=7.0)
+        self.add_box("Top", x=-1.0, y=-1.0, z=-1.0, size=12.0)
+        visibility = self.visibility("Plate", "Left", "Right", "Top")
+        before, count = self.fingerprint(), self.object_count()
+
+        # Act
+        envelope = self.boolean(base="Plate", tools=["Left", "Right", "Top"])
+
+        # Assert
+        self.assert_rolled_back(envelope, "part_boolean.empty_result", before, count)
+        self.assertIsNone(self.document().getObject("Result_tools"))
+        self.assertEqual(self.visibility("Plate", "Left", "Right", "Top"), visibility)
 
     def test_Should_accept_a_result_with_two_solids_When_disjoint_solids_are_fused(self):
         # Arrange
@@ -816,6 +871,144 @@ class PartBooleanRefusalTest(_PartFixture):
         self.assertIn("Result_tools", str(caught.exception))
         self.assertIsNone(self.document().getObject("Result"))
 
+    def test_Should_keep_the_documented_limits_When_the_constants_are_read(self):
+        # Arrange and Act
+        limits = (
+            features._PART_BOOLEAN_MAX_FACES,
+            features._PART_BOOLEAN_MAX_SOLID_PAIRS,
+            features._PART_BOOLEAN_MAX_TOOLS,
+        )
+
+        # Assert
+        self.assertEqual(limits, (3000, 1000, 20))
+
+    def test_Should_refuse_at_the_shipped_face_limit_When_the_inputs_hold_3012_faces(self):
+        # Arrange
+        self.add_box("A")
+        many = Part.Compound(
+            [Part.makeBox(1, 1, 1, App.Vector(20 + 2 * i, 0, 0)) for i in range(501)]
+        )
+        self.add_shape("Many", many)
+
+        # Act and Assert
+        message = self.assert_refusal(
+            lambda: self.boolean(tools=["Many"]), "part_boolean.too_complex"
+        )
+        self.assertIn("3012 faces", message)
+
+    def test_Should_refuse_at_the_shipped_pair_limit_When_the_inputs_hold_1100_pairs(self):
+        # Arrange
+        base = Part.Compound([Part.makeBox(1, 1, 1, App.Vector(2 * i, 0, 0)) for i in range(100)])
+        tool = Part.Compound([Part.makeBox(1, 1, 1, App.Vector(2 * i, 5, 0)) for i in range(11)])
+        self.add_shape("Many", base)
+        self.add_shape("Few", tool)
+
+        # Act and Assert
+        message = self.assert_refusal(
+            lambda: self.boolean(base="Many", tools=["Few"]), "part_boolean.too_complex"
+        )
+        self.assertIn("1100 base-solid", message)
+
+    def test_Should_count_the_size_before_checking_the_shape_When_an_input_is_too_complex(self):
+        # Arrange
+        # A reversed compound of 501 boxes is both too complex and untrusted; the cheap size
+        # check must answer first so isValid() never runs on an input the tool refuses anyway.
+        self.add_box("A")
+        boxes = [Part.makeBox(1, 1, 1, App.Vector(20 + 2 * i, 0, 0)) for i in range(501)]
+        self.add_shape("Many", Part.Compound(boxes).reversed())
+
+        # Act and Assert
+        self.assert_refusal(lambda: self.boolean(tools=["Many"]), "part_boolean.too_complex")
+
+    def test_Should_accept_exactly_twenty_tools_When_they_are_disjoint_boxes(self):
+        # Arrange
+        self.add_box("Plate", size=100.0)
+        names = [f"T{index}" for index in range(20)]
+        for index, name in enumerate(names):
+            self.add_box(name, x=5.0 * index, y=1.0, z=1.0, size=1.0)
+
+        # Act
+        envelope = self.boolean(base="Plate", tools=names)
+
+        # Assert
+        self.assert_volume(envelope, 100.0**3 - 20.0, places=4)
+
+    def test_Should_refuse_with_a_plain_error_When_the_kind_is_not_a_string(self):
+        # Arrange
+        before = self.fingerprint()
+
+        # Act
+        def act():
+            return features.feature_part_primitive(
+                self.registry, doc=self.handle, kind=["box"], name="Part1"
+            )
+
+        # Assert
+        with self.assertRaises(ValidationError):
+            act()
+        self.assertEqual(self.fingerprint(), before)
+
+    def test_Should_refuse_a_size_FreeCAD_would_clamp_When_a_radius_is_above_the_stored_range(
+        self,
+    ):
+        # Arrange
+        before = self.fingerprint()
+
+        # Act
+        def act():
+            return features.feature_part_primitive(
+                self.registry, doc=self.handle, kind="sphere", name="Ball", radius=mm(1e39)
+            )
+
+        # Assert
+        with self.assertRaises(features.PartToolRefusal) as caught:
+            act()
+        self.assertEqual(caught.exception.code, "part_primitive.dimension")
+        self.assertEqual(self.fingerprint(), before)
+
+    def test_Should_refuse_a_name_that_is_another_objects_label_When_a_tool_creates_a_part(self):
+        # Arrange
+        holder = self.add_box("A")
+        holder.Label = "Taken"
+        self.add_box("B", x=5.0)
+
+        # Act
+        def act_primitive():
+            return self.primitive(name="Taken")
+
+        def act_boolean():
+            return self.boolean(name="Taken")
+
+        # Assert
+        for act in (act_primitive, act_boolean):
+            with self.subTest(act=act.__name__):
+                with self.assertRaises(ValidationError) as caught:
+                    act()
+                self.assertIn("Label of A", str(caught.exception))
+        self.assertIsNone(self.document().getObject("Taken"))
+
+    def test_Should_say_why_the_input_is_untrusted_When_it_is_not_a_solid(self):
+        # Arrange
+        self.add_box("A")
+        box = Part.makeBox(10, 10, 10)
+        self.add_shape("Wire", Part.makePolygon([App.Vector(0, 0, 0), App.Vector(10, 0, 0)]))
+        self.add_shape("Face", box.Faces[0])
+        expected = {
+            "Wire": "not made only of solids",
+            "Face": "not made only of solids",
+        }
+        for name, reason in expected.items():
+            with self.subTest(name=name):
+                # Act
+                def act(n=name):
+                    return self.boolean(tools=[n])
+
+                # Assert
+                with self.assertRaises(features.PartToolRefusal) as caught:
+                    act()
+                self.assertEqual(caught.exception.code, "part_boolean.untrusted_shape")
+                self.assertIn(reason, str(caught.exception))
+
     def test_Should_refuse_before_any_write_When_the_faces_are_above_the_limit(self):
         # Arrange
         self.two_cubes()
@@ -958,6 +1151,36 @@ class PartBooleanCostTest(_PartFixture):
         # Assert
         self.assertEqual(self.document().getObject("Holes").Shape.Faces.__len__(), 2970)
         self.assert_volume(envelope, expected, places=3)
+        self.assertLess(elapsed, 60.0)
+
+    def test_Should_finish_inside_the_budget_When_two_crossing_families_sit_at_900_pairs(self):
+        # Arrange
+        # Two families of 30 cylinders that cross each other: 180 faces, 900 solid pairs, both
+        # under the limits. Measured at 13.4 s for a common in the spec probe.
+        def family(axis):
+            solids = []
+            for index in range(30):
+                offset = 3.0 * index
+                if axis == "x":
+                    solids.append(
+                        Part.makeCylinder(1.0, 100.0, App.Vector(offset, 0, 0), App.Vector(0, 1, 0))
+                    )
+                else:
+                    solids.append(
+                        Part.makeCylinder(1.0, 100.0, App.Vector(0, offset, 0), App.Vector(1, 0, 0))
+                    )
+            return Part.Compound(solids)
+
+        self.add_shape("FamilyX", family("x"))
+        self.add_shape("FamilyY", family("y"))
+        started = time.monotonic()
+
+        # Act
+        envelope = self.boolean(base="FamilyX", tools=["FamilyY"], operation="common")
+        elapsed = time.monotonic() - started
+
+        # Assert
+        self.assert_ok(envelope)
         self.assertLess(elapsed, 60.0)
 
 

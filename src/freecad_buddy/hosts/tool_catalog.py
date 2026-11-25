@@ -989,7 +989,8 @@ def _feature_specs():
             ),
             "Cut, fuse or common of top-level solids (Part::Cut, Fuse, Common, or the Multi "
             "types), not PartDesign features. The inputs and any intermediate fuse are hidden. "
-            "Refused before any write with detail.code part_boolean.not_top_level (a Body "
+            "Refused before any write with detail.code part_boolean.invalid_input (an input named "
+            "twice, tools not 1 to 20 Names), part_boolean.not_top_level (a Body "
             "feature or an App::Part member), part_boolean.untrusted_shape (reversed, invalid, "
             "non-solid input: FreeCAD gives wrong numbers) or part_boolean.too_complex (above "
             "3,000 faces or 1,000 solid pairs). An empty or invalid result fails as "
