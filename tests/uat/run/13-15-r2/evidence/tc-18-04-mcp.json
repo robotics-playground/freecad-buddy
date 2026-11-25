@@ -1,0 +1,765 @@
+[
+ {
+  "tool": "document_create",
+  "args": {
+   "label": "tc18_04_curved_face"
+  },
+  "seconds": 0.208,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww",
+    "name": "tc18_04_curved_face",
+    "label": "tc18_04_curved_face"
+   },
+   "text": "doc: fcb-doc:0THgOTHYLeEQd4PCa7ARww\nlabel: tc18_04_curved_face\nname: tc18_04_curved_face"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:0THgOTHYLeEQd4PCa7ARww\",\"name\":\"tc18_04_curved_face\",\"label\":\"tc18_04_curved_face\"},\"text\":\"doc: fcb-doc:0THgOTHYLeEQd4PCa7ARww\\nlabel: tc18_04_curved_face\\nname: tc18_04_curved_face\"}"
+  ]
+ },
+ {
+  "tool": "feature_body_create",
+  "args": {
+   "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww",
+   "name": "Body"
+  },
+  "seconds": 0.145,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Body"
+     ]
+    },
+    "feature": "Body",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Body",
+     "readable": false
+    }
+   },
+   "text": "Mutation committed; fingerprint 283569b3f782.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Body\",\"volume\":0.0,\"area\":0.0,\"com\":[0.0,0.0,0.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":null,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Body\"]},\"feature\":\"Body\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"Body\",\"readable\":false}},\"text\":\"Mutation committed; fingerprint 283569b3f782.\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"no visible shape-bearing objects to measure\"}}"
+  ]
+ },
+ {
+  "tool": "sketch_create",
+  "args": {
+   "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww",
+   "name": "Profile",
+   "plane": "XY",
+   "body": "Body"
+  },
+  "seconds": 0.051,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "02d4b20e41785786d5c3602ca032a2ce27023331bc87c63aabdc9cafe589434c",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Profile",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Profile"
+     ]
+    },
+    "sketch": "Profile",
+    "sketch_state": {
+     "schema": "fcb.sketch-state/1",
+     "sketch": "Profile",
+     "readable": true,
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 0,
+     "constraint_count": 0,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    }
+   },
+   "text": "Mutation committed; fingerprint 02d4b20e4178.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"02d4b20e41785786d5c3602ca032a2ce27023331bc87c63aabdc9cafe589434c\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Profile\",\"volume\":0.0,\"area\":0.0,\"com\":[0.0,0.0,0.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":true,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Profile\"]},\"sketch\":\"Profile\",\"sketch_state\":{\"schema\":\"fcb.sketch-state/1\",\"sketch\":\"Profile\",\"readable\":true,\"dof\":0,\"fully_constrained\":true,\"geometry_count\":0,\"constraint_count\":0,\"conflicting\":[],\"malformed\":[],\"redundant\":[],\"partially_redundant\":[],\"solver_status_code\":0}},\"text\":\"Mutation committed; fingerprint 02d4b20e4178.\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"no visible shape-bearing objects to measure\"}}"
+  ]
+ },
+ {
+  "tool": "sketch_add_geometry",
+  "args": {
+   "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww",
+   "sketch": "Profile",
+   "geometry": [
+    {
+     "kind": "circle",
+     "center": [
+      0,
+      0
+     ],
+     "radius": {
+      "value": 5,
+      "unit": "mm"
+     }
+    }
+   ],
+   "constraints": [
+    {
+     "type": "Coincident",
+     "first": 0,
+     "first_pos": 3,
+     "second": -1,
+     "second_pos": 1
+    },
+    {
+     "type": "Radius",
+     "first": 0,
+     "value": {
+      "value": 5,
+      "unit": "mm"
+     },
+     "name": "Radius"
+    }
+   ]
+  },
+  "seconds": 0.108,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "02d4b20e41785786d5c3602ca032a2ce27023331bc87c63aabdc9cafe589434c",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "0c54cdbb0f2b139c74e31097ab04b1ecf053e442c1f7f1044e1c5d6db49fbb5a",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Profile",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Profile"
+     ]
+    },
+    "sketch": "Profile",
+    "sketch_state": {
+     "schema": "fcb.sketch-state/1",
+     "sketch": "Profile",
+     "readable": true,
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 1,
+     "constraint_count": 2,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    },
+    "geo_ids": [
+     0
+    ],
+    "constraint_ids": [
+     1,
+     2
+    ]
+   },
+   "text": "Mutation committed; fingerprint 0c54cdbb0f2b.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"02d4b20e41785786d5c3602ca032a2ce27023331bc87c63aabdc9cafe589434c\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"0c54cdbb0f2b139c74e31097ab04b1ecf053e442c1f7f1044e1c5d6db49fbb5a\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Profile\",\"volume\":0.0,\"area\":0.0,\"com\":[0.0,0.0,0.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":true,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Profile\"]},\"sketch\":\"Profile\",\"sketch_state\":{\"schema\":\"fcb.sketch-state/1\",\"sketch\":\"Profile\",\"readable\":true,\"dof\":0,\"fully_constrained\":true,\"geometry_count\":1,\"constraint_count\":2,\"conflicting\":[],\"malformed\":[],\"redundant\":[],\"partially_redundant\":[],\"solver_status_code\":0},\"geo_ids\":[0],\"constraint_ids\":[1,2]},\"text\":\"Mutation committed; fingerprint 0c54cdbb0f2b.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.41,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "feature_pad",
+  "args": {
+   "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww",
+   "body": "Body",
+   "profile": "Profile",
+   "name": "Block",
+   "length": {
+    "value": 10,
+    "unit": "mm"
+   }
+  },
+  "seconds": 0.119,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "0c54cdbb0f2b139c74e31097ab04b1ecf053e442c1f7f1044e1c5d6db49fbb5a",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "f0d6768919d887d33dd8a31661c7912c2903122ee8cf9a96f7e017dae9a15a61",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Block",
+       "volume": 785.4,
+       "area": 471.24,
+       "com": [
+        0.0,
+        0.0,
+        5.0
+       ]
+      },
+      {
+       "name": "Body",
+       "volume": 785.4,
+       "area": 471.24,
+       "com": [
+        0.0,
+        0.0,
+        5.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Block",
+      "Body"
+     ]
+    },
+    "feature": "Block",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Block",
+     "readable": true,
+     "body": "Body",
+     "is_tip": true,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 3,
+      "edge_count": 3,
+      "vertex_count": 2,
+      "is_valid": true,
+      "volume": 785.4,
+      "area": 471.24,
+      "bbox": [
+       10.0,
+       9.98,
+       10.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint f0d6768919d8.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"0c54cdbb0f2b139c74e31097ab04b1ecf053e442c1f7f1044e1c5d6db49fbb5a\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"f0d6768919d887d33dd8a31661c7912c2903122ee8cf9a96f7e017dae9a15a61\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Block\",\"volume\":785.4,\"area\":471.24,\"com\":[0.0,0.0,5.0]},{\"name\":\"Body\",\"volume\":785.4,\"area\":471.24,\"com\":[0.0,0.0,5.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":true,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Block\",\"Body\"]},\"feature\":\"Block\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"Block\",\"readable\":true,\"body\":\"Body\",\"is_tip\":true,\"shape_summary\":{\"solid_count\":1,\"face_count\":3,\"edge_count\":3,\"vertex_count\":2,\"is_valid\":true,\"volume\":785.4,\"area\":471.24,\"bbox\":[10.0,9.98,10.0]}}},\"text\":\"Mutation committed; fingerprint f0d6768919d8.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.41,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww",
+   "code": "fs = doc.getObject('Block').Shape.Faces\nresult = [f'Face{i}' for i, f in enumerate(fs, 1) if f.Surface.TypeId == 'Part::GeomCylinder']"
+  },
+  "seconds": 0.116,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww",
+    "stdout": "",
+    "value_repr": "['Face1']",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:0THgOTHYLeEQd4PCa7ARww\nfingerprint_after: None\nstdout: \nvalue_repr: ['Face1']\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:0THgOTHYLeEQd4PCa7ARww\",\"stdout\":\"\",\"value_repr\":\"['Face1']\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:0THgOTHYLeEQd4PCa7ARww\\nfingerprint_after: None\\nstdout: \\nvalue_repr: ['Face1']\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.41,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "feature_datum",
+  "args": {
+   "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww",
+   "body": "Body",
+   "name": "CurvedPoint",
+   "kind": "point",
+   "map_mode": "CenterOfMass",
+   "attachment": {
+    "kind": "mapped_name",
+    "object": "Block",
+    "mapped_name": "Face1"
+   }
+  },
+  "seconds": 0.085,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "f0d6768919d887d33dd8a31661c7912c2903122ee8cf9a96f7e017dae9a15a61",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "4a0a52771fd5018f208233c4c9b1115bcda6521859eed6287ea4671767946e70",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "CurvedPoint",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        5.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "PASS": 1
+       },
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "CurvedPoint",
+      "Body"
+     ]
+    },
+    "feature": "CurvedPoint",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "CurvedPoint",
+     "readable": true,
+     "body": "",
+     "is_tip": false,
+     "shape_summary": {
+      "solid_count": 0,
+      "face_count": 0,
+      "edge_count": 0,
+      "vertex_count": 1,
+      "is_valid": true,
+      "volume": 0.0,
+      "area": 0.0,
+      "bbox": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint 4a0a52771fd5.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"f0d6768919d887d33dd8a31661c7912c2903122ee8cf9a96f7e017dae9a15a61\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"4a0a52771fd5018f208233c4c9b1115bcda6521859eed6287ea4671767946e70\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"CurvedPoint\",\"volume\":0.0,\"area\":0.0,\"com\":[0.0,0.0,5.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":null,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{\"PASS\":1},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"CurvedPoint\",\"Body\"]},\"feature\":\"CurvedPoint\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"CurvedPoint\",\"readable\":true,\"body\":\"\",\"is_tip\":false,\"shape_summary\":{\"solid_count\":0,\"face_count\":0,\"edge_count\":0,\"vertex_count\":1,\"is_valid\":true,\"volume\":0.0,\"area\":0.0,\"bbox\":[0.0,0.0,0.0]}}},\"text\":\"Mutation committed; fingerprint 4a0a52771fd5.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.41,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww"
+  },
+  "seconds": 0.059,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "fitted": true,
+    "document": "tc18_04_curved_face",
+    "camera_recorded": true
+   },
+   "text": "fitted the live viewport to 'tc18_04_curved_face'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"fitted\":true,\"document\":\"tc18_04_curved_face\",\"camera_recorded\":true},\"text\":\"fitted the live viewport to 'tc18_04_curved_face'\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww",
+   "code": "import Part\nf = doc.getObject('Block').Shape.getElement('Face1')\nbb, ob = f.BoundBox, f.optimalBoundingBox()\ntri = f.getTriangulation() if hasattr(f, 'getTriangulation') else None\np = doc.getObject('CurvedPoint')\nresult = dict(bbox=[round(v, 9) for v in (bb.XMin, bb.YMin, bb.ZMin, bb.XMax, bb.YMax, bb.ZMax)], optimal=[round(v, 9) for v in (ob.XMin, ob.YMin, ob.ZMin, ob.XMax, ob.YMax, ob.ZMax)], triangles=(len(tri[1]) if tri and tri[1] else 0), point_z=round(p.Placement.Base.z, 6), valid=p.isValid())"
+  },
+  "seconds": 0.106,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww",
+    "stdout": "",
+    "value_repr": "{'bbox': [-5.0, -4.990133642, 0.0, 5.0, 4.990133642, 10.0], 'optimal': [-5.009866458, -5.0000001, -0.009866458, 5.009866458, 5.0000001, 10.009866458], 'triangles': 0, 'point_z': 5.0, 'valid': True}",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:0THgOTHYLeEQd4PCa7ARww\nfingerprint_after: None\nstdout: \nvalue_repr: <197 chars>",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:0THgOTHYLeEQd4PCa7ARww\",\"stdout\":\"\",\"value_repr\":\"{'bbox': [-5.0, -4.990133642, 0.0, 5.0, 4.990133642, 10.0], 'optimal': [-5.009866458, -5.0000001, -0.009866458, 5.009866458, 5.0000001, 10.009866458], 'triangles': 0, 'point_z': 5.0, 'valid': True}\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:0THgOTHYLeEQd4PCa7ARww\\nfingerprint_after: None\\nstdout: \\nvalue_repr: <197 chars>\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "feature_set_parameters",
+  "args": {
+   "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww",
+   "feature": "Block",
+   "parameters": {
+    "Length": {
+     "value": 15,
+     "unit": "mm"
+    }
+   }
+  },
+  "seconds": 0.067,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4a0a52771fd5018f208233c4c9b1115bcda6521859eed6287ea4671767946e70",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "f8facc262818cbbd12aa13de9f12b338d4992411913b75f50fd8ec97b4c7d2e9",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Block",
+       "volume": 1178.1,
+       "area": 628.32,
+       "com": [
+        0.0,
+        0.0,
+        7.5
+       ]
+      },
+      {
+       "name": "Body",
+       "volume": 1178.1,
+       "area": 628.32,
+       "com": [
+        0.0,
+        0.0,
+        7.5
+       ]
+      },
+      {
+       "name": "CurvedPoint",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        7.5
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "PASS": 2
+       },
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Block",
+      "Body"
+     ]
+    },
+    "feature": "Block",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Block",
+     "readable": true,
+     "body": "Body",
+     "is_tip": true,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 3,
+      "edge_count": 3,
+      "vertex_count": 2,
+      "is_valid": true,
+      "volume": 1178.1,
+      "area": 628.32,
+      "bbox": [
+       10.0,
+       9.98,
+       15.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint f8facc262818.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 1.19,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"4a0a52771fd5018f208233c4c9b1115bcda6521859eed6287ea4671767946e70\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"f8facc262818cbbd12aa13de9f12b338d4992411913b75f50fd8ec97b4c7d2e9\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Block\",\"volume\":1178.1,\"area\":628.32,\"com\":[0.0,0.0,7.5]},{\"name\":\"Body\",\"volume\":1178.1,\"area\":628.32,\"com\":[0.0,0.0,7.5]},{\"name\":\"CurvedPoint\",\"volume\":0.0,\"area\":0.0,\"com\":[0.0,0.0,7.5]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":true,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{\"PASS\":2},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Block\",\"Body\"]},\"feature\":\"Block\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"Block\",\"readable\":true,\"body\":\"Body\",\"is_tip\":true,\"shape_summary\":{\"solid_count\":1,\"face_count\":3,\"edge_count\":3,\"vertex_count\":2,\"is_valid\":true,\"volume\":1178.1,\"area\":628.32,\"bbox\":[10.0,9.98,15.0]}}},\"text\":\"Mutation committed; fingerprint f8facc262818.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":1.19,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww",
+   "code": "import Part\nf = doc.getObject('Block').Shape.getElement('Face1')\nbb, ob = f.BoundBox, f.optimalBoundingBox()\ntri = f.getTriangulation() if hasattr(f, 'getTriangulation') else None\np = doc.getObject('CurvedPoint')\nresult = dict(bbox=[round(v, 9) for v in (bb.XMin, bb.YMin, bb.ZMin, bb.XMax, bb.YMax, bb.ZMax)], optimal=[round(v, 9) for v in (ob.XMin, ob.YMin, ob.ZMin, ob.XMax, ob.YMax, ob.ZMax)], triangles=(len(tri[1]) if tri and tri[1] else 0), point_z=round(p.Placement.Base.z, 6), valid=p.isValid())"
+  },
+  "seconds": 0.021,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww",
+    "stdout": "",
+    "value_repr": "{'bbox': [-5.0, -4.988343846, 0.0, 5.0, 4.988343846, 15.0], 'optimal': [-5.011656254, -5.0000001, -0.011656254, 5.011656254, 5.0000001, 15.011656254], 'triangles': 0, 'point_z': 7.5, 'valid': True}",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:0THgOTHYLeEQd4PCa7ARww\nfingerprint_after: None\nstdout: \nvalue_repr: <197 chars>\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 1.19,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:0THgOTHYLeEQd4PCa7ARww\",\"stdout\":\"\",\"value_repr\":\"{'bbox': [-5.0, -4.988343846, 0.0, 5.0, 4.988343846, 15.0], 'optimal': [-5.011656254, -5.0000001, -0.011656254, 5.011656254, 5.0000001, 15.011656254], 'triangles': 0, 'point_z': 7.5, 'valid': True}\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:0THgOTHYLeEQd4PCa7ARww\\nfingerprint_after: None\\nstdout: \\nvalue_repr: <197 chars>\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":1.19,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "document_close",
+  "args": {
+   "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww"
+  },
+  "seconds": 0.064,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:0THgOTHYLeEQd4PCa7ARww",
+    "name": "tc18_04_curved_face",
+    "closed": true
+   },
+   "text": "Closed tc18_04_curved_face (doc=fcb-doc:0THgOTHYLeEQd4PCa7ARww)."
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:0THgOTHYLeEQd4PCa7ARww\",\"name\":\"tc18_04_curved_face\",\"closed\":true},\"text\":\"Closed tc18_04_curved_face (doc=fcb-doc:0THgOTHYLeEQd4PCa7ARww).\"}"
+  ]
+ }
+]

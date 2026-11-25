@@ -129,6 +129,8 @@ the run records with the witness values.
 
 **04b — the curved face is inside the support's box.** **Given** `tc18_04b_inner_curved_face`: the block, then a sketch `BossProfile` on XY in the Body with one circle centre (10, 5) radius 3 mm (`DistanceX`/`DistanceY` from the root, `Radius`), Pad `Boss` 15 mm, a datum point `BossPoint` (`CenterOfMass`) on the Boss cylindrical face, `view_fit_viewport`  
 **When** `mcp feature_set_parameters { ..., feature: "Boss", parameters: { Length: { value: 20, unit: "mm" } } }`  
-**Then** record `status`, `rolled_back`, the finding and both witnesses. A `REPOINTED` whose witness differs from the true face box only on an axis the support did not move (y here) is the mesh-deflection false positive  
+**Then** record `status`, `rolled_back`, the finding and both witnesses  
+**And** the witness is exact on both sides — verify: the y bounds in the finding (or in a `PASS`) are `2.0` and `8.0` before and after. A y bound off the true value (for example `2.0164`) is the mesh-deflection defect D-1 of run 13-15-r1  
+**And** a `REPOINTED` names its reason — verify with `evidence/probe04b_reason.py` (run 13-15-r2): the installed guard grades the same edit `REPOINTED` as shipped and `PASS` with `_has_positional_counter` and `_lineage_has_counter` switched off. The Boss side face has a name of the form `#<id>:1;:M;FUS;...` (`#23:1;:M;FUS;:H-85b:7,F` in run 13-15-r2): the fuse with the block gives it the piece counter `;:M`, and decision 017 never excuses a name that carries one. That is the expected safe-side result; a `REPOINTED` with the detector off is a finding  
 
 **Cleanup**: `mcp document_close { doc: <handle> }`
