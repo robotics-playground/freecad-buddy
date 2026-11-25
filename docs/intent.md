@@ -251,7 +251,7 @@ Each phase has a SMART goal: **S**pecific scope, **M**easurable exit criteria, *
 
 > *"Add a 5 mm fillet to the top edges" — AI proposes one operation, user confirms, bridge executes and verifies.*
 
-**Specific.** Expose mutation tools (`sketch.*`, `feature.*`: create sketch, add geometry + constraints, pad, pocket, fillet, chamfer, hole, mirror, pattern). The AI maps one natural-language command to one operation (or one small atomic group), shows a preview/diff (before/after screenshot + parameter list), executes on confirmation, then runs automatic post-verification: recompute succeeded, shape still valid, sketch DoF, and no broken references (TNP check). Undo restores the exact prior state.
+**Specific.** Expose mutation tools (`sketch.*`, `feature.*`: create sketch, add geometry + constraints, pad, pocket, fillet, chamfer, hole, mirror, pattern; and, for parts built by solid combination, Part primitives (box, cylinder, cone, sphere, torus) and Part booleans (cut, fuse, common)). The AI maps one natural-language command to one operation (or one small atomic group), shows a preview/diff (before/after screenshot + parameter list), executes on confirmation, then runs automatic post-verification: recompute succeeded, shape still valid, sketch DoF, and no broken references (TNP check). Undo restores the exact prior state.
 
 **Measurable — exit criteria:**
 - [ ] Command benchmark: 40 scripted natural-language commands across 8 operation types on reference models; ≥ 85% execute correctly (resulting geometry matches expected assertions) on first attempt.
