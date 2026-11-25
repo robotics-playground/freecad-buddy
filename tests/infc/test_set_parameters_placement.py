@@ -388,6 +388,22 @@ class OverwrittenValueTest(_PlacementFixture):
         self.assertEqual(content["feature"], "Py")
         self.assertIn("feature_state", content)
 
+    def test_Should_roll_back_When_an_expression_drives_a_numeric_property(self):
+        # Arrange
+        self.padded_body()
+        self.document().getObject("Block").setExpression("Length", "3 mm")
+        self.document().recompute()
+
+        # Act
+        envelope = self.dispatch("Block", {"Length": mm(7.0)})
+
+        # Assert
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR", envelope.get("detail"))
+        self.assertEqual(envelope["detail"]["code"], "parameters.value_overwritten")
+        self.assertIn("Block.Length", envelope["detail"]["message"])
+        self.assertTrue(envelope["structured_content"]["mutation"]["rolled_back"])
+        self.assertAlmostEqual(self.document().getObject("Block").Length.Value, 3.0)
+
     def test_Should_roll_back_When_an_expression_drives_the_placement(self):
         # Arrange
         body = self.padded_body()

@@ -2352,8 +2352,3 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   blocker: Story 13-19 owns the gap list.
   unblock: Story 13-19 removes both rows (and the `Label` row beside them).
 
-- source_spec: `_bmad-output/implementation-artifacts/spec-13-16-set-parameters-placement-strings.md`
-  summary: `feature_set_parameters` writes a numeric, boolean or enumeration property that an expression drives and returns `OK`; the recompute then puts the bound value back.
-  evidence: the new read-back (`recompute_check` in `feature_set_parameters`) covers placement and string families only; `feature_parameters_define` refuses a bound property with `parameters.bound_by_expression` before the bracket. Pre-existing for numeric writes (`gap-list.md:26` notes the reset).
-  blocker: widening the read-back changes the numeric families' equality rules (Quantity, enumeration, bool) and their tests, outside Story 13-16.
-  unblock: a Story that adds a bound-property refusal or a read-back for the numeric families.

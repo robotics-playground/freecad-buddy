@@ -2424,12 +2424,20 @@ def _is_placement_or_string(feature: object, prop: str) -> bool:
     return str(feature.getTypeIdOfProperty(prop)) in (_PLACEMENT_TYPE, _STRING_TYPE)
 
 
-def _holds_text_or_placement(feature: object, prop: str, value: object) -> bool:
-    """Whether a placement or string property already holds ``value``."""
+def _holds_written(feature: object, prop: str, value: object) -> bool:
+    """Whether ``feature.prop`` holds the value a write stored.
+
+    A placement compares exactly, a number within a relative 1e-9 (a quantity compares by its
+    magnitude in FreeCAD's internal unit, which is what the write stored), and a string, boolean
+    or enumeration member by equality.
+    """
     current = getattr(feature, prop)
-    if isinstance(value, str):
-        return current == value
-    return current.isSame(value, 0.0)
+    if hasattr(value, "isSame"):
+        return current.isSame(value, 0.0)
+    if _is_number(value):
+        magnitude = current.Value if hasattr(current, "Value") else current
+        return math.isclose(float(magnitude), float(value), rel_tol=1e-9, abs_tol=1e-12)
+    return current == value
 
 
 def _comparable(value: object) -> object:
@@ -2557,9 +2565,8 @@ def feature_set_parameters(
     keeps its current value. Each is validated against the live object before the bracket opens.
 
     The ``Placement`` of an attached object or a feature inside a Body is read-only and refused
-    before the bracket. A placement or string the recompute still leaves different from the
-    request (a value an expression or a Python feature drives) fails the call as
-    ``RECOMPUTE_ERROR`` with
+    before the bracket. A value the recompute still leaves different from the request (one an
+    expression, a clamp or a Python feature rewrites) fails the call as ``RECOMPUTE_ERROR`` with
     ``detail.code`` ``parameters.value_overwritten``; ``Label`` is exempt because FreeCAD makes it
     unique, and the result's ``label`` reports ``{requested, stored}``. A call that writes only
     placements and strings equal to the current values opens no transaction and has no
@@ -2582,7 +2589,7 @@ def feature_set_parameters(
     def unchanged_names(_handle: str, document: object) -> list[str] | None:
         target, writes = writes_of(document)
         if all(_is_placement_or_string(target, prop) for prop, _ in writes) and all(
-            _holds_text_or_placement(target, prop, value) for prop, value in writes
+            _holds_written(target, prop, value) for prop, value in writes
         ):
             return [prop for prop, _ in writes]
         return None
@@ -2611,9 +2618,7 @@ def feature_set_parameters(
     def recompute_check(document: object) -> None:
         target = document.getObject(feature)
         for prop, value in applied:
-            if prop == "Label" or not _is_placement_or_string(target, prop):
-                continue
-            if not _holds_text_or_placement(target, prop, value):
+            if prop != "Label" and not _holds_written(target, prop, value):
                 raise transaction.RecomputeFailure(
                     "parameters.value_overwritten",
                     f"{feature}.{prop} reads {getattr(target, prop)!r} after the recompute, not "

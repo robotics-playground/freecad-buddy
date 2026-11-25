@@ -99,7 +99,7 @@ Round 1 (blind a91118f7dae0452aa, edge ae707f991cc5f9719, gap a33ff8044dd65939f)
 | 3 | no-op path runs before the confirm gate and writes no audit line | low | patch: same order as `feature_parameters_define` and `feature_set_expression`; design row states it; test in `test_confirm_gate.py` |
 | 4 | design doc has no output contract for `label`, `unchanged`, `undo_steps` | low | patch: added to the `mcp-tools-design.md` validation bullet |
 | 5 | `value_overwritten` sits under the `INVALID_INPUT` list; `AttachmentOffset` hint wrong for a Pad | low | patch: doc names the after-bracket status and the Body case |
-| 6 | read-back covers placement and string only; an expression-bound numeric still reverts | medium | defer: pre-existing, outside the Story intent (numeric behaviour unchanged) |
+| 6 | read-back covers placement and string only; an expression-bound numeric still reverts | medium | patch (round 2, leader): the read-back covers every written family; test Should_roll_back_When_an_expression_drives_a_numeric_property |
 | 7 | exact `isSame` versus rounded probe | false | exact equality holds: test `Should_store_the_rotation_exactly_When_the_axis_is_not_a_unit_vector`; the probe is rounded only to survive a snapshot reload |
 | 8 | schema text lacks the `axis` list shape and the no-bare-number rule | low | patch: `tool_catalog.py` text |
 | 9 | TC-20 setup incomplete; coverage matrix row missing | low | patch |
