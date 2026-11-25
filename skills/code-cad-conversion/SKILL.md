@@ -42,9 +42,10 @@ first. If `query_capabilities` reports `exec_enabled: false`, use the headless r
   PartDesign rebuild of a CSG source changes the geometry definition and loses
   the one-to-one map you need to prove equality.
 - **Build with typed parameters and a generator file run by `script_exec`.**
-  Clear, `feature_parameters_define` and `feature_set_expression` set up `Params`
-  (`references/generator-kit.md`, "Run it"); one Python file on disk, run with `doc`
-  injected inside a transaction that aborts on error, builds the parts. Keep each
+  `document_object_delete`, `feature_parameters_define` and `feature_set_expression`
+  set up `Params` (`references/generator-kit.md`, "Run it"); one Python file on
+  disk, run with `doc` injected inside a transaction that aborts on error, builds
+  the parts. Keep each
   call under the 30 s budget: one part per call. After a `TIMEOUT`, run `query_tree_summary` before the next
   mutating call.
 - **One VarSet `Params`, source names kept.** Use the source constant names, so

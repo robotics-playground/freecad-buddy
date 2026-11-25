@@ -49,6 +49,6 @@ Result `{wires, closed_wires, length, area, bbox}`. A plane that misses the part
 | --- | --- | --- |
 | `section.untrusted_shape` | an invalid or reversed shape, or one with no face | repair the part; check it with `verify_shape` |
 | `section.too_complex` | more than 3,000 faces, or BSpline or Bezier faces with about 800 poles or more in one face (a coil spring) | cut a simpler part, or report the section as unmeasured |
-| `section.plane_on_face` | the plane lies on a planar face | move `offset` into the part by more than the shape's face tolerance: 1e-6 mm for a native part, up to about 1e-3 mm for an imported one (a plane moved outward misses the part: `wires` 0, `area` 0) |
+| `section.plane_on_face` | the plane lies on a planar face | move `offset` into the part by 1e-6 mm or more, and by more than the face tolerance of a shape that has a larger one (a plane moved outward misses the part: `wires` 0, `area` 0) |
 
 Solids that overlap or touch inside one compound are not detected: `area` counts each solid.
