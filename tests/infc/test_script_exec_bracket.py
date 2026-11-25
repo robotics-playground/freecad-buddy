@@ -920,6 +920,27 @@ class UndoNoteTest(_BracketFixture):
         # Assert
         self.assertIn("the script undid steps itself", envelope["text"])
 
+    def test_Should_note_the_undo_When_the_script_undoes_the_only_earlier_entry_and_writes(self):
+        # Arrange
+        self.run_script("doc.Box.Length = 11")
+
+        # Act
+        envelope = self.run_script("doc.undo()\ndoc.Box.Height = 12")
+
+        # Assert
+        self.assertIn("the script undid steps itself", envelope["text"])
+
+    def test_Should_note_the_undo_When_the_script_undoes_every_earlier_entry_and_writes(self):
+        # Arrange
+        self.run_script("doc.Box.Length = 11")
+        self.run_script("doc.Box.Height = 12")
+
+        # Act
+        envelope = self.run_script("doc.undo()\ndoc.undo()\ndoc.Box.Width = 5")
+
+        # Assert
+        self.assertIn("the script undid steps itself", envelope["text"])
+
     def test_Should_not_note_an_undo_by_the_script_When_the_script_only_writes(self):
         # Arrange
         self.run_script("doc.Box.Length = 11")

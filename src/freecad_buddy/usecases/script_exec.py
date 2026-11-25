@@ -185,7 +185,9 @@ class _Observation:
 
 def _undid_entries(before: list[str], after: list[str], added: int) -> bool:
     """Whether ``after`` lost entries of ``before`` beyond the oldest ones a full stack drops."""
-    return after[added:] != before[: len(after) - added]
+    remaining = after[added:]
+    shrunk_below_a_full_stack = len(remaining) < len(before) < _FULL_UNDO_STACK
+    return remaining != before[: len(remaining)] or shrunk_below_a_full_stack
 
 
 def _observe(
