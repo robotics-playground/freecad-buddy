@@ -1,17 +1,17 @@
 # Epic 13 status
 
 Goal: Build SPEC-mcp-usage-improvement (`_bmad-output/specs/spec-mcp-usage-improvement/SPEC.md`): typed tools cover the frequent operations so `script_exec` becomes an escape route for rare work (CAP-1 .. CAP-9).
-Done: 13-1 .. 13-15, 13-18, 13-20, 13-fu (13-fu 2b6fbe2d, 13-15 67551cfe, 13-13 547542cd)
-In progress: 13-16 (3 rounds done @15a097d6; verifier-13-16 owns the container + redteam-13-16); 13-17 (builder-13-17 coding in wt-13-17, merged feat + story/13-16; must merge feat again after 13-16 lands)
-Remaining: 13-19 (skill routing; closes gap-list rows 26/33/42 and deferred-work Part::Common entry), then epic close (validator re-score, full gates, container UAT smoke, CAP-6 live session, retrospective), then decision 49: merge feat into main, push main, shut down the computer
-Branch / head: integration feat/epic-13-mcp-usage-improvement @ bbc9924f (gates green at 547542cd: external 2117 passed, infc 1403 OK), worktree D:/Work/Personal/Sources/freecad-buddy-int
+Done: all 20 Stories + 13-fu; retrospective (epic-13-retro-2026-11-26.md); epic-close verification PASS (verify-epic-13-close.md)
+In progress: none
+Remaining: decision 49 step 'merge feat into main and push' is BLOCKED: origin/main (8e8c1878) diverged from local main (21 commits only on origin incl. releases 0.1.0/0.1.1 and code-cad-conversion; 25 only local); a trial merge of feat into origin/main gives 72 conflicted files incl. src/ (script_exec, tool_catalog, rpc_*). Waiting for the user. Computer not shut down.
+Branch / head: integration feat/epic-13-mcp-usage-improvement @ dae65d98 (all gates green: external 2122 passed, infc 1531 OK), not pushed
 Blockers: none
 Open decisions (user): none (handover rows 1-7 answered: decisions 40-46)
 Open for the user to confirm: decisions 47, 48, 50 (leader); 65 base commits from fix/uat-gate-1-failures go to main with the epic (told the user)
-Agents alive: verifier-13-16, redteam-13-16, builder-13-17
-Next: merge 13-16 after verifier + red team; 13-17 verify; 13-19; epic close; decision 49
+Agents alive: none
+Next: user decides how main is reconciled (see the run report); then push; then shutdown
 Plan: epic-13-plan.md. Context: epic-13-context.md. Decisions: epic-13-decisions.md. Handover: epic-13-handover.md.
-Updated: 2026-11-26 00:20 (UTC+7)
+Updated: 2026-11-26 04:10 (UTC+7)
 
 ## Environment
 Skill version: bmad-leader SKILL.md sha256 `936e3e227d5e`.
