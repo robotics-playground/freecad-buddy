@@ -1,0 +1,5 @@
+ran=82 failures=4 errors=0
+RED infc.test_feature_expressions.ClosureTest.test_Should_leave_no_transaction_open_When_every_item_is_equivalent_text :: AssertionError: ('buddy: set expressions 14', 14) is not None
+RED infc.test_mutation_protocol.ApplicationTransactionTest.test_Should_close_the_transaction_of_the_bracket_name_When_it_is_left_open :: AssertionError: ('buddy: set expressions 1', 83) is not None
+RED infc.test_mutation_protocol.ApplicationTransactionTest.test_Should_leave_no_transaction_open_When_the_op_raises_before_its_first_write :: AssertionError: ('buddy: refuse', 85) is not None
+RED infc.test_mutation_protocol.ApplicationTransactionTest.test_Should_leave_no_transaction_open_When_the_op_writes_nothing_and_commits :: AssertionError: ('buddy: write nothing', 88) is not None

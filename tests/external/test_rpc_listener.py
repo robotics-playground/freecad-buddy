@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import queue
 import socket
 import struct
 import sys
 import threading
 import time
+from pathlib import Path
 
 from freecad_buddy.adapters import rpc_listener
 from freecad_buddy.adapters.marshal import Marshal
@@ -569,6 +571,109 @@ def test_discovery_file_written_0600_and_deleted_on_stop(tmp_path):
     assert list(disco_dir.glob("rpc-*.json")) == []
 
 
+def _discovery_file(directory, pid, content=None):
+    path = directory / f"rpc-{pid}.json"
+    path.write_text(json.dumps({"pid": pid}) if content is None else content, encoding="utf-8")
+    return path
+
+
+def _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids):
+    monkeypatch.setattr(rpc_listener, "pid_alive", lambda pid: pid in alive_pids)
+    directory = tmp_path / "freecad-buddy"
+    directory.mkdir()
+    return directory
+
+
+def test_Should_delete_the_discovery_file_When_its_pid_is_dead(tmp_path, monkeypatch):
+    # Arrange
+    directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids=set())
+    dead = _discovery_file(directory, 4_000_001)
+    target = RpcListener(
+        _fake_registry(), Marshal(ThreadedExecutor()), TOKEN, appdata_dir=str(tmp_path)
+    )
+
+    # Act
+    target.bind()
+    target.stop()
+
+    # Assert
+    assert not dead.exists()
+
+
+def test_Should_keep_the_discovery_file_When_its_pid_is_alive(tmp_path, monkeypatch):
+    # Arrange
+    directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids={4_000_002})
+    live = _discovery_file(directory, 4_000_002)
+    target = RpcListener(
+        _fake_registry(), Marshal(ThreadedExecutor()), TOKEN, appdata_dir=str(tmp_path)
+    )
+
+    # Act
+    target.bind()
+    target.stop()
+
+    # Assert
+    assert live.exists()
+
+
+def test_Should_keep_the_discovery_file_When_it_is_unreadable_or_has_no_integer_pid(
+    tmp_path, monkeypatch
+):
+    # Arrange
+    directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids=set())
+    kept = [
+        _discovery_file(directory, 4_000_003, content="{not json"),
+        _discovery_file(directory, 4_000_004, content=json.dumps({"pid": "4000004"})),
+        _discovery_file(directory, 4_000_005, content=json.dumps({"pid": True})),
+        _discovery_file(directory, 4_000_006, content=json.dumps([4_000_006])),
+        _discovery_file(directory, 4_000_007, content=json.dumps({})),
+    ]
+    target = RpcListener(
+        _fake_registry(), Marshal(ThreadedExecutor()), TOKEN, appdata_dir=str(tmp_path)
+    )
+
+    # Act
+    target.bind()
+    target.stop()
+
+    # Assert
+    assert [path.exists() for path in kept] == [True] * len(kept)
+
+
+def test_Should_keep_the_own_discovery_file_When_pid_alive_reports_the_own_pid_dead(
+    tmp_path, monkeypatch
+):
+    # Arrange
+    directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids=set())
+    own = _discovery_file(directory, os.getpid())
+
+    # Act
+    RpcListener._sweep_orphan_discovery(directory)
+
+    # Assert
+    assert own.exists()
+
+
+def test_Should_keep_the_discovery_file_When_pid_alive_rejects_its_pid_as_out_of_range(
+    tmp_path, monkeypatch
+):
+    # Arrange
+    directory = tmp_path / "freecad-buddy"
+    directory.mkdir()
+
+    def reject(pid):
+        raise OverflowError(pid)
+
+    monkeypatch.setattr(rpc_listener, "pid_alive", reject)
+    huge = _discovery_file(directory, 2**80)
+
+    # Act
+    RpcListener._sweep_orphan_discovery(directory)
+
+    # Assert
+    assert huge.exists()
+
+
 # -- connection-end logging ------------------------------------------------------------------
 
 _LISTENER_LOGGER = "freecad_buddy.rpc_listener"
@@ -942,3 +1047,55 @@ def test_should_end_the_idle_serving_thread_when_stop_runs(tmp_path):
 
     # Assert
     assert not serving.is_alive()
+
+
+def test_Should_bind_and_write_the_own_file_When_a_discovery_file_is_nested_too_deep(
+    tmp_path, monkeypatch, caplog
+):
+    # Arrange
+    directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids=set())
+    nested = directory / "rpc-99999999.json"
+    nested.write_text("[" * 50_000, encoding="utf-8")
+    target = RpcListener(
+        _fake_registry(), Marshal(ThreadedExecutor()), TOKEN, appdata_dir=str(tmp_path)
+    )
+
+    # Act
+    with caplog.at_level(logging.WARNING, logger=_LISTENER_LOGGER):
+        target.bind()
+    own_file_written = (directory / f"rpc-{os.getpid()}.json").exists()
+    target.stop()
+
+    # Assert
+    assert own_file_written
+    assert nested.exists()
+    assert "discovery sweep kept rpc-99999999.json after RecursionError" in caplog.text
+
+
+def test_Should_keep_the_discovery_file_When_it_is_larger_than_a_discovery_record(
+    tmp_path, monkeypatch
+):
+    # Arrange
+    directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids=set())
+    padding = " " * (rpc_listener._DISCOVERY_FILE_LIMIT_BYTES + 1)
+    large = _discovery_file(directory, 4_000_010, content=json.dumps({"pid": 4_000_010}) + padding)
+
+    # Act
+    RpcListener._sweep_orphan_discovery(directory)
+
+    # Assert
+    assert large.exists()
+
+
+def test_Should_not_raise_When_the_discovery_directory_cannot_be_listed(tmp_path, monkeypatch):
+    # Arrange
+    def refuse(self, pattern):
+        raise PermissionError(pattern)
+
+    monkeypatch.setattr(Path, "glob", refuse)
+
+    # Act
+    act = lambda: RpcListener._sweep_orphan_discovery(tmp_path)  # noqa: E731
+
+    # Assert
+    act()

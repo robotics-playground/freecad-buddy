@@ -1,0 +1,6 @@
+label=RT3-nobase rc=0 elapsed=8s
+FEATURES_FILE=D:\Work\Personal\Sources\fcb-verify-13-18\src\freecad_buddy\usecases\features.py
+FAIL: test_Should_refuse_before_the_bracket_When_a_subtractive_loft_has_no_solid_to_cut (infc.test_feature_tools.LoftTest.test_Should_refuse_before_the_bracket_When_a_subtractive_loft_has_no_solid_to_cut)
+AssertionError: LoftSweepRefusal not raised
+RESULT fail=1 error=0 run=68
+RED infc.test_feature_tools.LoftTest.test_Should_refuse_before_the_bracket_When_a_subtractive_loft_has_no_solid_to_cut

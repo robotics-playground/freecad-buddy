@@ -1,0 +1,682 @@
+[
+ {
+  "step": "create",
+  "tool": "document_create",
+  "args": {
+   "label": "RT1_Box"
+  },
+  "isError": false,
+  "elapsed_s": 1.417,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+    "name": "RT1_Box",
+    "label": "RT1_Box"
+   },
+   "text": "doc: fcb-doc:s-32d2yxCbsWA_6x7UX1tg\nlabel: RT1_Box\nname: RT1_Box"
+  }
+ },
+ {
+  "step": "define1",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "note",
+     "type": "string",
+     "value": "rev A"
+    },
+    {
+     "name": "width",
+     "type": "length",
+     "value": {
+      "value": 12,
+      "unit": "mm"
+     }
+    }
+   ]
+  },
+  "isError": false,
+  "elapsed_s": 0.998,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "changed": [],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Params"
+     ]
+    },
+    "varset": "Params",
+    "added": [
+     "note",
+     "width"
+    ],
+    "updated": [],
+    "unchanged": [],
+    "undo_steps": 1
+   },
+   "text": "Mutation committed; fingerprint 4f53cda18c2b.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "step": "user_box",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+   "code": "import FreeCAD as App\nd = [x for x in App.listDocuments().values() if x.Label == 'RT1_Box'][0]\nd.openTransaction('user box'); d.addObject('Part::Box', 'UserBox'); d.commitTransaction(); d.recompute()\nprint('UndoCount', d.UndoCount, 'UserBox', d.getObject('UserBox') is not None)\n"
+  },
+  "isError": false,
+  "elapsed_s": 0.358,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+    "stdout": "UndoCount 2 UserBox True\n",
+    "value_repr": null,
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:s-32d2yxCbsWA_6x7UX1tg\nfingerprint_after: None\nstdout: <25 chars>\nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "define_noop",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "note",
+     "type": "string",
+     "value": "rev A"
+    },
+    {
+     "name": "width",
+     "type": "length",
+     "value": {
+      "value": 12,
+      "unit": "mm"
+     }
+    }
+   ]
+  },
+  "isError": false,
+  "elapsed_s": 0.122,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "varset": "Params",
+    "added": [],
+    "updated": [],
+    "unchanged": [
+     "note",
+     "width"
+    ],
+    "undo_steps": 0
+   },
+   "text": "Params: 2 parameter(s) already hold the values; no undo step recorded, so document_undo would revert an earlier step.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "probe_after_noop",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+   "code": "import FreeCAD as App\nd = [x for x in App.listDocuments().values() if x.Label == 'RT1_Box'][0]\nv = d.getObject('Params')\nprint('UndoCount', d.UndoCount, 'UserBox', d.getObject('UserBox') is not None, 'note', repr(v.note) if v else None)\n"
+  },
+  "isError": false,
+  "elapsed_s": 0.111,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+    "stdout": "UndoCount 2 UserBox True note 'rev A'\n",
+    "value_repr": null,
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:s-32d2yxCbsWA_6x7UX1tg\nfingerprint_after: None\nstdout: <38 chars>\nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "define_partial",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "note",
+     "type": "string",
+     "value": "rev A"
+    },
+    {
+     "name": "width",
+     "type": "length",
+     "value": {
+      "value": 14,
+      "unit": "mm"
+     }
+    }
+   ]
+  },
+  "isError": false,
+  "elapsed_s": 0.22,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4b2798e095232bc45319c11d513bb9b40218561d1c0bd7e01d0d3363be430d00",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "4b2798e095232bc45319c11d513bb9b40218561d1c0bd7e01d0d3363be430d00",
+      "serializer": "exportBinary"
+     },
+     "changed": [],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Params"
+     ]
+    },
+    "varset": "Params",
+    "added": [],
+    "updated": [
+     "width"
+    ],
+    "unchanged": [
+     "note"
+    ],
+    "undo_steps": 1
+   },
+   "text": "Mutation committed; fingerprint 4b2798e09523.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "undo_partial",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg"
+  },
+  "isError": false,
+  "elapsed_s": 0.161,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+    "name": "RT1_Box",
+    "undone": "buddy: define parameters on Params",
+    "fingerprint_before": "4b2798e095232bc45319c11d513bb9b40218561d1c0bd7e01d0d3363be430d00",
+    "fingerprint_after": "4b2798e095232bc45319c11d513bb9b40218561d1c0bd7e01d0d3363be430d00",
+    "matches_pre_op": null,
+    "restored_objects": [
+     "Params",
+     "UserBox"
+    ],
+    "undo_count": 2,
+    "errors": []
+   },
+   "text": "Undid 'buddy: define parameters on Params' on RT1_Box: no pre-op digest supplied to compare against (4b2798e09523 -> 4b2798e09523).\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "cached",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "probe_after_partial_undo",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+   "code": "import FreeCAD as App\nd = [x for x in App.listDocuments().values() if x.Label == 'RT1_Box'][0]\nv = d.getObject('Params')\nprint('UndoCount', d.UndoCount, 'UserBox', d.getObject('UserBox') is not None, 'note', repr(v.note) if v else None)\n"
+  },
+  "isError": false,
+  "elapsed_s": 0.109,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+    "stdout": "UndoCount 2 UserBox True note 'rev A'\n",
+    "value_repr": null,
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:s-32d2yxCbsWA_6x7UX1tg\nfingerprint_after: None\nstdout: <38 chars>\nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "define_noop2",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "note",
+     "type": "string",
+     "value": "rev A"
+    },
+    {
+     "name": "width",
+     "type": "length",
+     "value": {
+      "value": 12,
+      "unit": "mm"
+     }
+    }
+   ]
+  },
+  "isError": false,
+  "elapsed_s": 0.06,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "varset": "Params",
+    "added": [],
+    "updated": [],
+    "unchanged": [
+     "note",
+     "width"
+    ],
+    "undo_steps": 0
+   },
+   "text": "Params: 2 parameter(s) already hold the values; no undo step recorded, so document_undo would revert an earlier step.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "undo_after_noop",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg"
+  },
+  "isError": false,
+  "elapsed_s": 0.148,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+    "name": "RT1_Box",
+    "undone": "user box",
+    "fingerprint_before": "4b2798e095232bc45319c11d513bb9b40218561d1c0bd7e01d0d3363be430d00",
+    "fingerprint_after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "matches_pre_op": null,
+    "restored_objects": [
+     "Params"
+    ],
+    "undo_count": 1,
+    "errors": []
+   },
+   "text": "Undid 'user box' on RT1_Box: no pre-op digest supplied to compare against (4b2798e09523 -> 4f53cda18c2b).",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "step": "probe_after_noop_undo",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+   "code": "import FreeCAD as App\nd = [x for x in App.listDocuments().values() if x.Label == 'RT1_Box'][0]\nv = d.getObject('Params')\nprint('UndoCount', d.UndoCount, 'UserBox', d.getObject('UserBox') is not None, 'note', repr(v.note) if v else None)\n"
+  },
+  "isError": false,
+  "elapsed_s": 0.112,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+    "stdout": "UndoCount 1 UserBox False note 'rev A'\n",
+    "value_repr": null,
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:s-32d2yxCbsWA_6x7UX1tg\nfingerprint_after: None\nstdout: <39 chars>\nvalue_repr: None",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "step": "meta_change",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "note",
+     "type": "string",
+     "value": "rev B",
+     "group": "Other"
+    }
+   ]
+  },
+  "isError": true,
+  "elapsed_s": 0.186,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "parameters.metadata_immutable",
+    "message": "Params.note exists with group 'Parameters'; FreeCAD does not undo a group change, so it is set only when the parameter is created",
+    "data": {
+     "exception": "ParameterRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1622, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 571, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2263, in feature_parameters_define\n    if registry.with_document(doc, changes_nothing):\n       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 429, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2259, in changes_nothing\n    _precheck_parameters(document, varset, specs)\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2115, in _precheck_parameters\n    raise ParameterRefusal(\nfreecad_buddy.usecases.features.ParameterRefusal: Params.note exists with group 'Parameters'; FreeCAD does not undo a group change, so it is set only when the parameter is created\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "step": "nul_string",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "tag",
+     "type": "string",
+     "value": "rev A\u0000x"
+    }
+   ]
+  },
+  "isError": true,
+  "elapsed_s": 0.063,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "parameters.invalid_string",
+    "message": "parameters[0].value holds U+0000 at index 5, a character FreeCAD cuts or changes when it stores the string",
+    "data": {
+     "exception": "ParameterRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1622, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 571, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2263, in feature_parameters_define\n    if registry.with_document(doc, changes_nothing):\n       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 429, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2258, in changes_nothing\n    specs = _parameter_specs(parameters)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2060, in _parameter_specs\n    specs = [\n            ^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2061, in <listcomp>\n    _parameter_spec(raw, index, builtin, attributes) for index, raw in enumerate(parameters)\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 1994, in _parameter_spec\n    parsed = _parameter_write_value(kind, value, f\"{where}.value\")\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2045, in _parameter_write_value\n    return _storable_text(value, what)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 1936, in _storable_text\n    raise ParameterRefusal(\nfreecad_buddy.usecases.features.ParameterRefusal: parameters[0].value holds U+0000 at index 5, a character FreeCAD cuts or changes when it stores the string\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "step": "varset_W",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+   "varset": "W",
+   "parameters": [
+    {
+     "name": "x1",
+     "type": "float",
+     "value": 1.0
+    }
+   ]
+  },
+  "isError": true,
+  "elapsed_s": 0.012,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "parameters.unit_symbol_name",
+    "message": "varset 'W' is a unit or constant to FreeCAD's expression parser, so no expression could name it; choose another name, for example W_params",
+    "data": {
+     "exception": "ParameterRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1622, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 571, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2263, in feature_parameters_define\n    if registry.with_document(doc, changes_nothing):\n       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 429, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2259, in changes_nothing\n    _precheck_parameters(document, varset, specs)\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2086, in _precheck_parameters\n    raise ParameterRefusal(\nfreecad_buddy.usecases.features.ParameterRefusal: varset 'W' is a unit or constant to FreeCAD's expression parser, so no expression could name it; choose another name, for example W_params\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "step": "shape_name",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "Shape",
+     "type": "float",
+     "value": 1.0
+    }
+   ]
+  },
+  "isError": true,
+  "elapsed_s": 0.058,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "parameters.reserved_name",
+    "message": "parameters[0].name 'Shape' is a name a VarSet or an expression already uses",
+    "data": {
+     "exception": "ParameterRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1622, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 571, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2263, in feature_parameters_define\n    if registry.with_document(doc, changes_nothing):\n       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 429, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2258, in changes_nothing\n    specs = _parameter_specs(parameters)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2060, in _parameter_specs\n    specs = [\n            ^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2061, in <listcomp>\n    _parameter_spec(raw, index, builtin, attributes) for index, raw in enumerate(parameters)\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 1977, in _parameter_spec\n    raise ParameterRefusal(\nfreecad_buddy.usecases.features.ParameterRefusal: parameters[0].name 'Shape' is a name a VarSet or an expression already uses\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "step": "exec_oserror",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+   "code": "raise OSError(5, 'access denied')"
+  },
+  "isError": true,
+  "elapsed_s": 0.113,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "RECOMPUTE_ERROR",
+   "detail": {
+    "code": "RECOMPUTE_ERROR",
+    "message": "[Errno 5] access denied",
+    "data": {
+     "exception": "OSError",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1622, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1112, in <lambda>\n    lambda **params: script_exec_uc.script_exec(\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/script_exec.py\", line 53, in script_exec\n    handle = registry.with_document(doc, _run)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 429, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/script_exec.py\", line 44, in _run\n    exec(code, namespace)  # noqa: S102 - raw exec is the tool's purpose\n    ^^^^^^^^^^^^^^^^^^^^^\n  File \"<string>\", line 1, in <module>\nOSError: [Errno 5] access denied\n",
+     "unexpected": true
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "step": "exec_code_method",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg",
+   "code": "class E(Exception):\n    def code(self):\n        return 1\nraise E('boom')"
+  },
+  "isError": true,
+  "elapsed_s": 0.017,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "RECOMPUTE_ERROR",
+   "detail": {
+    "code": "RECOMPUTE_ERROR",
+    "message": "boom",
+    "data": {
+     "exception": "E",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1622, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1112, in <lambda>\n    lambda **params: script_exec_uc.script_exec(\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/script_exec.py\", line 53, in script_exec\n    handle = registry.with_document(doc, _run)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 429, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/script_exec.py\", line 44, in _run\n    exec(code, namespace)  # noqa: S102 - raw exec is the tool's purpose\n    ^^^^^^^^^^^^^^^^^^^^^\n  File \"<string>\", line 4, in <module>\nE: boom\n",
+     "unexpected": true
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "step": "query",
+  "tool": "query_parameters",
+  "args": {
+   "doc": "fcb-doc:s-32d2yxCbsWA_6x7UX1tg"
+  },
+  "isError": false,
+  "elapsed_s": 0.073,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "varsets": [
+     {
+      "object": "Params",
+      "label": "Params",
+      "parameters": [
+       {
+        "name": "note",
+        "type": "string",
+        "value": "rev A",
+        "unit": null,
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "width",
+        "type": "length",
+        "value": 12.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       }
+      ]
+     }
+    ],
+    "spreadsheets": [],
+    "bindings": [],
+    "totals": {
+     "varset_parameters": 2,
+     "spreadsheet_parameters": 0,
+     "bindings": 0
+    },
+    "truncated": false
+   },
+   "text": "2 VarSet parameter(s) in 1 VarSet(s), 0 spreadsheet parameter(s), 0 binding(s).",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ }
+]

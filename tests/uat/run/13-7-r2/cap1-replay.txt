@@ -1,0 +1,60 @@
+extra: [-999.9999999999998, 'Shell', False]
+fingerprint fresh equal=True cached equal=True undo 0->0 touched []->[]
+trusted: {'A': True, 'Sep': True, 'Over': True, 'FaceTouch': True, 'VertTouch': True, 'Cyl': True, 'Bowtie': False, 'Reversed': False, 'InRev': True, 'Shell': False}
+--- form=objects status=OK elapsed=0.098s
+        A/Sep       trusted   tool vol=     0.0 dist=  10.0 failed=False | script vol=                 0.0 dist=10.0 | ok=True
+        A/Over      trusted   tool vol=   125.0 dist=   0.0 failed=False | script vol=  124.99999999999997 dist=0.0 | ok=True
+        A/FaceTouch trusted   tool vol=    None dist=   0.0 failed=True  | script vol=                 0.0 dist=0.0 | ok=True
+        A/VertTouch trusted   tool vol=    None dist=   0.0 failed=True  | script vol=                 0.0 dist=0.0 | ok=True
+        A/Cyl       trusted   tool vol=  282.74 dist=   0.0 failed=False | script vol=   282.7433388230814 dist=0.0 | ok=True
+        A/Bowtie    untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=0.0 | ok=True
+        A/Reversed  untrusted tool vol=    None dist=  None failed=True  | script vol=   999.9999999999998 dist=0.0 | ok=True
+        A/InRev     trusted   tool vol=     0.0 dist=  34.0 failed=False | script vol=                 0.0 dist=34.0 | ok=True
+        A/Shell     untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=20.0 | ok=True
+      Sep/Over      trusted   tool vol=     0.0 dist=   5.0 failed=False | script vol=                 0.0 dist=5.0 | ok=True
+      Sep/FaceTouch trusted   tool vol=     0.0 dist=  10.0 failed=False | script vol=                 0.0 dist=10.0 | ok=True
+      Sep/VertTouch trusted   tool vol=     0.0 dist=  20.0 failed=False | script vol=                 0.0 dist=20.0 | ok=True
+      Sep/Cyl       trusted   tool vol=     0.0 dist=  12.0 failed=False | script vol=                 0.0 dist=12.0 | ok=True
+      Sep/Bowtie    untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=0.0 | ok=True
+      Sep/Reversed  untrusted tool vol=    None dist=  None failed=True  | script vol=   999.9999999999998 dist=0.0 | ok=True
+      Sep/InRev     trusted   tool vol=     0.0 dist=  14.0 failed=False | script vol=                 0.0 dist=14.0 | ok=True
+      Sep/Shell     untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=0.0 | ok=True
+     Over/FaceTouch trusted   tool vol=   125.0 dist=   0.0 failed=False | script vol=  124.99999999999997 dist=0.0 | ok=True
+     Over/VertTouch trusted   tool vol=     0.0 dist=  8.66 failed=False | script vol=                 0.0 dist=8.660254037844387 | ok=True
+     Over/Cyl       trusted   tool vol=   70.69 dist=   0.0 failed=False | script vol=   70.68583470577035 dist=0.0 | ok=True
+     Over/Bowtie    untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=0.0 | ok=True
+     Over/Reversed  untrusted tool vol=    None dist=  None failed=True  | script vol=   999.9999999999998 dist=0.0 | ok=True
+     Over/InRev     trusted   tool vol=     0.0 dist=  29.0 failed=False | script vol=                 0.0 dist=29.0 | ok=True
+     Over/Shell     untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=15.0 | ok=True
+FaceTouch/VertTouch trusted   tool vol=     0.0 dist=  10.0 failed=False | script vol=                 0.0 dist=10.0 | ok=True
+FaceTouch/Cyl       trusted   tool vol=  282.74 dist=   0.0 failed=False | script vol=   282.7433388230814 dist=0.0 | ok=True
+FaceTouch/Bowtie    untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=0.0 | ok=True
+FaceTouch/Reversed  untrusted tool vol=    None dist=  None failed=True  | script vol=   999.9999999999998 dist=0.0 | ok=True
+FaceTouch/InRev     trusted   tool vol=     0.0 dist= 34.23 failed=False | script vol=                 0.0 dist=34.23448553724738 | ok=True
+FaceTouch/Shell     untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=10.0 | ok=True
+VertTouch/Cyl       trusted   tool vol=     0.0 dist=  4.07 failed=False | script vol=                 0.0 dist=4.071067811865475 | ok=True
+VertTouch/Bowtie    untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=0.0 | ok=True
+VertTouch/Reversed  untrusted tool vol=    None dist=  None failed=True  | script vol=   999.9999999999998 dist=0.0 | ok=True
+VertTouch/InRev     trusted   tool vol=     0.0 dist= 44.36 failed=False | script vol=                 0.0 dist=44.36214602563767 | ok=True
+VertTouch/Shell     untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=10.0 | ok=True
+      Cyl/Bowtie    untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=0.0 | ok=True
+      Cyl/Reversed  untrusted tool vol=    None dist=  None failed=True  | script vol=   848.2300164692441 dist=0.0 | ok=True
+      Cyl/InRev     trusted   tool vol=     0.0 dist=  36.0 failed=False | script vol=                 0.0 dist=36.0 | ok=True
+      Cyl/Shell     untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=10.0 | ok=True
+   Bowtie/Reversed  untrusted tool vol=    None dist=  None failed=True  | script vol=5.684341886080802e-14 dist=0.0 | ok=True
+   Bowtie/InRev     untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=0.0 | ok=True
+   Bowtie/Shell     untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=0.0 | ok=True
+ Reversed/InRev     untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=4.0 | ok=True
+ Reversed/Shell     untrusted tool vol=    None dist=  None failed=True  | script vol=  124999.99999999999 dist=0.0 | ok=True
+    InRev/Shell     untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=14.0 | ok=True
+TEXT: 45 pair(s), 5 overlapping, 26 boolean failed. || A/FaceTouch: BOOLEAN FAILED, overlap unknown. || A/VertTouch: BOOLEAN FAILED, overlap unknown. || A/Bowtie: BOOLEAN FAILED, overlap unknown. || A/Reversed: BOOLEAN FAILED, overlap unknown. || A/Shell: BOOLEAN FAILED, overlap unknown. || Sep/Bowtie: BOOLEAN FAILED, overlap unknown. || Sep/Reversed: BOOLEAN FAILED, overlap unknown. || Sep/Shell: BOOLEAN FAILED, overlap unknown. || Over/Bowtie: BOOLEAN FAILED, overlap unknown. || Over/Reversed: BOOLEAN FAILED, overlap unknown. || Over/Shell: BOOLEAN FAILED, overlap unknown. || FaceTouch/Bowtie: BOOLEAN FAILED, overlap unknown. || FaceTouch/Reversed: BOOLEAN FAILED, overlap unknown. || FaceTouch/Shell: BOOLEAN FAILED, overlap unknown. || VertTouch/Bowtie: BOOLEAN FAILED, overlap unknown. || VertTouch/Reversed: BOOLEAN FAILED, overlap unknown. || VertTouch/Shell: BOOLEAN FAILED, overlap unknown. || Cyl/Bowtie: BOOLEAN FAILED, overlap unknown. || Cyl/Reversed: BOOLEAN FAILED, overlap unknown. || Cyl/Shell: BOOLEAN FAILED, overlap unknown. || Bowtie/Reversed: BOOLEAN FAILED, overlap unknown. || Bowtie/InRev: BOOLEAN FAILED, overlap unknown. || Bowtie/Shell: BOOLEAN FAILED, overlap unknown. || Reversed/InRev: BOOLEAN FAILED, overlap unknown. || Reversed/Shell: BOOLEAN FAILED, overlap unknown. || InRev/Shell: BOOLEAN FAILED, overlap unknown. || A/Over: common volume 125.0 mm^3. || A/Cyl: common volume 282.74 mm^3. || Over/FaceTouch: common volume 125.0 mm^3. || Over/Cyl: common volume 70.69 mm^3. || FaceTouch/Cyl: common volume 282.74 mm^3.
+--- form=pairs status=OK elapsed=0.043s
+        A/Sep       trusted   tool vol=     0.0 dist=  10.0 failed=False | script vol=                 0.0 dist=10.0 | ok=True
+     Over/A         trusted   tool vol=   125.0 dist=   0.0 failed=False | script vol=  124.99999999999997 dist=0.0 | ok=True
+        A/FaceTouch trusted   tool vol=    None dist=   0.0 failed=True  | script vol=                 0.0 dist=0.0 | ok=True
+   Bowtie/A         untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=0.0 | ok=True
+ Reversed/InRev     untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=4.0 | ok=True
+    Shell/A         untrusted tool vol=    None dist=  None failed=True  | script vol=                 0.0 dist=20.0 | ok=True
+        A/Cyl       trusted   tool vol=  282.74 dist=   0.0 failed=False | script vol=   282.7433388230814 dist=0.0 | ok=True
+TEXT: 7 pair(s), 2 overlapping, 4 boolean failed. || A/FaceTouch: BOOLEAN FAILED, overlap unknown. || Bowtie/A: BOOLEAN FAILED, overlap unknown. || Reversed/InRev: BOOLEAN FAILED, overlap unknown. || Shell/A: BOOLEAN FAILED, overlap unknown. || Over/A: common volume 125.0 mm^3. || A/Cyl: common volume 282.74 mm^3.
+RESULT records=52 mismatches=0

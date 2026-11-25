@@ -46,10 +46,13 @@ def _mesh_verify_proxy_handler(client: RpcClient, lock, tool_name: str):
             oracle_legs = [
                 export_oracle.safe_oracle(
                     "trimesh_stl",
-                    lambda: export_oracle.stl_oracle(path, source["volume"], band, decimals),
+                    lambda: export_oracle.stl_oracle(
+                        path, source["volume"], band, decimals, facts.get("facet_counts")
+                    ),
                 ),
                 export_oracle.safe_oracle(
-                    "stdlib_stl", lambda: export_oracle.StdlibStlOracle().check(path)
+                    "stdlib_stl",
+                    lambda: export_oracle.StdlibStlOracle().check(path, facts.get("facet_counts")),
                 ),
             ]
         else:
@@ -57,7 +60,12 @@ def _mesh_verify_proxy_handler(client: RpcClient, lock, tool_name: str):
                 export_oracle.safe_oracle(
                     "lib3mf",
                     lambda: export_oracle.mesh3mf_oracle(
-                        path, source["is_mm"], source["volume"], band, decimals
+                        path,
+                        source["is_mm"],
+                        source["volume"],
+                        band,
+                        decimals,
+                        facts.get("objects"),
                     ),
                 ),
             ]

@@ -1,0 +1,5044 @@
+{
+ "Ov": {
+  "query": {
+   "tool": "query_interference",
+   "args": {
+    "doc": "fcb-doc:bJs-neovknGA5S51vzdsgA",
+    "objects": [
+     "Ov0",
+     "Ov1",
+     "Ov2",
+     "Ov3",
+     "Ov4",
+     "Ov5",
+     "Ov6",
+     "Ov7",
+     "Ov8",
+     "Ov9",
+     "Ov10",
+     "Ov11",
+     "Ov12",
+     "Ov13",
+     "Ov14",
+     "Ov15",
+     "Ov16",
+     "Ov17",
+     "Ov18",
+     "Ov19"
+    ]
+   },
+   "elapsed_s": 7.825,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "pairs": [
+      {
+       "a": "Ov0",
+       "b": "Ov1",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov2",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov3",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov4",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov5",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov6",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 270.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov7",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 330.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 390.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 450.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 570.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 630.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 690.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 750.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 870.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 930.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 990.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov0",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1050.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov2",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov3",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov4",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov5",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov6",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov7",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 270.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 330.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 390.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 450.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 570.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 630.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 690.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 750.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 870.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 930.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov1",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 990.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov3",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov4",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov5",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov6",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov7",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 270.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 330.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 390.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 450.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 570.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 630.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 690.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 750.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 870.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov2",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 930.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov4",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov5",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov6",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov7",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 270.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 330.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 390.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 450.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 570.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 630.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 690.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 750.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov3",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 870.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov5",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov6",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov7",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 270.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 330.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 390.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 450.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 570.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 630.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 690.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 750.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov4",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov5",
+       "b": "Ov6",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov5",
+       "b": "Ov7",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov5",
+       "b": "Ov8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov5",
+       "b": "Ov9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov5",
+       "b": "Ov10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov5",
+       "b": "Ov11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 270.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov5",
+       "b": "Ov12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 330.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov5",
+       "b": "Ov13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 390.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov5",
+       "b": "Ov14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 450.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov5",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov5",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 570.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov5",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 630.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov5",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 690.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov5",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 750.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov6",
+       "b": "Ov7",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov6",
+       "b": "Ov8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov6",
+       "b": "Ov9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov6",
+       "b": "Ov10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov6",
+       "b": "Ov11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov6",
+       "b": "Ov12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 270.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov6",
+       "b": "Ov13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 330.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov6",
+       "b": "Ov14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 390.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov6",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 450.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov6",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov6",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 570.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov6",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 630.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov6",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 690.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov7",
+       "b": "Ov8",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov7",
+       "b": "Ov9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov7",
+       "b": "Ov10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov7",
+       "b": "Ov11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov7",
+       "b": "Ov12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov7",
+       "b": "Ov13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 270.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov7",
+       "b": "Ov14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 330.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov7",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 390.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov7",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 450.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov7",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov7",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 570.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov7",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 630.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov8",
+       "b": "Ov9",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov8",
+       "b": "Ov10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov8",
+       "b": "Ov11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov8",
+       "b": "Ov12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov8",
+       "b": "Ov13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov8",
+       "b": "Ov14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 270.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov8",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 330.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov8",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 390.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov8",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 450.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov8",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov8",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 570.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov9",
+       "b": "Ov10",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov9",
+       "b": "Ov11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov9",
+       "b": "Ov12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov9",
+       "b": "Ov13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov9",
+       "b": "Ov14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov9",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 270.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov9",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 330.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov9",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 390.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov9",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 450.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov9",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov10",
+       "b": "Ov11",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov10",
+       "b": "Ov12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov10",
+       "b": "Ov13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov10",
+       "b": "Ov14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov10",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov10",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 270.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov10",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 330.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov10",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 390.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov10",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 450.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov11",
+       "b": "Ov12",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov11",
+       "b": "Ov13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov11",
+       "b": "Ov14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov11",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov11",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov11",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 270.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov11",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 330.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov11",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 390.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov12",
+       "b": "Ov13",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov12",
+       "b": "Ov14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov12",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov12",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov12",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov12",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 270.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov12",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 330.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov13",
+       "b": "Ov14",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov13",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov13",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov13",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov13",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov13",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 270.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov14",
+       "b": "Ov15",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov14",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov14",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov14",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov14",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov15",
+       "b": "Ov16",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov15",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov15",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov15",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 150.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov16",
+       "b": "Ov17",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov16",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov16",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 90.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov17",
+       "b": "Ov18",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov17",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 30.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Ov18",
+       "b": "Ov19",
+       "common_volume": {
+        "value": 12545.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      }
+     ]
+    },
+    "text": "190 pair(s), 19 overlapping, 0 boolean failed.\nOv0/Ov1: common volume 12545.74 mm^3.\nOv1/Ov2: common volume 12545.74 mm^3.\nOv2/Ov3: common volume 12545.74 mm^3.\nOv3/Ov4: common volume 12545.74 mm^3.\nOv4/Ov5: common volume 12545.74 mm^3.\nOv5/Ov6: common volume 12545.74 mm^3.\nOv6/Ov7: common volume 12545.74 mm^3.\nOv7/Ov8: common volume 12545.74 mm^3.\nOv8/Ov9: common volume 12545.74 mm^3.\nOv9/Ov10: common volume 12545.74 mm^3.\nOv10/Ov11: common volume 12545.74 mm^3.\nOv11/Ov12: common volume 12545.74 mm^3.\nOv12/Ov13: common volume 12545.74 mm^3.\nOv13/Ov14: common volume 12545.74 mm^3.\nOv14/Ov15: common volume 12545.74 mm^3.\nOv15/Ov16: common volume 12545.74 mm^3.\nOv16/Ov17: common volume 12545.74 mm^3.\nOv17/Ov18: common volume 12545.74 mm^3.\nOv18/Ov19: common volume 12545.74 mm^3.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+    "framing": {
+     "fits": false,
+     "ratio": null,
+     "checked": "cached",
+     "stale_reason": "served from cache; unverified key component(s): geometry"
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"pairs\":[{\"a\":\"Ov0\",\"b\":\"Ov1\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov2\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov3\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov4\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov5\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov6\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":270.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov7\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":330.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":390.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":450.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":570.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":630.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":690.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":750.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":870.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":930.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":990.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov0\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1050.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov2\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov3\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov4\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov5\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov6\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov7\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":270.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":330.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":390.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":450.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":570.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":630.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":690.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":750.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":870.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":930.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov1\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":990.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov3\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov4\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov5\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov6\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov7\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":270.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":330.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":390.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":450.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":570.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":630.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":690.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":750.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":870.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov2\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":930.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov4\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov5\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov6\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov7\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":270.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":330.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":390.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":450.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":570.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":630.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":690.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":750.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov3\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":870.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov5\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov6\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov7\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":270.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":330.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":390.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":450.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":570.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":630.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":690.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":750.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov4\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov5\",\"b\":\"Ov6\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov5\",\"b\":\"Ov7\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov5\",\"b\":\"Ov8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov5\",\"b\":\"Ov9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov5\",\"b\":\"Ov10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov5\",\"b\":\"Ov11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":270.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov5\",\"b\":\"Ov12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":330.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov5\",\"b\":\"Ov13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":390.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov5\",\"b\":\"Ov14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":450.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov5\",\"b\":\"Ov15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov5\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":570.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov5\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":630.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov5\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":690.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov5\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":750.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov6\",\"b\":\"Ov7\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov6\",\"b\":\"Ov8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov6\",\"b\":\"Ov9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov6\",\"b\":\"Ov10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov6\",\"b\":\"Ov11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov6\",\"b\":\"Ov12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":270.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov6\",\"b\":\"Ov13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":330.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov6\",\"b\":\"Ov14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":390.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov6\",\"b\":\"Ov15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":450.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov6\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov6\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":570.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov6\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":630.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov6\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":690.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov7\",\"b\":\"Ov8\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov7\",\"b\":\"Ov9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov7\",\"b\":\"Ov10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov7\",\"b\":\"Ov11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov7\",\"b\":\"Ov12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov7\",\"b\":\"Ov13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":270.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov7\",\"b\":\"Ov14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":330.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov7\",\"b\":\"Ov15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":390.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov7\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":450.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov7\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov7\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":570.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov7\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":630.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov8\",\"b\":\"Ov9\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov8\",\"b\":\"Ov10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov8\",\"b\":\"Ov11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov8\",\"b\":\"Ov12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov8\",\"b\":\"Ov13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov8\",\"b\":\"Ov14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":270.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov8\",\"b\":\"Ov15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":330.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov8\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":390.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov8\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":450.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov8\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov8\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":570.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov9\",\"b\":\"Ov10\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov9\",\"b\":\"Ov11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov9\",\"b\":\"Ov12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov9\",\"b\":\"Ov13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov9\",\"b\":\"Ov14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov9\",\"b\":\"Ov15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":270.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov9\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":330.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov9\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":390.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov9\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":450.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov9\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov10\",\"b\":\"Ov11\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov10\",\"b\":\"Ov12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov10\",\"b\":\"Ov13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov10\",\"b\":\"Ov14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov10\",\"b\":\"Ov15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov10\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":270.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov10\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":330.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov10\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":390.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov10\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":450.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov11\",\"b\":\"Ov12\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov11\",\"b\":\"Ov13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov11\",\"b\":\"Ov14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov11\",\"b\":\"Ov15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov11\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov11\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":270.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov11\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":330.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov11\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":390.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov12\",\"b\":\"Ov13\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov12\",\"b\":\"Ov14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov12\",\"b\":\"Ov15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov12\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov12\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov12\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":270.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov12\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":330.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov13\",\"b\":\"Ov14\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov13\",\"b\":\"Ov15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov13\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov13\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov13\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov13\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":270.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov14\",\"b\":\"Ov15\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov14\",\"b\":\"Ov16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov14\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov14\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov14\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov15\",\"b\":\"Ov16\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov15\",\"b\":\"Ov17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov15\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov15\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":150.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov16\",\"b\":\"Ov17\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov16\",\"b\":\"Ov18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov16\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":90.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov17\",\"b\":\"Ov18\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov17\",\"b\":\"Ov19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":30.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Ov18\",\"b\":\"Ov19\",\"common_volume\":{\"value\":12545.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false}]},\"text\":\"190 pair(s), 19 overlapping, 0 boolean failed.\\nOv0/Ov1: common volume 12545.74 mm^3.\\nOv1/Ov2: common volume 12545.74 mm^3.\\nOv2/Ov3: common volume 12545.74 mm^3.\\nOv3/Ov4: common volume 12545.74 mm^3.\\nOv4/Ov5: common volume 12545.74 mm^3.\\nOv5/Ov6: common volume 12545.74 mm^3.\\nOv6/Ov7: common volume 12545.74 mm^3.\\nOv7/Ov8: common volume 12545.74 mm^3.\\nOv8/Ov9: common volume 12545.74 mm^3.\\nOv9/Ov10: common volume 12545.74 mm^3.\\nOv10/Ov11: common volume 12545.74 mm^3.\\nOv11/Ov12: common volume 12545.74 mm^3.\\nOv12/Ov13: common volume 12545.74 mm^3.\\nOv13/Ov14: common volume 12545.74 mm^3.\\nOv14/Ov15: common volume 12545.74 mm^3.\\nOv15/Ov16: common volume 12545.74 mm^3.\\nOv16/Ov17: common volume 12545.74 mm^3.\\nOv17/Ov18: common volume 12545.74 mm^3.\\nOv18/Ov19: common volume 12545.74 mm^3.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"cached\",\"stale_reason\":\"served from cache; unverified key component(s): geometry\"}}"
+   ]
+  }
+ },
+ "Dj": {
+  "query": {
+   "tool": "query_interference",
+   "args": {
+    "doc": "fcb-doc:bJs-neovknGA5S51vzdsgA",
+    "objects": [
+     "Dj0",
+     "Dj1",
+     "Dj2",
+     "Dj3",
+     "Dj4",
+     "Dj5",
+     "Dj6",
+     "Dj7",
+     "Dj8",
+     "Dj9",
+     "Dj10",
+     "Dj11",
+     "Dj12",
+     "Dj13",
+     "Dj14",
+     "Dj15",
+     "Dj16",
+     "Dj17",
+     "Dj18",
+     "Dj19"
+    ]
+   },
+   "elapsed_s": 5.613,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "pairs": [
+      {
+       "a": "Dj0",
+       "b": "Dj1",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj2",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj3",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj4",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj5",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj6",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj7",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 710.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 910.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1010.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1710.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj0",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj2",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj3",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj4",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj5",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj6",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj7",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 710.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 910.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1010.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj1",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1710.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj3",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj4",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj5",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj6",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj7",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 710.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 910.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1010.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj2",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj4",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj5",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj6",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj7",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 710.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 910.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1010.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj3",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj5",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj6",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj7",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 710.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 910.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1010.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj4",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj5",
+       "b": "Dj6",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj5",
+       "b": "Dj7",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj5",
+       "b": "Dj8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj5",
+       "b": "Dj9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj5",
+       "b": "Dj10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj5",
+       "b": "Dj11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj5",
+       "b": "Dj12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj5",
+       "b": "Dj13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 710.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj5",
+       "b": "Dj14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj5",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 910.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj5",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1010.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj5",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj5",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj5",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj6",
+       "b": "Dj7",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj6",
+       "b": "Dj8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj6",
+       "b": "Dj9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj6",
+       "b": "Dj10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj6",
+       "b": "Dj11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj6",
+       "b": "Dj12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj6",
+       "b": "Dj13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj6",
+       "b": "Dj14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 710.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj6",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj6",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 910.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj6",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1010.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj6",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj6",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj7",
+       "b": "Dj8",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj7",
+       "b": "Dj9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj7",
+       "b": "Dj10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj7",
+       "b": "Dj11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj7",
+       "b": "Dj12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj7",
+       "b": "Dj13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj7",
+       "b": "Dj14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj7",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 710.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj7",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj7",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 910.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj7",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1010.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj7",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj8",
+       "b": "Dj9",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj8",
+       "b": "Dj10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj8",
+       "b": "Dj11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj8",
+       "b": "Dj12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj8",
+       "b": "Dj13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj8",
+       "b": "Dj14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj8",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj8",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 710.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj8",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj8",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 910.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj8",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 1010.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj9",
+       "b": "Dj10",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj9",
+       "b": "Dj11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj9",
+       "b": "Dj12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj9",
+       "b": "Dj13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj9",
+       "b": "Dj14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj9",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj9",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj9",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 710.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj9",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj9",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 910.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj10",
+       "b": "Dj11",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj10",
+       "b": "Dj12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj10",
+       "b": "Dj13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj10",
+       "b": "Dj14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj10",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj10",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj10",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj10",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 710.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj10",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 810.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj11",
+       "b": "Dj12",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj11",
+       "b": "Dj13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj11",
+       "b": "Dj14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj11",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj11",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj11",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj11",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj11",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 710.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj12",
+       "b": "Dj13",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj12",
+       "b": "Dj14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj12",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj12",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj12",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj12",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj12",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 610.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj13",
+       "b": "Dj14",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj13",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj13",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj13",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj13",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj13",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 510.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj14",
+       "b": "Dj15",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj14",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj14",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj14",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj14",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 410.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj15",
+       "b": "Dj16",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj15",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj15",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj15",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 310.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj16",
+       "b": "Dj17",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj16",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj16",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 210.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj17",
+       "b": "Dj18",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj17",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 110.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Dj18",
+       "b": "Dj19",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      }
+     ]
+    },
+    "text": "190 pair(s), 0 overlapping, 0 boolean failed.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+    "framing": {
+     "fits": false,
+     "ratio": null,
+     "checked": "cached",
+     "stale_reason": "served from cache; unverified key component(s): geometry"
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"pairs\":[{\"a\":\"Dj0\",\"b\":\"Dj1\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj2\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj3\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj4\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj5\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj6\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj7\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":710.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":910.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1010.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1710.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj0\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj2\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj3\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj4\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj5\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj6\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj7\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":710.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":910.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1010.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj1\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1710.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj3\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj4\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj5\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj6\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj7\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":710.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":910.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1010.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj2\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj4\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj5\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj6\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj7\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":710.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":910.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1010.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj3\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj5\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj6\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj7\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":710.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":910.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1010.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj4\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj5\",\"b\":\"Dj6\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj5\",\"b\":\"Dj7\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj5\",\"b\":\"Dj8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj5\",\"b\":\"Dj9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj5\",\"b\":\"Dj10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj5\",\"b\":\"Dj11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj5\",\"b\":\"Dj12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj5\",\"b\":\"Dj13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":710.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj5\",\"b\":\"Dj14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj5\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":910.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj5\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1010.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj5\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj5\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj5\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj6\",\"b\":\"Dj7\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj6\",\"b\":\"Dj8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj6\",\"b\":\"Dj9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj6\",\"b\":\"Dj10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj6\",\"b\":\"Dj11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj6\",\"b\":\"Dj12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj6\",\"b\":\"Dj13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj6\",\"b\":\"Dj14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":710.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj6\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj6\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":910.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj6\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1010.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj6\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj6\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj7\",\"b\":\"Dj8\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj7\",\"b\":\"Dj9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj7\",\"b\":\"Dj10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj7\",\"b\":\"Dj11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj7\",\"b\":\"Dj12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj7\",\"b\":\"Dj13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj7\",\"b\":\"Dj14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj7\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":710.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj7\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj7\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":910.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj7\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1010.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj7\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj8\",\"b\":\"Dj9\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj8\",\"b\":\"Dj10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj8\",\"b\":\"Dj11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj8\",\"b\":\"Dj12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj8\",\"b\":\"Dj13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj8\",\"b\":\"Dj14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj8\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj8\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":710.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj8\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj8\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":910.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj8\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":1010.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj9\",\"b\":\"Dj10\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj9\",\"b\":\"Dj11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj9\",\"b\":\"Dj12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj9\",\"b\":\"Dj13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj9\",\"b\":\"Dj14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj9\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj9\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj9\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":710.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj9\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj9\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":910.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj10\",\"b\":\"Dj11\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj10\",\"b\":\"Dj12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj10\",\"b\":\"Dj13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj10\",\"b\":\"Dj14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj10\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj10\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj10\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj10\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":710.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj10\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":810.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj11\",\"b\":\"Dj12\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj11\",\"b\":\"Dj13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj11\",\"b\":\"Dj14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj11\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj11\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj11\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj11\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj11\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":710.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj12\",\"b\":\"Dj13\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj12\",\"b\":\"Dj14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj12\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj12\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj12\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj12\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj12\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":610.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj13\",\"b\":\"Dj14\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj13\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj13\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj13\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj13\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj13\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":510.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj14\",\"b\":\"Dj15\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj14\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj14\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj14\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj14\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":410.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj15\",\"b\":\"Dj16\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj15\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj15\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj15\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":310.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj16\",\"b\":\"Dj17\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj16\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj16\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":210.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj17\",\"b\":\"Dj18\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj17\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":110.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Dj18\",\"b\":\"Dj19\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false}]},\"text\":\"190 pair(s), 0 overlapping, 0 boolean failed.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"cached\",\"stale_reason\":\"served from cache; unverified key component(s): geometry\"}}"
+   ]
+  }
+ }
+}

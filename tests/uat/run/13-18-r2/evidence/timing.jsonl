@@ -1,0 +1,15 @@
+{"case": "loft_two_3999gons", "status": "REFUSED", "code": "loft.too_complex", "detail": "the sections cost 15992001 units (the larger section of each neighbouring pair, squared; a BSpline edge counts its poles), above the limit of 1000000: loft fewer or simpler sections", "elapsed_s": 0.31}
+{"case": "loft_circle_to_4000gon", "status": "REFUSED", "code": "loft.too_complex", "detail": "the sections cost 16000000 units (the larger section of each neighbouring pair, squared; a BSpline edge counts its poles), above the limit of 1000000: loft fewer or simpler sections", "elapsed_s": 0.14}
+{"case": "sweep_doubled_back", "status": "REFUSED", "code": "sweep.degenerate_spine", "detail": "the spine doubles back on itself inside one edge; FreeCAD cannot sweep along it and would hold the bridge. Split it into separate edges or redraw it", "elapsed_s": 0.01}
+{"case": "loft_circle_to_1000gon", "status": "OK", "code": null, "detail": "None", "volume": 19373.10302006621, "valid": true, "faces": 1002, "elapsed_s": 13.18}
+{"case": "loft_two_1000gons", "status": "OK", "code": null, "detail": "None", "volume": 19373.0272271403, "valid": true, "faces": 1002, "elapsed_s": 10.56}
+{"case": "loft_500x44", "status": "OK", "code": null, "detail": "None", "volume": 628245.3024299341, "valid": true, "faces": 46, "elapsed_s": 13.69}
+{"case": "loft_circle_to_bspline1000", "poles": 999, "status": "OK", "code": null, "detail": "None", "volume": 19484.1184528625, "valid": true, "faces": 3, "elapsed_s": 0.14}
+{"case": "loft_two_bspline1000", "status": "OK", "code": null, "detail": "None", "volume": 19630.321376952037, "valid": true, "faces": 3, "elapsed_s": 0.16}
+{"case": "loft_two_250gons_bopcheck", "status": "OK", "code": null, "detail": "None", "volume": 19371.115237572598, "valid": true, "faces": 252, "elapsed_s": 3.54}
+{"case": "sweep_circle_3000_lines", "status": "OK", "code": null, "detail": "None", "volume": 212.05750411731407, "valid": true, "faces": 3002, "elapsed_s": 9.29}
+{"case": "sweep_circle_10000_lines", "status": "REFUSED", "code": "sweep.too_complex", "detail": "the profile and spine cost 10000 units (profile units times spine units), above the limit of 3000: use a simpler profile or spine", "elapsed_s": 0.36}
+{"case": "sweep_bspline3000_line", "status": "OK", "code": null, "detail": "None", "volume": 213.07709964671093, "valid": true, "faces": 3, "elapsed_s": 0.21}
+{"case": "sweep_bspline150_helix20", "status": "OK", "code": null, "detail": "None", "volume": 8894.618826365886, "valid": true, "faces": 3, "elapsed_s": 0.3}
+{"case": "sweep_10gon_30lines_bopcheck", "status": "OK", "code": null, "detail": "None", "volume": 198.37752264870988, "valid": true, "faces": 302, "elapsed_s": 0.36}
+{"case": "sweep_helix120", "status": "OK", "code": null, "detail": "None", "volume": 5515.765395841563, "valid": true, "faces": 3, "elapsed_s": 1.21}

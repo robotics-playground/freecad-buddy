@@ -1,0 +1,166 @@
+[
+ {
+  "label": "spring 30 turns",
+  "build_status": "OK",
+  "build_s": 4.26,
+  "waited_for_bridge_s": null,
+  "faces_solids_poleload_valid": "[3, 1, 5503716, True]",
+  "status": "INVALID_INPUT",
+  "detail": {
+   "code": "section.too_complex",
+   "message": "object Shape0 has a BSpline and Bezier pole load of 5503716, limit 640000: the sum over its faces of the square of the pole count (one face of 800 poles reaches it). Section a simpler object."
+  },
+  "sc": {},
+  "text": "object Shape0 has a BSpline and Bezier pole load of 5503716, limit 640000: the sum over its faces of the square of the pole count (one face of 800 poles reaches it). Section a simpler object.",
+  "elapsed_s": 0.1,
+  "bridge_after": "OK",
+  "bridge_after_s": 0.08,
+  "reference": null
+ },
+ {
+  "label": "prism 9,990 sides (9,992 faces)",
+  "build_status": "OK",
+  "build_s": 3.9,
+  "waited_for_bridge_s": null,
+  "faces_solids_poleload_valid": "[9992, 1, 0, True]",
+  "status": "INVALID_INPUT",
+  "detail": {
+   "code": "section.too_complex",
+   "message": "object Shape1 has 9992 faces, limit 3000. Section a simpler object."
+  },
+  "sc": {},
+  "text": "object Shape1 has 9992 faces, limit 3000. Section a simpler object.",
+  "elapsed_s": 0.09,
+  "bridge_after": "OK",
+  "bridge_after_s": 0.11,
+  "reference": null
+ },
+ {
+  "label": "prism 2,898 sides (2,900 faces)",
+  "build_status": "OK",
+  "build_s": 0.57,
+  "waited_for_bridge_s": null,
+  "faces_solids_poleload_valid": "[2900, 1, 0, True]",
+  "status": "OK",
+  "detail": null,
+  "sc": {
+   "wires": 1,
+   "closed_wires": 1,
+   "area": {
+    "value": 7853.98,
+    "unit": "mm^2"
+   },
+   "length": {
+    "value": 314.16,
+    "unit": "mm"
+   },
+   "bbox": {
+    "xmin": {
+     "value": -50.0,
+     "unit": "mm"
+    },
+    "xmax": {
+     "value": 50.0,
+     "unit": "mm"
+    },
+    "ymin": {
+     "value": -50.0,
+     "unit": "mm"
+    },
+    "ymax": {
+     "value": 50.0,
+     "unit": "mm"
+    },
+    "zmin": {
+     "value": 5.0,
+     "unit": "mm"
+    },
+    "zmax": {
+     "value": 5.0,
+     "unit": "mm"
+    }
+   }
+  },
+  "text": "1 wire(s), 1 closed, length 314.16 mm, area 7853.98 mm^2.",
+  "elapsed_s": 6.83,
+  "bridge_after": "OK",
+  "bridge_after_s": 0.11,
+  "reference": {
+   "status": "OK",
+   "elapsed_s": 4.37,
+   "value": "'{\"wires\": 1, \"closed\": 1, \"length\": 314.1592038268977, \"common_area\": 7853.975480767797, \"bullseye_area\": 7853.975480767809}'"
+  }
+ },
+ {
+  "label": "plate 1,400 hex holes",
+  "build_status": "TIMEOUT",
+  "build_s": 39.66,
+  "waited_for_bridge_s": 0.3,
+  "faces_solids_poleload_valid": null,
+  "status": "INVALID_INPUT",
+  "detail": {
+   "code": "section.too_complex",
+   "message": "object Shape3 has 8406 faces, limit 3000. Section a simpler object."
+  },
+  "sc": {},
+  "text": "object Shape3 has 8406 faces, limit 3000. Section a simpler object.",
+  "elapsed_s": 0.14,
+  "bridge_after": "OK",
+  "bridge_after_s": 0.07,
+  "reference": null
+ },
+ {
+  "label": "spring 5 turns",
+  "build_status": "INVALID_INPUT",
+  "build_s": 0.1,
+  "waited_for_bridge_s": 0.1,
+  "faces_solids_poleload_valid": null,
+  "status": "INVALID_INPUT",
+  "detail": {
+   "code": "INVALID_INPUT",
+   "message": "unknown object: Shape4",
+   "data": {
+    "exception": "ValidationError",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1550, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 1305, in query_section\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 1236, in read\n    own_shape = _named_shape(document, object)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 760, in _named_shape\n    obj = _resolve_object(document, name)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 202, in _resolve_object\n    raise ValidationError(f\"unknown object: {name}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown object: Shape4\n"
+   }
+  },
+  "sc": {},
+  "text": "",
+  "elapsed_s": 0.24,
+  "bridge_after": "OK",
+  "bridge_after_s": 0.11,
+  "reference": {
+   "status": "INVALID_INPUT",
+   "elapsed_s": 0.1,
+   "value": null,
+   "waited_for_bridge_s": 0.1
+  }
+ },
+ {
+  "label": "spring 10 turns",
+  "build_status": "INVALID_INPUT",
+  "build_s": 0.05,
+  "waited_for_bridge_s": 0.1,
+  "faces_solids_poleload_valid": null,
+  "status": "INVALID_INPUT",
+  "detail": {
+   "code": "INVALID_INPUT",
+   "message": "unknown object: Shape5",
+   "data": {
+    "exception": "ValidationError",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1550, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 1305, in query_section\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 1236, in read\n    own_shape = _named_shape(document, object)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 760, in _named_shape\n    obj = _resolve_object(document, name)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 202, in _resolve_object\n    raise ValidationError(f\"unknown object: {name}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown object: Shape5\n"
+   }
+  },
+  "sc": {},
+  "text": "",
+  "elapsed_s": 0.06,
+  "bridge_after": "OK",
+  "bridge_after_s": 0.11,
+  "reference": {
+   "status": "INVALID_INPUT",
+   "elapsed_s": 0.1,
+   "value": null,
+   "waited_for_bridge_s": 0.1
+  }
+ }
+]

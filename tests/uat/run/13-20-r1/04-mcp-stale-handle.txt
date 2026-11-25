@@ -1,0 +1,103 @@
+document_create schema: {"label": {"type": "string"}, "path": {"type": "string"}}
+{
+ "call": "document_list (before)",
+ "isError": false,
+ "structuredContent": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "documents": []
+  },
+  "text": "0 open document(s)."
+ },
+ "text": [
+  "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"documents\":[]},\"text\":\"0 open document(s).\"}"
+ ]
+}
+{
+ "call": "document_close never-issued",
+ "isError": true,
+ "structuredContent": {
+  "schema": "fcb.result-envelope/1",
+  "status": "INVALID_INPUT",
+  "detail": {
+   "code": "INVALID_INPUT",
+   "message": "unknown or stale document handle: fcb-doc:does-not-exist; call document_list for the current handles",
+   "data": {
+    "exception": "ValidationError",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1484, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 553, in document_close\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 403, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 393, in _lookup\n    raise ValidationError(_STALE_HANDLE_MESSAGE.format(doc=doc))\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:does-not-exist; call document_list for the current handles\n"
+   }
+  },
+  "structured_content": {},
+  "text": ""
+ },
+ "text": [
+  "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"INVALID_INPUT\",\"message\":\"unknown or stale document handle: fcb-doc:does-not-exist; call document_list for the current handles\",\"data\":{\"exception\":\"ValidationError\",\"traceback\":\"Traceback (most recent call last):\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\\\", line 143, in _invoke\\n    return method.handler(**params)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 1484, in handler\\n    envelope = raw(**params)\\n               ^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\\\", line 553, in document_close\\n    handle, document = self._resolve(doc)\\n                       ^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\\\", line 403, in _resolve\\n    handle, document = self._lookup(doc)\\n                       ^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\\\", line 393, in _lookup\\n    raise ValidationError(_STALE_HANDLE_MESSAGE.format(doc=doc))\\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:does-not-exist; call document_list for the current handles\\n\"}},\"structured_content\":{},\"text\":\"\"}"
+ ]
+}
+{
+ "call": "query_tree_summary never-issued",
+ "isError": true,
+ "structuredContent": null,
+ "text": [
+  "INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist; call document_list for the current handles"
+ ]
+}
+{
+ "call": "document_create",
+ "isError": true,
+ "structuredContent": null,
+ "text": [
+  "Input validation error: 'label' is a required property"
+ ]
+}
+HANDLE None
+{
+ "call": "document_close (first)",
+ "isError": true,
+ "structuredContent": null,
+ "text": [
+  "Input validation error: None is not of type 'string'"
+ ]
+}
+{
+ "call": "document_close stale",
+ "isError": true,
+ "structuredContent": null,
+ "text": [
+  "Input validation error: None is not of type 'string'"
+ ]
+}
+{
+ "call": "query_object stale",
+ "isError": true,
+ "structuredContent": null,
+ "text": [
+  "Input validation error: None is not of type 'string'"
+ ]
+}
+{
+ "call": "query_tree_summary stale",
+ "isError": true,
+ "structuredContent": null,
+ "text": [
+  "Input validation error: None is not of type 'string'"
+ ]
+}
+{
+ "call": "document_list (after)",
+ "isError": false,
+ "structuredContent": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "documents": []
+  },
+  "text": "0 open document(s)."
+ },
+ "text": [
+  "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"documents\":[]},\"text\":\"0 open document(s).\"}"
+ ]
+}

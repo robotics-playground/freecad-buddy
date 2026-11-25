@@ -1,0 +1,6 @@
+[LoftPart.undo] document_undo status=OK code=None elapsed=0.075 undo_steps=None rolled_back=None msg= text=None
+[LoftPart.tree] query_tree_summary status=None code=None elapsed=0.099 undo_steps=None rolled_back=None msg= text=['OK: 12 objects, 1 shown.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\nframing: does not fit, computed\nv [BODY] Body (+4)']
+[SweepPart.undo] document_undo status=OK code=None elapsed=0.07 undo_steps=None rolled_back=None msg= text=None
+[SweepPart.tree] query_tree_summary status=None code=None elapsed=0.058 undo_steps=None rolled_back=None msg= text=['OK: 11 objects, 1 shown.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\nframing: does not fit, ratio 3.91, computed\nv [BODY] Body (+3)']
+[GroovePart.undo] document_undo status=OK code=None elapsed=0.071 undo_steps=None rolled_back=None msg= text=None
+[GroovePart.tree] query_tree_summary status=None code=None elapsed=0.049 undo_steps=None rolled_back=None msg= text=['OK: 13 objects, 1 shown.\nframing: fits, ratio 0.77, computed\nv [BODY] Body (+4)']

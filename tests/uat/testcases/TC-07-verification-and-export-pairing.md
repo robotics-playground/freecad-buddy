@@ -30,7 +30,7 @@ needs no Show All. The `fcb` env (`Part.read`, `Mesh.Mesh`) is an equal alternat
 ## Preconditions
 - [ ] FreeCAD 1.1.x installed (verify: `docker exec -u cua fcb-desktop ls /opt/freecad/AppRun`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
 - [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: press the `Show All Objects` leaf of View > Visibility by `element_token` (test-plan §6, "Menu route"). A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`. If the leaf is not in the snapshot or the press fails, show the objects with `mcp script_exec { doc: <H>, code: "for o in doc.Objects: o.Visibility = True" }`.
-- [ ] `script_exec` is on (the default: `tools/list` names it). The re-import recipe and the TC-07-03 and TC-07-12 fixtures need it.
+- [ ] `script_exec` is on (the default: `tools/list` names it). The re-import recipe and the TC-07-03, TC-07-11 and TC-07-12 fixtures need it.
 - [ ] FreeCAD GUI open, addon loaded, proxy serving `:8765` (verify: `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` shows LISTEN)
 - [ ] Golden models present (verify: `ls benchmarks/g0/golden-models/*.FCStd` lists 5 files)
 - [ ] Fault fixtures present (verify: `ls benchmarks/g0/fault-injection/wrong-volume/case.yaml benchmarks/g0/fault-injection/non-watertight-open-shell/case.yaml`)
@@ -66,7 +66,7 @@ mcp verify_shape { doc: <H>, object: <OBJ>, checks: [
 **And** every check passed — verify: no element of `structured_content.checks` has `passed: false`  
 **And** measured volume is the analytic 6000.0 — verify: the `assert.expect_volume` check `measured` equals `6000.0`  
 **And** verdict is derived, not asserted — verify: `structured_content.verdict` equals `OK` and equals the envelope `status`  
-**And** an unknown assertion `fn` is refused — verify: `mcp verify_shape { doc: <H>, object: <OBJ>, checks: [{ fn: "expect_genus", expect: 0 }] }` returns `INVALID_INPUT` with message `unknown assertion fn: 'expect_genus'`  
+**And** an unknown assertion `fn` is refused — verify: `mcp verify_shape { doc: <H>, object: <OBJ>, checks: [{ fn: "expect_genus", expect: 0 }] }` is refused at the schema gate: the call is a protocol rejection (`isError` set, `structuredContent` is `null`) whose text matches `Input validation error: .*expect_genus.* is not valid under any of the given schemas`  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the window shows one whole box with the proportions the scenario asked for — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-07-01-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: one solid body, closed on every side, whose three edge lengths read as roughly 1 : 2 : 3. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
@@ -422,65 +422,81 @@ mcp document_close { doc: <H> }
 
 ---
 
-### TC-07-11: multi-object selection is refused by the single-shape writers
+### TC-07-11: several objects export to one file per format and verify per object
 
 **Priority**: High
-**Design Ref**: `verification-design.md` §6 (fail-closed selection), `mcp-tools-design.md` §3.5
+**Design Ref**: `verification-design.md` §6.2 to §6.4 (per-object checks), `mcp-tools-design.md` §3.5, `tool-contracts.md` T-5
 
-**Given** no stale targets — verify: `rm -f "$RUN_DIR/evidence/tc-07-11-multi.step" "$RUN_DIR/evidence/tc-07-11-multi.stl" "$RUN_DIR/evidence/tc-07-11-multi.3mf"`  
-**And** `box-10-20-30.FCStd` is open as `<H>` with `<OBJ>` resolved — verify: `mcp document_open` returns `OK` and `mcp query_tree_summary { doc: <H> }` names the object  
-**And** the framed starting state is captured — verify: run Show All and fit the model, then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-07-11-before.png"}' | "$FCB_CUA" get_window_state`  
-
-**When** a two-element selection is passed to each writer  
+**Given** no stale targets — verify: `rm -f "$RUN_DIR/evidence/tc-07-11-three.step" "$RUN_DIR/evidence/tc-07-11-three.stl" "$RUN_DIR/evidence/tc-07-11-three.3mf"`  
+**And** a three-body document is open as `<H>` — verify: `mcp document_create { label: "tc07_three_bodies" }` returns `OK`, then run the script below and `mcp query_tree_summary { doc: <H> }` names `BoxA`, `Cyl` and `Sph`  
 ```
-mcp export_step { doc: <H>, path: "$RUN_DIR/evidence/tc-07-11-multi.step", objects: [<OBJ>, <OBJ>] }
-mcp export_stl  { doc: <H>, path: "$RUN_DIR/evidence/tc-07-11-multi.stl",  objects: [<OBJ>, <OBJ>] }
-mcp export_3mf  { doc: <H>, path: "$RUN_DIR/evidence/tc-07-11-multi.3mf",  objects: [<OBJ>, <OBJ>] }
+mcp script_exec { doc: <H>, code: "a = doc.addObject('Part::Box', 'BoxA'); a.Label = 'Alpha'; b = doc.addObject('Part::Cylinder', 'Cyl'); b.Label = 'Beta'; b.Placement.Base = App.Vector(30, 0, 0); c = doc.addObject('Part::Sphere', 'Sph'); c.Label = 'Gamma'; c.Placement.Base = App.Vector(0, 60, 0); doc.recompute()" }
+```
+**And** the framed starting state is captured — verify: `mcp view_fit_viewport { doc: <H> }` returns `OK`, then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-07-11-before.png"}' | "$FCB_CUA" get_window_state`  
+
+**When** the three objects are exported to each format and each export is verified  
+```
+mcp export_step { doc: <H>, path: "$RUN_DIR/evidence/tc-07-11-three.step", objects: ["BoxA", "Cyl", "Sph"] }
+mcp export_stl  { doc: <H>, path: "$RUN_DIR/evidence/tc-07-11-three.stl",  objects: ["BoxA", "Cyl", "Sph"] }
+mcp export_3mf  { doc: <H>, path: "$RUN_DIR/evidence/tc-07-11-three.3mf",  objects: ["BoxA", "Cyl", "Sph"] }
+mcp verify_export_step { doc: <H>, export_id: <STEP id> }
+mcp verify_export_stl  { doc: <H>, export_id: <STL id> }
+mcp verify_export_3mf  { doc: <H>, export_id: <3MF id> }
 ```
 
-**Then** all three writers return `INVALID_INPUT` — verify: each envelope `status` equals `INVALID_INPUT`  
-**And** the message names the single-shape constraint — verify: each `detail.message` equals `export supports a single object; got multiple`  
-**And** no partial file is left behind — verify: `ls "$RUN_DIR/evidence/tc-07-11-multi."*` reports no such files  
-**And** an unknown object name inside a one-element selection is a separate refusal — verify: `objects: ["NoSuchObject"]` returns `INVALID_INPUT` with message `unknown object: NoSuchObject`  
+**Then** the three writers return `OK` with `verified` equal to `false` and `objects` equal to `["BoxA", "Cyl", "Sph"]` — verify: each envelope  
+**And** the STEP verdict is `OK` with one volume check per object — verify: `checks` holds `export_step.object_volume:BoxA`, `export_step.object_volume:Cyl` and `export_step.object_volume:Sph`, each `passed` equal to `true`, plus `export_step.objects_matched` with `passed` equal to `true`  
+**And** the 3MF verdict is `OK` with per-object checks — verify: `checks` holds `lib3mf.object_count` with `measured` equal to `3`, `lib3mf.object_names` with `measured` equal to `["Alpha", "Beta", "Gamma"]`, and `trimesh_3mf.object_volume:BoxA`, `:Cyl`, `:Sph` each `passed` equal to `true`  
+**And** the STL verdict is `OK` with the total volume only — verify: `checks` holds `trimesh_stl.volume_band` and no check whose id contains `object_volume`  
+**And** the STEP file names every object by its `Label` — verify: `grep -o "PRODUCT('[^']*','[^']*'" "$RUN_DIR/evidence/tc-07-11-three.step"` lists `Alpha`, `Beta` and `Gamma`  
+**And** the 3MF file names every mesh object by its `Label` — verify: `unzip -p "$RUN_DIR/evidence/tc-07-11-three.3mf" 3D/3dmodel.model | grep -o '<object[^>]*>'` shows three tags with `name="Alpha"`, `name="Beta"` and `name="Gamma"`  
+**And** the GUI-written 3MF is a valid container that declares each content type once — verify: `unzip -p "$RUN_DIR/evidence/tc-07-11-three.3mf" '[Content_Types].xml' | grep -o 'Extension="png"' | wc -l` prints `1` (FreeCAD's GUI writer adds one thumbnail part per mesh, `unzip -l` lists them, and the bridge keeps one content-type entry), and `verify_export_3mf` reports `lib3mf.parses` with `passed` equal to `true`  
+**And** a hidden Body takes its tip out of the default export — verify: in `<H>` run `mcp script_exec { doc: <H>, code: "body = doc.addObject('PartDesign::Body', 'Hid'); body.newObject('PartDesign::AdditiveBox', 'HidBox'); doc.recompute(); body.Visibility = False" }`, then `export_step` without `objects` returns `objects` equal to `["BoxA", "Cyl", "Sph"]`, with no `Hid` and no `HidBox`  
+**And** an independent re-import measures the sum of the three volumes — verify: re-import the STEP as `<H_RT>` with the re-import recipe (STEP, path `$RUN_DIR/evidence/tc-07-11-three.step`) and read `mcp query_mass_properties { doc: <H_RT>, object: "Reimport" }`; it is within 0.1 % of `1649.26` (box 1000.0, cylinder 125.66, sphere 523.60). The verifier's own volume check is a claim by the code under test; a separate re-import measured by the agent is the outside witness.  
+**And** an unknown name in the selection is refused and writes nothing — verify: `mcp export_step { doc: <H>, path: "$RUN_DIR/evidence/tc-07-11-bad.step", objects: ["BoxA", "NoSuchObject"] }` returns `INVALID_INPUT` with message `unknown object: NoSuchObject`, and `ls "$RUN_DIR/evidence/tc-07-11-bad.step"` reports no such file  
 **And** an empty document is refused distinctly — verify: exporting from a freshly created empty document returns `INVALID_INPUT` with message `document has no objects to export`  
-**And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the window is unchanged by the five refusals — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-07-11-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and say what is on screen: the same single whole box in both, no error dialog raised, no object added to or removed from the tree. No file was written, so there is no exported artifact for an outside tool to read; the visual carries the whole result here. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** an omitted `objects` on `<H>` gives the same result for each format — verify: `export_step`, `export_stl` and `export_3mf` without `objects` to `$RUN_DIR/evidence/tc-07-11-omitted.<ext>` each return `objects` equal to `["BoxA", "Cyl", "Sph"]`, and each paired `verify_export_*` returns `OK` with the same check ids as the named export  
+**And** a planted wrong file fails and names the object — verify: build a second document `<HB>` with the same script plus `b.Height = 20`, export it to `$RUN_DIR/evidence/tc-07-11-wrong.step` and `.3mf`; export `<H>` to `$RUN_DIR/evidence/tc-07-11-planted.step` and `.3mf`, copy each `wrong` file over its `planted` file, then `verify_export_step` and `verify_export_3mf` on the `planted` export ids return a status other than `OK`, with `export_step.object_volume:Cyl` and `trimesh_3mf.object_volume:Cyl` among the failed check ids and no other `object_volume` check failed  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <H_RT> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the re-imported file holds three separate bodies — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-07-11-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and say what is on screen: in the first, a box, a cylinder and a sphere laid out as built; in the second, the same three solids with the same relative layout, not one merged blob and not fewer than three. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* each exported file opens through FreeCAD's own **File > Import** — verify: for each of `tc-07-11-three.step`, `.3mf` and `.stl`, `mcp document_create { label: "gui_import_<ext>" }`, press the `Import…` menu leaf by `element_token`, type the container path into the `File name:` field of the `Import file` dialog, press `Open` (STEP: press `OK` in `STEP Import Settings` with its defaults), press the **Isometric** and **Fit All** toolbar buttons by `element_token`, and capture `$RUN_DIR/evidence/tc-07-11-after-<ext>.png`. Each capture shows the box, the cylinder and the sphere in the built layout. The STEP tree lists `Alpha`, `Beta` and `Gamma` under the root product (expand it). FreeCAD 1.1.4 imports a 3MF and an STL as one mesh object named after the file, so the 3MF names are read with an outside tool instead: `unzip -p` above, and `trimesh.load("<path>.3mf").geometry` keys equal `["Alpha", "Beta", "Gamma"]`  
 
 **Cleanup**:
 ```bash
-rm -f "$RUN_DIR/evidence/tc-07-11-multi.step" "$RUN_DIR/evidence/tc-07-11-multi.stl" "$RUN_DIR/evidence/tc-07-11-multi.3mf"
+rm -f "$RUN_DIR/evidence/tc-07-11-three.step" "$RUN_DIR/evidence/tc-07-11-three.stl" "$RUN_DIR/evidence/tc-07-11-three.3mf"
 ```
 ```
+mcp document_close { doc: <H_RT> }
 mcp document_close { doc: <H> }
 ```
 
 ---
 
-### TC-07-12: an omitted `objects` exports the document's sole object
+### TC-07-12: an omitted `objects` exports every visible solid
 
 **Priority**: Medium
 **Design Ref**: `mcp-tools-design.md` §3.5 (default selection), `verification-design.md` §6
 
-**Given** no stale target — verify: `rm -f "$RUN_DIR/evidence/tc-07-12-default.step"`  
+**Given** no stale target — verify: `rm -f "$RUN_DIR/evidence/tc-07-12-default.step" "$RUN_DIR/evidence/tc-07-12-default-compound.step"`  
 **And** `box-10-20-30.FCStd` is open as `<H>` (a single-object document) — verify: `mcp document_open` returns `OK`  
 
 **When** the export is made with `objects` absent from the arguments entirely  
 ```
 mcp export_step { doc: <H>, path: "$RUN_DIR/evidence/tc-07-12-default.step" }
 ```
-**And** a document that holds two shape objects is built as `<H2>`, and the omitted-`objects` export is repeated on it to `$RUN_DIR/evidence/tc-07-12-default-compound.step`. `two-box-compound.FCStd` cannot serve here: it holds one object (`TwoBoxCompound`, a compound of two solids), so its default export is not ambiguous  
+**And** a document that holds two visible solids is built as `<H2>`, and the omitted-`objects` export is repeated on it to `$RUN_DIR/evidence/tc-07-12-default-compound.step`  
 ```
 mcp document_create { label: "tc07_two_objects" }
 mcp script_exec { doc: <H2>, code: "doc.addObject('Part::Box', 'BoxA'); b = doc.addObject('Part::Box', 'BoxB'); b.Placement.Base = App.Vector(20, 0, 0); doc.recompute()" }
 mcp export_step { doc: <H2>, path: "$RUN_DIR/evidence/tc-07-12-default-compound.step" }
 ```
 
-**Then** the single-object document exports without a selection — verify: the first export returns `status` equal to `OK`  
-**And** the exported shape is the document's sole object — verify: `verify_export_step` on the returned `export_id` returns `OK` with `export_step.volume` `measured` within 0.1 % of `6000.0`  
-**And** a multi-object document refuses the ambiguous default — verify: the repeat on `<H2>` returns `INVALID_INPUT` with message `document has multiple objects; specify 'objects' with the one to export`  
-**And** the ambiguous case wrote nothing — verify: `ls "$RUN_DIR/evidence/tc-07-12-default-compound.step"` reports no such file  
+**Then** the single-object document exports without a selection — verify: the first export returns `status` equal to `OK` and `objects` equal to the box's Name  
+**And** the exported shape is the document's sole object — verify: `verify_export_step` on the returned `export_id` returns `OK` with `export_step.volume` `measured` within 0.1 % of `6000.0`, and its `checks` hold no id that contains `object_volume`  
+**And** the two-solid document exports both solids — verify: the repeat on `<H2>` returns `OK` with `objects` equal to `["BoxA", "BoxB"]`, and `verify_export_step` returns `OK` with `export_step.object_volume:BoxA` and `export_step.object_volume:BoxB` each `passed` equal to `true`  
+**And** a hidden solid is left out — verify: `mcp script_exec { doc: <H2>, code: "doc.getObject('BoxB').Visibility = False" }`, then the omitted-`objects` export of `<H2>` to the same path returns `objects` equal to `["BoxA"]`  
 **And** an empty `objects` array behaves as omitted, not as a selection of none — verify: `objects: []` on the single-object document returns the same `OK` result as the first export  
-**And** an independent re-import measures the box, not the compound — verify: re-import the file as `<H_RT>` with the re-import recipe (STEP, path `$RUN_DIR/evidence/tc-07-12-default.step`) and read `mcp query_mass_properties { doc: <H_RT>, object: "Reimport" }`; it is within 0.1 % of `6000.0`, not `2000.0` (two 10 mm boxes). The verifier's own volume check is a claim by the code under test; a separate re-import measured by the agent is the outside witness.  
+**And** an independent re-import measures the box — verify: re-import the file as `<H_RT>` with the re-import recipe (STEP, path `$RUN_DIR/evidence/tc-07-12-default.step`) and read `mcp query_mass_properties { doc: <H_RT>, object: "Reimport" }`; it is within 0.1 % of `6000.0`. The verifier's own volume check is a claim by the code under test; a separate re-import measured by the agent is the outside witness.  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <H_RT> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the re-imported file holds exactly one box — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-07-12-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: one solid box of roughly 1 : 2 : 3 proportions — not two separate bodies, and not an empty view. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 

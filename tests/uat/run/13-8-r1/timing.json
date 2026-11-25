@@ -1,0 +1,116 @@
+[
+ {
+  "label": "compound 1,666 boxes (9,996 faces, 1,666 wires)",
+  "built": "[9996, 1666, True]",
+  "build_status": "OK",
+  "build_s": 1.63,
+  "status": "OK",
+  "detail": null,
+  "message": null,
+  "wires": 1666,
+  "closed": 1666,
+  "area": null,
+  "length": {
+   "value": 13328.0,
+   "unit": "mm"
+  },
+  "elapsed_s": 4.96,
+  "bridge_after": null,
+  "bridge_after_s": 0.11
+ },
+ {
+  "label": "compound 1,500 boxes (9,000 faces, 1,500 wires, area measured)",
+  "built": "[9000, 1500, True]",
+  "build_status": "OK",
+  "build_s": 1.47,
+  "status": "OK",
+  "detail": null,
+  "message": null,
+  "wires": 1500,
+  "closed": 1500,
+  "area": {
+   "value": 6000.0,
+   "unit": "mm^2"
+  },
+  "length": {
+   "value": 12000.0,
+   "unit": "mm"
+  },
+  "elapsed_s": 6.82,
+  "bridge_after": null,
+  "bridge_after_s": 0.1
+ },
+ {
+  "label": "plate 1,499 holes (1,505 faces, 1,500 wires, area measured)",
+  "built": null,
+  "build_status": "TIMEOUT",
+  "build_s": 48.75,
+  "status": "OK",
+  "detail": null,
+  "message": null,
+  "wires": 1500,
+  "closed": 1500,
+  "area": {
+   "value": 20890.75,
+   "unit": "mm^2"
+  },
+  "length": {
+   "value": 10058.49,
+   "unit": "mm"
+  },
+  "elapsed_s": 8.85,
+  "bridge_after": null,
+  "bridge_after_s": 0.11
+ },
+ {
+  "label": "plate 1,500 holes (1,506 faces, 1,501 wires, area null)",
+  "built": null,
+  "build_status": "TIMEOUT",
+  "build_s": 48.09,
+  "status": "OK",
+  "detail": null,
+  "message": null,
+  "wires": 1501,
+  "closed": 1501,
+  "area": null,
+  "length": {
+   "value": 10064.78,
+   "unit": "mm"
+  },
+  "elapsed_s": 5.36,
+  "bridge_after": null,
+  "bridge_after_s": 0.11
+ },
+ {
+  "label": "plate 9,000 holes (9,006 faces, 9,001 wires)",
+  "built": null,
+  "build_status": "TIMEOUT",
+  "build_s": 130.16,
+  "status": "WORKER_CRASHED",
+  "detail": "WORKER_CRASHED",
+  "message": "handshake rejected",
+  "wires": null,
+  "closed": null,
+  "area": null,
+  "length": null,
+  "elapsed_s": 5.02,
+  "bridge_after": null,
+  "bridge_after_s": 5.07
+ },
+ {
+  "label": "compound 1,667 boxes (10,002 faces, refused)",
+  "built": null,
+  "build_status": "WORKER_CRASHED",
+  "build_s": 5.02,
+  "status": "WORKER_CRASHED",
+  "detail": "WORKER_CRASHED",
+  "message": "handshake rejected",
+  "wires": null,
+  "closed": null,
+  "area": null,
+  "length": null,
+  "elapsed_s": 5.02,
+  "bridge_after": null,
+  "bridge_after_s": 5.07
+ }
+]

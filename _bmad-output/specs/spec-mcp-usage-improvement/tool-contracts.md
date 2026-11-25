@@ -52,11 +52,13 @@ typed tool families in the server instructions."
 
 Input adds `objects: string[]` (1..50). Exactly one of `object` and `objects` is required.
 
-Output with `objects`: `{ "objects": [ <the per-object record of today> + "is_valid": bool +
-"solids": int ] }`, in input order. With `object`: unchanged plus `is_valid` and `solids`.
+Output with `objects`: `{ "objects": [ <the per-object record of today> + "is_valid": bool ] }`,
+in input order. The solid count stays in the record's `counts.solids` (CAP-8: each value once).
+With `object`: unchanged plus `is_valid`.
 
-Errors: both or neither of `object`/`objects` → `INVALID_INPUT`; an object with no shape →
-its record carries `"shape": null` and the call stays `OK`.
+Errors: both or neither of `object`/`objects` → `INVALID_INPUT`; an unknown name in `objects` →
+`INVALID_INPUT` naming it; in `objects`, an object with no shape or an empty shape → its record
+is `{ "name", "shape": null }` and the call stays `OK`. The `object` path keeps its errors.
 
 ### `query_interference` — new, read-only
 
@@ -83,6 +85,14 @@ Exactly one of `objects` and `pairs`. `common_volume` uses `Shape.common`; `min_
 empty shape while `min_distance` is 0, `boolean_failed` is true and `common_volume` is null. An
 empty result must never read as "no overlap" (a measured false pass, usage-evidence.md).
 
+A pair is measured only when both shapes are valid solids with positive volume; otherwise
+`boolean_failed` is true and `common_volume` and `min_distance` are null (FreeCAD's `common` and
+`distToShape` are not reliable on invalid, reversed or non-solid shapes). `min_distance` is also
+null when `distToShape` raises. Cost bounds: a pair whose face counts multiply to more than
+150,000, or a call still running after 40 s between pairs, returns `INVALID_INPUT` with
+`detail.code` `interference.too_complex` and no partial result. Unknown name, self pair, or an
+object with no shape → `INVALID_INPUT`.
+
 ### `query_section` — new, read-only
 
 Input: `doc`, `object`, `plane: { "normal": "x"|"y"|"z"|[nx,ny,nz], "offset": Quantity }`,
@@ -92,7 +102,12 @@ Output: `wires` (count), `closed_wires`, `area` (of the faces the closed wires b
 `length`, `bbox`; with `points`, `polylines: [[[x,y,z],…],…]` in mm, capped at `max_points`
 total with `truncated: bool`.
 
-Errors: a plane that misses the shape → `OK` with `wires: 0`.
+Errors: a plane that misses the shape → `OK` with `wires: 0`. A plane on a planar face →
+`INVALID_INPUT` `section.plane_on_face`. An invalid or reversed shape → `INVALID_INPUT`
+`section.untrusted_shape`; a valid shell or face is cut with `area` null. More than 3,000 faces
+or a BSpline pole load above 640,000 → `INVALID_INPUT` `section.too_complex`. `area` is null
+when it cannot be measured (open wire, more than 300 wires, or the cross-check against the
+closed wires fails). Cut by `Shape.section` with a plane face (`slice` misses planes near a face).
 
 ## T-3 Parameters and expressions
 

@@ -105,6 +105,7 @@ _VALIDATOR_SOURCES = {
         _SRC / "usecases" / "verify.py",
         _SRC / "usecases" / "fingerprint.py",
         _SRC / "usecases" / "assertions.py",
+        _SRC / "contracts" / "assertions.py",
         _SRC / "contracts" / "numbers.py",
     ),
     # Order matches score_export_verify.py's VALIDATOR_SOURCES.
@@ -130,6 +131,7 @@ _VALIDATOR_SOURCES = {
         _REPO_ROOT / "benchmarks" / "harness" / "assertions.py",
         _SRC / "usecases" / "assertions.py",
         _SRC / "usecases" / "verify.py",
+        _SRC / "contracts" / "assertions.py",
         _SRC / "contracts" / "numbers.py",
     ),
     "run_mutation": (
@@ -149,6 +151,7 @@ _VALIDATOR_SOURCES = {
     "spec_assertions": (
         _SRC / "usecases" / "assertions.py",
         _SRC / "usecases" / "verify.py",
+        _SRC / "contracts" / "assertions.py",
         _REPO_ROOT / "benchmarks" / "g3" / "fault-injection" / "score_g3_replay.py",
         _SRC / "contracts" / "numbers.py",
     ),

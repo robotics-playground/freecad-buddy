@@ -1,0 +1,15 @@
+label=a2-sweep rc=0 elapsed=2s
+FEATURES_FILE=D:\Work\Personal\Sources\fcb-verify-13-18\src\freecad_buddy\usecases\features.py
+FAIL: test_Should_cut_subtractive_frenet_When_the_spine_is_a_sketch_name (infc.test_feature_tools.SweepTest.test_Should_cut_subtractive_frenet_When_the_spine_is_a_sketch_name)
+AssertionError: 15999.999999999996 != 15717.256661176918 within 3 places (282.7433388230784 difference)
+FAIL: test_Should_cut_subtractive_frenet_When_the_spine_is_an_edge_selector (infc.test_feature_tools.SweepTest.test_Should_cut_subtractive_frenet_When_the_spine_is_an_edge_selector)
+AssertionError: 15999.999999999996 != 15717.256661176918 within 3 places (282.7433388230784 difference)
+FAIL: test_Should_cut_subtractive_standard_When_the_spine_is_a_sketch_name (infc.test_feature_tools.SweepTest.test_Should_cut_subtractive_standard_When_the_spine_is_a_sketch_name)
+AssertionError: 15999.999999999996 != 15717.256661176918 within 3 places (282.7433388230784 difference)
+FAIL: test_Should_cut_subtractive_standard_When_the_spine_is_an_edge_selector (infc.test_feature_tools.SweepTest.test_Should_cut_subtractive_standard_When_the_spine_is_an_edge_selector)
+AssertionError: 15999.999999999996 != 15717.256661176918 within 3 places (282.7433388230784 difference)
+RESULT fail=4 error=0 run=46
+RED infc.test_feature_tools.SweepTest.test_Should_cut_subtractive_frenet_When_the_spine_is_a_sketch_name
+RED infc.test_feature_tools.SweepTest.test_Should_cut_subtractive_frenet_When_the_spine_is_an_edge_selector
+RED infc.test_feature_tools.SweepTest.test_Should_cut_subtractive_standard_When_the_spine_is_a_sketch_name
+RED infc.test_feature_tools.SweepTest.test_Should_cut_subtractive_standard_When_the_spine_is_an_edge_selector

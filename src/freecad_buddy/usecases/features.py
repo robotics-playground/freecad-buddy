@@ -16,18 +16,33 @@ Stdlib + FreeCAD App modules only; version-sensitive calls go through ``shim``.
 
 from __future__ import annotations
 
+import itertools
 import math
 import re
+from collections.abc import Collection
 from typing import Callable
 
 from freecad_buddy.contracts import ResultEnvelope
 from freecad_buddy.usecases import confirm, shim, transaction, verify
-from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
+from freecad_buddy.usecases.documents import (
+    CodedValidationError,
+    DocumentRegistry,
+    ValidationError,
+)
+from freecad_buddy.usecases.parameter_types import PARAMETER_PROPERTY_TYPES
+from freecad_buddy.usecases.queries import scalar_reading
 
 _ANGLE_UNITS = frozenset({"deg"})
 _LENGTH_UNITS = frozenset({"mm"})
 
 _BODY_TYPE = "PartDesign::Body"
+_ORIGIN_TYPE = "App::Origin"
+_LINK_TYPE = "App::Link"
+
+# Types that carry ``App::GroupExtension`` but whose ``Group`` is an operand list, not a member
+# list: a ``PartDesign::Boolean`` keeps the Bodies it fuses, cuts or intersects there (probed on
+# 1.1.4: ``hasExtension("App::GroupExtension")`` is true for it).
+_OPERAND_GROUP_TYPES = ("PartDesign::Boolean",)
 _FEATURE_BASE_TYPE = "PartDesign::FeatureBase"
 
 # FreeCAD rewrites any character outside this set when it names an object, so a name failing the
@@ -350,6 +365,11 @@ def _feature_mutation(
     op: Callable[[object], list[str]],
     audit_sink: object = None,
     precheck: Callable[[object], None] | None = None,
+    report: Callable[[object], dict] | None = None,
+    state_probe: Callable[[object], object] | None = None,
+    deleted: set[str] | None = None,
+    recompute_check: Callable[[object], None] | None = None,
+    removed_bindings: Collection[tuple[str, str]] = (),
 ) -> ResultEnvelope:
     """Run ``op`` through the mutation bracket and attach the post-op ``feature_state``.
 
@@ -362,6 +382,13 @@ def _feature_mutation(
     :param op: applies the typed operation and returns the names of the objects it touched.
     :param precheck: validates the request against the resolved document before the bracket
         opens, so a malformed request raises ``ValidationError`` without writing a snapshot.
+    :param report: for an op that creates no shape: reads the fields to add to an ``OK`` result
+        from the returned document, in place of ``feature`` and ``feature_state``.
+    :param state_probe: reads state the shape fingerprint cannot see; passed to ``run_mutation``.
+    :param deleted: the names ``op`` deletes on purpose, filled by ``precheck``; read when the
+        bracket opens and passed to ``run_mutation``.
+    :param recompute_check: runs after the bracket's recompute; passed to ``run_mutation``.
+    :param removed_bindings: the expression bindings ``op`` removes; passed to ``run_mutation``.
     :raises ValidationError: the call carries no confirm authorizing it, or the request is
         malformed; neither writes a snapshot nor opens a transaction.
     """
@@ -384,6 +411,10 @@ def _feature_mutation(
             tool=tool,
             params=params,
             fp_before=fp_before,
+            state_probe=state_probe,
+            deleted=frozenset(deleted or ()),
+            recompute_check=recompute_check,
+            removed_bindings=removed_bindings,
         )
         rebound.append(result[0])
         # The reported state is read here, in the window that produced it: reading it after this
@@ -394,8 +425,11 @@ def _feature_mutation(
         if not isinstance(content, dict):
             content = {}
             result[1]["structured_content"] = content
-        content["feature"] = feature
-        content["feature_state"] = _feature_state(result[0], feature)
+        if report is None:
+            content["feature"] = feature
+            content["feature_state"] = _feature_state(result[0], feature)
+        elif result[1]["status"] == "OK":
+            content.update(report(result[0]))
         return result
 
     try:
@@ -790,6 +824,519 @@ def feature_revolve(
         op,
         audit_sink,
         precheck,
+    )
+
+
+# --------------------------------------------------------------------------------------------
+# Loft and sweep
+# --------------------------------------------------------------------------------------------
+
+# Cost limits. Both OCC builds hold the Python interpreter lock, so the bridge timeout cannot stop
+# a slow one; the request is measured and refused before the bracket instead. Timings are whole
+# `recompute` calls on a development host, FreeCAD 1.1.4.
+#
+# A loft section has a size: its edges, a BSpline edge counting its poles. ThruSections cost grows
+# with the square of the larger section of each neighbouring pair, so the loft cost is the sum of
+# max(size, next size) squared over consecutive sections (the last back to the first when
+# closed). Measured recompute, smooth: circle to 1,000-gon (1,000,000) 9.3 s; circle to 1,400-gon
+# (1,960,000) 20 s; two 1,000-gons (1,000,000) 5.7 s; two 1,400-gons 11 s; two 2,000-gons 24 s;
+# 40 sections of 200 edges (1,560,000) 4.6 s; 500 sections of 16 edges (128,000) 0.64 s. A
+# circle to an n-gon is the slowest layout, so the limit is set on it. Whole tool call at the
+# limit: circle to 1,000-gon 10.7 s; two 1,000-gons 8.0 s; 24 sections of 200 edges (920,000)
+# 5.2 s.
+_LOFT_MAX_COST = 1_000_000
+# Sections are bounded on their own, because the tool call also spends time per section:
+# smooth loft of 100 circles 0.09 s, 500 circles 1.6 s, 1,500 circles 19 s.
+_LOFT_MAX_SECTIONS = 500
+# Sweep cost units are profile units times spine units. A profile edge counts its poles (1 for
+# any other curve); a spine edge counts 1 plus a tenth of its poles, rounded down. Recompute:
+# 100 profile edges along 100 spine lines (10,000) 5.8 s; 200 along 200 (40,000) 69 s; a circle
+# along 10,000 lines 32 s through the tool; 250 edges along a 25-turn helix of 392 poles (10,000)
+# 18 s. Whole tool call at the limit: a circle along 3,000 lines 4.1 s; 30 edges along 100 lines
+# 2.5 s; 8 edges along 375 lines 2.3 s; 35 edges along a 25-turn helix of 770 poles (2,730) 1.1 s.
+_SWEEP_MAX_COST = 3000
+_SWEEP_POLES_PER_UNIT = 10
+
+# Only BSpline-like spine edges are sampled (a line or an analytic curve cannot reverse), and at
+# most _SPINE_MAX_SAMPLED_EDGES of them, so the check itself stays short.
+# A spine edge is sampled at this many parameters. A BSpline that doubles back on itself has a
+# point of zero velocity: an AdditivePipe over one held the interpreter for more than 280 s
+# (8 points through x = 0.5 i cos(0.3 i)). Its consecutive tangents flip to dot = -1.0; every
+# legitimate spine tried (helix, sine, hairpin, circle, 100-segment polyline) stays above 0.98.
+_SPINE_TANGENT_SAMPLES = 400
+_SPINE_MAX_SAMPLED_EDGES = 100
+# A long helix turns a quarter turn between two of 400 samples after about 100 turns, which
+# reads as a reversal, so an edge is sampled eight times per pole (a pole spans well under a
+# quarter turn) when that is more than 400: a 120-turn helix of 3,330 poles builds valid in
+# 0.85 s. The total is bounded.
+_SPINE_SAMPLES_PER_POLE = 8
+_SPINE_MAX_SAMPLES = 100_000
+
+_SWEEP_MODES = {"standard": "Standard", "frenet": "Frenet"}
+_SPINE_SHAPE_TYPES = frozenset({"Edge", "Wire"})
+
+
+class LoftSweepRefusal(CodedValidationError):
+    """A refused ``feature_loft`` or ``feature_sweep`` request, carrying its ``detail.code``."""
+
+
+def _require_bool(value: object, what: str) -> bool:
+    if not isinstance(value, bool):
+        raise ValidationError(f"{what} must be true or false, got {value!r}")
+    return value
+
+
+def _edge_poles(edge: object) -> int:
+    """Return the pole count of a BSpline-like edge, or 0 for any other curve."""
+    try:
+        return len(edge.Curve.getPoles())
+    except Exception:  # noqa: BLE001 - a curve that cannot report poles counts as plain
+        return 0
+
+
+def _section_shape(document: object, name: object, what: str) -> object:
+    """Return the shape of the sketch ``name``, which must carry at least one wire."""
+    sketch = _resolve_sketch(document, name, what)
+    shape = _require_shape(sketch)
+    if not shape.Wires:
+        raise ValidationError(f"{what} {name} carries no wire")
+    return shape
+
+
+def _require_base_to_subtract(document: object, body: object, subtractive: bool, tool: str) -> None:
+    """Refuse a subtractive loft or sweep in a Body that holds no solid yet.
+
+    FreeCAD's loft adds its solid in that case instead of cutting, so the result would grow the
+    Body; its sweep fails at recompute.
+
+    :raises LoftSweepRefusal: ``loft.nothing_to_subtract`` or ``sweep.nothing_to_subtract``.
+    """
+    if subtractive and getattr(_resolve_body(document, body), "Tip", None) is None:
+        raise LoftSweepRefusal(
+            f"{tool}.nothing_to_subtract",
+            f"subtractive {tool} needs a solid in the Body to cut from: {body} holds none",
+        )
+
+
+# A built solid must add or remove at least this much volume (mm^3); a sweep whose spine lies in
+# the profile plane gives -1.4e-13.
+_MIN_VOLUME_CHANGE = 1e-6
+# Volumes of a large Body carry integration noise that grows with the volume.
+_RELATIVE_VOLUME_NOISE = 1e-9
+
+
+# The Boolean-operation check finds self-intersections that isValid() misses (a profile wider than
+# the bend of its spine). It holds the interpreter lock, and its time follows the geometry, not the
+# face count: a 1,002-face loft took 18.6 s, and a 3-face sweep along a 25-turn helix (770 poles)
+# did not finish in 50 s. It runs only when no input edge and no edge of the Body's earlier shape is
+# BSpline-like and the result has at most this many faces. A 292-face loft with the check took 3.1 s
+# as a whole call; 100 sections of 100 edges (102 faces) took 0.56 s for the check alone. A
+# self-intersecting result built from BSpline inputs is not detected.
+_BOP_CHECK_MAX_FACES = 300
+
+
+def _require_clean_bop_check(feature_name: str, shape: object, code: str) -> None:
+    """Fail on a Boolean-operation check error, ignoring continuity notes.
+
+    A smooth BSpline sweep reports ``BOPAlgo GeomAbs_C0`` for edges and faces of a valid solid;
+    those lines are notes about continuity, not defects.
+    """
+    try:
+        shape.check(True)
+    except Exception as exc:  # noqa: BLE001 - FreeCAD raises one error carrying every finding
+        lines = [
+            line
+            for line in str(exc).splitlines()
+            if line.strip() and "following errors" not in line
+        ]
+        if not lines or any("GeomAbs_" not in line for line in lines):
+            raise transaction.RecomputeFailure(
+                code, f"{feature_name} fails the shape check: {exc}"
+            ) from exc
+
+
+def _solid_result_check(
+    feature_name: str, subtractive: bool, code: str, inputs: list[object]
+) -> Callable[[object], None]:
+    """Return a recompute check that the new feature is a valid solid that changed the Body.
+
+    FreeCAD reports a degenerate sweep or loft as up to date: a spine in the profile plane builds
+    a zero-volume shape, a subtractive cut that misses the Body removes nothing, and a
+    self-intersecting sweep leaves a shape that fails the Boolean-operation check.
+    """
+
+    def check(document: object) -> None:
+        feature = document.getObject(feature_name)
+        shape = getattr(feature, "Shape", None)
+        if shape is None or shape.isNull():
+            raise transaction.RecomputeFailure(code, f"{feature_name} built no shape")
+        if not shape.isValid():
+            raise transaction.RecomputeFailure(code, f"{feature_name} built an invalid shape")
+        if len(shape.Solids) != 1:
+            raise transaction.RecomputeFailure(
+                code, f"{feature_name} built {len(shape.Solids)} solids, not one"
+            )
+        base = getattr(feature, "BaseFeature", None)
+        base_shape = getattr(base, "Shape", None)
+        base_volume = 0.0 if base_shape is None or base_shape.isNull() else base_shape.Volume
+        changed = base_volume - shape.Volume if subtractive else shape.Volume - base_volume
+        if changed <= max(
+            _MIN_VOLUME_CHANGE, _RELATIVE_VOLUME_NOISE * max(base_volume, shape.Volume)
+        ):
+            verb = "removed" if subtractive else "added"
+            raise transaction.RecomputeFailure(
+                code, f"{feature_name} {verb} no volume ({changed:g} mm^3)"
+            )
+        shapes = [getattr(document.getObject(name), "Shape", None) for name in inputs]
+        if len(shape.Faces) <= _BOP_CHECK_MAX_FACES and not _has_bspline_edge(
+            [*shapes, base_shape]
+        ):
+            _require_clean_bop_check(feature_name, shape, code)
+
+    return check
+
+
+def _has_bspline_edge(shapes: list[object]) -> bool:
+    return any(
+        shape is not None and not shape.isNull() and any(map(_edge_poles, shape.Edges))
+        for shape in shapes
+    )
+
+
+def _hide(document: object, names: list[object]) -> list[str]:
+    """Hide the sketches a loft or sweep consumed, as the GUI does; return the hidden names."""
+    hidden = []
+    for name in names:
+        obj = document.getObject(name) if isinstance(name, str) else None
+        if obj is not None and str(getattr(obj, "TypeId", "")).startswith("Sketcher::"):
+            obj.Visibility = False
+            hidden.append(obj.Name)
+    return hidden
+
+
+def _loft_sections(document: object, profile: object, sections: object) -> list[object]:
+    """Return the section shapes after checking the section list against the profile.
+
+    :raises ValidationError: the list is empty or malformed, repeats a sketch, holds the profile,
+        or names a sketch whose wire count differs from the profile's (FreeCAD raises at
+        recompute for that).
+    """
+    if not isinstance(sections, list) or not sections:
+        raise LoftSweepRefusal(
+            "loft.invalid_sections", "sections must be a non-empty list of sketch names"
+        )
+    if len(sections) > _LOFT_MAX_SECTIONS:
+        raise LoftSweepRefusal(
+            "loft.too_complex",
+            f"{len(sections)} sections is above the limit of {_LOFT_MAX_SECTIONS}: loft fewer "
+            "sections",
+        )
+    if len(set(map(str, sections))) != len(sections):
+        raise LoftSweepRefusal("loft.invalid_sections", "sections must not repeat a sketch")
+    if profile in sections:
+        raise LoftSweepRefusal(
+            "loft.invalid_sections", f"sections must not hold the profile {profile}"
+        )
+    wanted = len(_section_shape(document, profile, "profile").Wires)
+    shapes = []
+    for section in sections:
+        shape = _section_shape(document, section, "section")
+        if len(shape.Wires) != wanted:
+            raise LoftSweepRefusal(
+                "loft.wire_count_mismatch",
+                f"section {section} has {len(shape.Wires)} wires, the profile has {wanted}; "
+                "every section needs the same number of wires",
+            )
+        shapes.append(shape)
+    return shapes
+
+
+def _section_size(shape: object) -> int:
+    return sum(_edge_poles(edge) or 1 for edge in shape.Edges)
+
+
+def _loft_cost(shapes: list[object], closed: bool = False) -> int:
+    sizes = [_section_size(shape) for shape in shapes]
+    pairs = list(zip(sizes, sizes[1:]))
+    if closed and len(sizes) > 2:
+        pairs.append((sizes[-1], sizes[0]))
+    return sum(max(pair) ** 2 for pair in pairs)
+
+
+def feature_loft(
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    body: str | None = None,
+    profile: str | None = None,
+    sections: list[str] | None = None,
+    name: str | None = None,
+    ruled: bool = False,
+    closed: bool = False,
+    subtractive: bool = False,
+    confirm: dict | None = None,
+    audit_sink: object = None,
+) -> ResultEnvelope:
+    """Loft through the profile sketch and the section sketches, in the order given.
+
+    ``ruled`` joins consecutive sections with straight surfaces; ``closed`` also joins the last
+    section back to the profile and needs at least two sections (FreeCAD resets it silently
+    otherwise). ``subtractive`` removes the lofted solid from the Body.
+
+    :raises ValidationError: an input is unknown or not a sketch, or a flag is not a boolean.
+    :raises LoftSweepRefusal: ``loft.invalid_sections`` (empty, repeated, or holding the
+        profile), ``loft.wire_count_mismatch``, ``loft.closed_needs_sections``,
+        ``loft.nothing_to_subtract`` or ``loft.too_complex`` (too many sections, or the sections
+        cost more than the limit).
+    """
+    _require_partdesign()
+
+    def precheck(document: object) -> None:
+        _resolve_body(document, body)
+        _name_available(document, name)
+        shapes = _loft_sections(document, profile, sections)
+        _require_bool(ruled, "ruled")
+        _require_bool(subtractive, "subtractive")
+        if _require_bool(closed, "closed") and len(sections) < 2:
+            raise LoftSweepRefusal(
+                "loft.closed_needs_sections",
+                "closed needs at least 2 sections: FreeCAD ignores it for a single section",
+            )
+        cost = _loft_cost([_section_shape(document, profile, "profile"), *shapes], closed)
+        if cost > _LOFT_MAX_COST:
+            raise LoftSweepRefusal(
+                "loft.too_complex",
+                f"the sections cost {cost} units (the larger section of each neighbouring pair, "
+                f"squared; a BSpline edge counts its poles), above the limit of {_LOFT_MAX_COST}: "
+                "loft fewer or simpler sections",
+            )
+        _require_base_to_subtract(document, body, subtractive, "loft")
+
+    def op(document: object) -> list[str]:
+        body_obj = _resolve_body(document, body)
+        type_id = "PartDesign::SubtractiveLoft" if subtractive else "PartDesign::AdditiveLoft"
+        feature = _add_feature(document, body_obj, type_id, name)
+        feature.Profile = _resolve_sketch(document, profile, "profile")
+        feature.Sections = [(_resolve_sketch(document, s, "section"), [""]) for s in sections]
+        feature.Ruled = ruled
+        feature.Closed = closed
+        hidden = _hide(document, [profile, *sections])
+        return [feature.Name, body_obj.Name, *hidden]
+
+    params = {
+        "doc": doc,
+        "body": body,
+        "profile": profile,
+        "sections": sections,
+        "name": name,
+        "ruled": ruled,
+        "closed": closed,
+        "subtractive": subtractive,
+        "confirm": confirm,
+    }
+    return _feature_mutation(
+        registry,
+        doc,
+        name,
+        f"loft {name}",
+        "feature_loft",
+        params,
+        op,
+        audit_sink,
+        precheck,
+        recompute_check=_solid_result_check(
+            name, subtractive, "loft.invalid_result", [profile, *sections]
+        ),
+    )
+
+
+def _spine_target(document: object, spine: object) -> tuple[object, str, list[object]]:
+    """Return ``(object, subelement, edges)`` for a sweep spine.
+
+    ``spine`` is a sketch Name, or a ``mapped_name`` selector naming one Edge, or a whole object
+    (no ``mapped_name``). A whole object must be an Edge, a Wire or a compound of those.
+
+    :raises ValidationError: the spine is unknown or, for a string, not a sketch.
+    :raises LoftSweepRefusal: ``sweep.invalid_spine``: a Body, a subelement that is not an Edge,
+        or a whole object that is not an edge, a wire or a compound of those.
+    """
+    if isinstance(spine, str):
+        obj = _resolve_sketch(document, spine, "spine")
+        subelement = ""
+    else:
+        obj_name, subelement = _selector_subelement(spine, "spine", whole_object=True)
+        obj = _resolve_object(document, obj_name, "spine")
+        if str(getattr(obj, "TypeId", "")) == _BODY_TYPE:
+            raise LoftSweepRefusal("sweep.invalid_spine", f"spine must not be a Body: {obj_name}")
+    shape = _require_shape(obj)
+    if subelement:
+        try:
+            element = shape.getElement(subelement)
+        except Exception as exc:  # noqa: BLE001 - an unresolvable subelement is caller input
+            raise LoftSweepRefusal(
+                "sweep.invalid_spine", f"unresolvable spine selector {subelement!r}: {exc}"
+            ) from exc
+        if getattr(element, "ShapeType", "") != "Edge":
+            raise LoftSweepRefusal(
+                "sweep.invalid_spine",
+                f"spine selector {subelement!r} resolves to a "
+                f"{getattr(element, 'ShapeType', 'unknown')}, not an Edge",
+            )
+        return obj, subelement, [element]
+    kinds = {shape.ShapeType}
+    if shape.ShapeType == "Compound":
+        kinds = {sub.ShapeType for sub in shape.SubShapes}
+    if not shape.Edges or not kinds <= _SPINE_SHAPE_TYPES:
+        raise LoftSweepRefusal(
+            "sweep.invalid_spine",
+            f"spine {obj.Name} is a {shape.ShapeType}; a spine must be an edge or a wire",
+        )
+    return obj, "", list(shape.Edges)
+
+
+def _spine_name(spine: object) -> object:
+    return spine.get("object") if isinstance(spine, dict) else spine
+
+
+def _check_spine_tangents(edges: list[object]) -> None:
+    """Refuse a spine edge whose direction reverses between two samples.
+
+    :raises LoftSweepRefusal: ``sweep.degenerate_spine``, or ``sweep.too_complex`` when the
+        spine holds more curved edges than the check samples.
+    """
+    curved = [edge for edge in edges if _edge_poles(edge)]
+    if len(curved) > _SPINE_MAX_SAMPLED_EDGES:
+        raise LoftSweepRefusal(
+            "sweep.too_complex",
+            f"the spine holds {len(curved)} BSpline edges, above the limit of "
+            f"{_SPINE_MAX_SAMPLED_EDGES}: use fewer spine edges",
+        )
+    samples = [
+        max(_SPINE_TANGENT_SAMPLES, _SPINE_SAMPLES_PER_POLE * _edge_poles(edge)) for edge in curved
+    ]
+    if sum(samples) > _SPINE_MAX_SAMPLES:
+        raise LoftSweepRefusal(
+            "sweep.too_complex",
+            f"the spine needs {sum(samples)} tangent samples, above the limit of "
+            f"{_SPINE_MAX_SAMPLES}: use fewer or simpler spine edges",
+        )
+    for edge, count in zip(curved, samples, strict=True):
+        first, last = edge.ParameterRange
+        previous = None
+        for index in range(count + 1):
+            parameter = first + (last - first) * index / count
+            try:
+                tangent = edge.tangentAt(parameter)
+            except Exception as exc:  # noqa: BLE001 - no tangent means zero velocity
+                raise LoftSweepRefusal(
+                    "sweep.degenerate_spine",
+                    f"the spine has no tangent at parameter {parameter:g}: {exc}",
+                ) from exc
+            if previous is not None and previous.dot(tangent) < 0.0:
+                raise LoftSweepRefusal(
+                    "sweep.degenerate_spine",
+                    "the spine doubles back on itself inside one edge; FreeCAD cannot sweep "
+                    "along it and would hold the bridge. Split it into separate edges or "
+                    "redraw it",
+                )
+            previous = tangent
+
+
+def _sweep_cost(profile_shape: object, spine_edges: list[object]) -> int:
+    profile_units = sum(_edge_poles(edge) or 1 for edge in profile_shape.Edges)
+    spine_units = sum(1 + _edge_poles(edge) // _SWEEP_POLES_PER_UNIT for edge in spine_edges)
+    return profile_units * spine_units
+
+
+def feature_sweep(
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    body: str | None = None,
+    profile: str | None = None,
+    spine: str | dict | None = None,
+    name: str | None = None,
+    mode: str = "standard",
+    subtractive: bool = False,
+    confirm: dict | None = None,
+    audit_sink: object = None,
+) -> ResultEnvelope:
+    """Sweep the profile sketch along a spine.
+
+    ``spine`` is a sketch Name or a selector for one Edge or a whole edge or wire object.
+    ``mode`` ``"standard"`` keeps the profile's orientation by the Standard law; ``"frenet"``
+    follows the Frenet trihedron of the spine. ``subtractive`` removes the swept solid from the
+    Body.
+
+    :raises ValidationError: an input is unknown or not a sketch, or a flag is not a boolean.
+    :raises LoftSweepRefusal: ``sweep.invalid_spine`` (the profile, a Body, or not an edge or
+        wire), ``sweep.invalid_mode``, ``sweep.nothing_to_subtract``, ``sweep.too_complex`` or
+        ``sweep.degenerate_spine``.
+    """
+    _require_partdesign()
+
+    def member() -> str:
+        if not isinstance(mode, str) or mode not in _SWEEP_MODES:
+            raise LoftSweepRefusal(
+                "sweep.invalid_mode", f"mode must be one of {sorted(_SWEEP_MODES)}, got {mode!r}"
+            )
+        return _SWEEP_MODES[mode]
+
+    def precheck(document: object) -> None:
+        _resolve_body(document, body)
+        _name_available(document, name)
+        profile_shape = _section_shape(document, profile, "profile")
+        obj, _, edges = _spine_target(document, spine)
+        if obj.Name == profile:
+            raise LoftSweepRefusal("sweep.invalid_spine", "spine must not be the profile sketch")
+        _require_bool(subtractive, "subtractive")
+        resolved = member()
+        shim.probe_object(
+            "PartDesign::AdditivePipe",
+            lambda probe: _checked_enum(probe, "Mode", resolved, "mode"),
+        )
+        cost = _sweep_cost(profile_shape, edges)
+        if cost > _SWEEP_MAX_COST:
+            raise LoftSweepRefusal(
+                "sweep.too_complex",
+                f"the profile and spine cost {cost} units (profile units times spine units), "
+                f"above the limit of {_SWEEP_MAX_COST}: use a simpler profile or spine",
+            )
+        _require_base_to_subtract(document, body, subtractive, "sweep")
+        _check_spine_tangents(edges)
+
+    def op(document: object) -> list[str]:
+        body_obj = _resolve_body(document, body)
+        type_id = "PartDesign::SubtractivePipe" if subtractive else "PartDesign::AdditivePipe"
+        feature = _add_feature(document, body_obj, type_id, name)
+        feature.Profile = _resolve_sketch(document, profile, "profile")
+        obj, subelement, _ = _spine_target(document, spine)
+        feature.Spine = (obj, [subelement])
+        feature.Mode = _checked_enum(feature, "Mode", member(), "mode")
+        hidden = _hide(document, [profile, obj.Name])
+        return [feature.Name, body_obj.Name, *hidden]
+
+    params = {
+        "doc": doc,
+        "body": body,
+        "profile": profile,
+        "spine": spine,
+        "name": name,
+        "mode": mode,
+        "subtractive": subtractive,
+        "confirm": confirm,
+    }
+    return _feature_mutation(
+        registry,
+        doc,
+        name,
+        f"sweep {name}",
+        "feature_sweep",
+        params,
+        op,
+        audit_sink,
+        precheck,
+        recompute_check=_solid_result_check(
+            name, subtractive, "sweep.invalid_result", [profile, _spine_name(spine)]
+        ),
     )
 
 
@@ -1835,4 +2382,1220 @@ def feature_set_parameters(
         op,
         audit_sink,
         precheck,
+    )
+
+
+# --------------------------------------------------------------------------------------------
+# VarSet parameters
+# --------------------------------------------------------------------------------------------
+
+_VARSET_TYPE = "App::VarSet"
+
+_DEFAULT_PARAMETER_GROUP = "Parameters"
+_MAX_PARAMETERS = 100
+
+# ``App::PropertyInteger`` stores a C ``long``, which is 32 bits on Windows: a larger value raises
+# ``OverflowError`` inside the transaction. The bound is the one every platform holds.
+_MAX_INTEGER_PARAMETER = 2**31 - 1
+
+# Every ASCII spelling the expression lexer returns as UNIT or CONSTANT
+# (docs/references/FreeCAD/src/App/Expression.l). A VarSet property with one of these names adds
+# without error, but ``<VarSet>.<name>`` then fails to parse in every expression, e.g.
+# ``Failed to parse expression 'VS.W'`` (probed on FreeCAD 1.1.4). Longer names that merely begin
+# with a symbol (``W2``, ``min2``) parse.
+_EXPRESSION_RESERVED_NAMES = frozenset(
+    (
+        "A AS C CV F False G GHz GPa H Hz J K M MA MHz MN MOhm MPa MS MeV Mpsi N Nm None Ohm "
+        "Pa S T THz Torr True V VA VAs W Wb Ws bar cal cd cft cm cwt deg dm e eV false ft g "
+        "gon h in kA kHz kJ kN kOhm kPa kS kV kW kWh kcal keV kg km ksi l lb lbf lbm m mA mF "
+        "mH mJ mK mN mS mTorr mV mW mbar mg mi mil min ml mm mmol mol mph nF nH nm oz pF pi "
+        "psi rad s sqft st t thou true uF uH uK uS uTorr ug um yd"
+    ).split()
+)
+
+
+# The names ``ObjectIdentifier::resolveProperty`` answers itself (App/ObjectIdentifier.cpp, the
+# ``_props`` table) before it looks up a property, so ``<VarSet>._pla`` reads the placement and
+# never a parameter of that name. ``addProperty`` accepts all of them without error.
+_EXPRESSION_PSEUDO_PROPERTIES = frozenset(
+    "_shape _pla _matrix __pla __matrix _self _app _part _re _py _math _coll _gui _cq".split()
+)
+
+# ``App::PropertyAngle`` and ``App::PropertyLength`` clamp a value to their bounds without an
+# error (PropertyUnits.cpp ``AngleStandard``, ``LengthStandard``; probed: -5 mm reads 0 mm and
+# 720 deg reads 360 deg), so a value outside them is refused instead of stored changed.
+_ANGLE_LIMIT_DEGREES = 360.0
+
+
+# Names the mutation bracket and the fingerprint read with ``getattr`` from every object they
+# touch (``transaction._shape_bearing``, ``fingerprint.fingerprint``, ``tnp_guard``). A VarSet
+# property of that name makes the VarSet look like a shape-bearing object, and the call always
+# ends ``SPEC_FAILED`` (probed: parameter ``Shape``).
+_PROJECT_READ_NAMES = frozenset({"Shape", "ElementMapVersion"})
+
+
+def _unstorable(character: str) -> bool:
+    """Whether FreeCAD fails to keep ``character`` in a string property.
+
+    NUL cuts the value in memory. The characters below read back as ``_`` after the document is
+    saved and reopened, which is how a snapshot restore reads it: the C0 controls except tab, line
+    feed and carriage return, U+007F to U+0084, U+0086 to U+009F, U+FDD0 to U+FDEF and the last two
+    code points of every plane. A lone surrogate cannot be encoded. Every other code point was
+    kept in a save and reopen of the whole range (probed on FreeCAD 1.1.4).
+    """
+    code = ord(character)
+    return (
+        (code < 0x20 and character not in "\t\n\r")
+        or 0x7F <= code <= 0x84
+        or 0x86 <= code <= 0x9F
+        or 0xD800 <= code <= 0xDFFF
+        or 0xFDD0 <= code <= 0xFDEF
+        or code & 0xFFFE == 0xFFFE
+    )
+
+
+class ParameterRefusal(CodedValidationError):
+    """A refused ``feature_parameters_define`` request, carrying its ``detail.code`` (AD-17)."""
+
+
+def _storable_text(text: str, what: str) -> str:
+    """Return ``text`` after checking FreeCAD keeps it unchanged.
+
+    :raises ParameterRefusal: ``parameters.invalid_string`` when it holds a character FreeCAD
+        cuts or rewrites.
+    """
+    for index, character in enumerate(text):
+        if _unstorable(character):
+            raise ParameterRefusal(
+                "parameters.invalid_string",
+                f"{what} holds U+{ord(character):04X} at index {index}, a character FreeCAD "
+                "cuts or changes when it stores the string",
+            )
+    return text
+
+
+def _parameter_spec(
+    raw: object, index: int, builtin: frozenset[str], attributes: frozenset[str]
+) -> dict:
+    """Return one validated parameter as ``{name, type, value, group, description}``.
+
+    ``value`` is what the property takes: a float in mm or degrees for ``length`` and ``angle``.
+
+    :raises ParameterRefusal: the name is a lexer unit or constant, or a name a VarSet or an
+        expression already uses.
+    :raises ValidationError: any other malformed field.
+    """
+    where = f"parameters[{index}]"
+    if not isinstance(raw, dict):
+        raise ValidationError(f"{where} must be an object, got {raw!r}")
+    name, kind, value = raw.get("name"), raw.get("type"), raw.get("value")
+    if not isinstance(name, str) or not _OBJECT_NAME.fullmatch(name):
+        raise ValidationError(
+            f"{where}.name {name!r} must start with a letter or underscore and hold only ASCII "
+            "letters, digits and underscores"
+        )
+    if name in _EXPRESSION_RESERVED_NAMES:
+        raise ParameterRefusal(
+            "parameters.unit_symbol_name",
+            f"{where}.name {name!r} is a unit or constant to FreeCAD's expression parser, so any "
+            "expression that reads it fails to parse; choose another name, for example "
+            f"{name}_value",
+        )
+    if (
+        name in builtin
+        or name in attributes
+        or name in _EXPRESSION_PSEUDO_PROPERTIES
+        or name in _PROJECT_READ_NAMES
+    ):
+        raise ParameterRefusal(
+            "parameters.reserved_name",
+            f"{where}.name {name!r} is a name a VarSet or an expression already uses",
+        )
+    if kind not in PARAMETER_PROPERTY_TYPES:
+        raise ValidationError(
+            f"{where}.type must be one of {sorted(PARAMETER_PROPERTY_TYPES)}, got {kind!r}"
+        )
+    group, description = raw.get("group"), raw.get("description")
+    if group is not None and (not isinstance(group, str) or not group):
+        raise ValidationError(f"{where}.group must be a non-empty string, got {group!r}")
+    if description is not None and not isinstance(description, str):
+        raise ValidationError(f"{where}.description must be a string, got {description!r}")
+    for text, field in ((group, "group"), (description, "description")):
+        if text is not None:
+            _storable_text(text, f"{where}.{field}")
+    try:
+        parsed = _parameter_write_value(kind, value, f"{where}.value")
+    except OverflowError:
+        raise ValidationError(f"{where}.value is too large to be a number") from None
+    return {
+        "name": name,
+        "type": kind,
+        "value": parsed,
+        "group": group,
+        "description": description,
+    }
+
+
+def _parameter_write_value(kind: str, value: object, what: str) -> object:
+    """Return ``value`` as the Python value the ``kind`` property takes.
+
+    A ``length`` or ``angle`` is a float in mm or degrees, from a ``{value, unit}`` quantity.
+
+    :raises ValidationError: the value does not match ``kind``.
+    """
+    if kind == "length":
+        millimetres = _length_mm(value, what)
+        if millimetres < 0:
+            raise ValidationError(f"{what} must not be negative, got {millimetres} mm")
+        return millimetres
+    if kind == "angle":
+        degrees = _angle_degrees(value, what)
+        if abs(degrees) > _ANGLE_LIMIT_DEGREES:
+            raise ValidationError(
+                f"{what} must be within +-{_ANGLE_LIMIT_DEGREES:g} deg, got {degrees} deg"
+            )
+        return degrees
+    if kind == "float":
+        if not _is_number(value) or not math.isfinite(float(value)):
+            raise ValidationError(f"{what} must be a finite number, got {value!r}")
+        return float(value)
+    if kind == "integer":
+        if (
+            not isinstance(value, int)
+            or isinstance(value, bool)
+            or abs(value) > _MAX_INTEGER_PARAMETER
+        ):
+            raise ValidationError(
+                f"{what} must be an integer within +-{_MAX_INTEGER_PARAMETER}, got {value!r}"
+            )
+        return value
+    if kind == "bool":
+        if not isinstance(value, bool):
+            raise ValidationError(f"{what} must be true or false, got {value!r}")
+        return value
+    if not isinstance(value, str):
+        raise ValidationError(f"{what} must be a string, got {value!r}")
+    return _storable_text(value, what)
+
+
+def _parameter_specs(parameters: object) -> list[dict]:
+    """Return every parameter of the request, validated, in request order.
+
+    :raises ParameterRefusal: a name appears twice.
+    :raises ValidationError: the list is empty or too long, or an item is malformed.
+    """
+    if not isinstance(parameters, list) or not 1 <= len(parameters) <= _MAX_PARAMETERS:
+        raise ValidationError(f"'parameters' must be a list of 1 to {_MAX_PARAMETERS} items")
+    builtin = shim.varset_builtin_properties()
+    if not builtin:
+        raise ValidationError("the built-in properties of App::VarSet could not be read")
+    attributes = shim.varset_attribute_names()
+    specs = [
+        _parameter_spec(raw, index, builtin, attributes) for index, raw in enumerate(parameters)
+    ]
+    names = [spec["name"] for spec in specs]
+    for name in names:
+        if names.count(name) > 1:
+            raise ParameterRefusal(
+                "parameters.duplicate_name", f"parameter {name!r} appears more than once"
+            )
+    return specs
+
+
+def _precheck_parameters(document: object, varset: object, specs: list[dict]) -> None:
+    """Refuse a request the document cannot take, before the bracket opens.
+
+    :raises ParameterRefusal: ``varset`` names another kind of object, an existing property has
+        a different type than the request, or an updated property is bound by an expression.
+    :raises ValidationError: ``varset`` is not a usable object name, or an updated property is
+        read-only.
+    """
+    if not isinstance(varset, str) or not _OBJECT_NAME.fullmatch(varset):
+        raise ValidationError(
+            f"varset {varset!r} must start with a letter or underscore and hold only ASCII "
+            "letters, digits and underscores"
+        )
+    if varset in _EXPRESSION_RESERVED_NAMES:
+        raise ParameterRefusal(
+            "parameters.unit_symbol_name",
+            f"varset {varset!r} is a unit or constant to FreeCAD's expression parser, so no "
+            f"expression could name it; choose another name, for example {varset}_params",
+        )
+    target = document.getObject(varset)
+    if target is None:
+        return
+    if target.TypeId != _VARSET_TYPE:
+        raise ParameterRefusal(
+            "parameters.not_a_varset", f"{varset} is a {target.TypeId}, not an {_VARSET_TYPE}"
+        )
+    bound = {path for path, _ in target.ExpressionEngine}
+    for spec in specs:
+        name = spec["name"]
+        if name not in target.PropertiesList:
+            continue
+        existing = target.getTypeIdOfProperty(name)
+        wanted = PARAMETER_PROPERTY_TYPES[spec["type"]]
+        if existing != wanted:
+            raise ParameterRefusal(
+                "parameters.type_conflict",
+                f"{varset}.{name} is a {existing}; a {spec['type']} parameter is a {wanted}",
+            )
+        for given, current, field in (
+            (spec["group"], target.getGroupOfProperty(name), "group"),
+            (spec["description"], target.getDocumentationOfProperty(name), "description"),
+        ):
+            if given is not None and given != current:
+                raise ParameterRefusal(
+                    "parameters.metadata_immutable",
+                    f"{varset}.{name} exists with {field} {current!r}; FreeCAD does not undo a "
+                    f"{field} change, so it is set only when the parameter is created",
+                )
+        if name in bound:
+            raise ParameterRefusal(
+                "parameters.bound_by_expression",
+                f"{varset}.{name} is bound by an expression, which the next recompute would "
+                "apply over the new value; clear the binding first",
+            )
+        if "ReadOnly" in target.getPropertyStatus(name):
+            raise ValidationError(f"{varset}.{name} is read-only")
+
+
+def _holds_value(target: object, spec: dict) -> bool:
+    """Whether ``target`` already has the property with exactly the requested value."""
+    name = spec["name"]
+    if name not in target.PropertiesList:
+        return False
+    current = getattr(target, name)
+    if spec["type"] == "length":
+        return current.getValueAs("mm") == spec["value"]
+    if spec["type"] == "angle":
+        return current.getValueAs("deg") == spec["value"]
+    return current == spec["value"]
+
+
+def _write_parameter(target: object, spec: dict) -> str:
+    """Add or update one parameter on ``target``; return ``added``, ``updated`` or ``unchanged``.
+
+    A property already holding the value is not written: FreeCAD records no undo step for some
+    same-value writes (a string), and a call that wrote only those would leave ``document_undo``
+    reverting the step before it. Group and description are set when the property is created and
+    never after, because FreeCAD does not undo them.
+    """
+    name = spec["name"]
+    if name not in target.PropertiesList:
+        target.addProperty(
+            PARAMETER_PROPERTY_TYPES[spec["type"]],
+            name,
+            spec["group"] or _DEFAULT_PARAMETER_GROUP,
+            spec["description"] or "",
+        )
+        setattr(target, name, spec["value"])
+        return "added"
+    if _holds_value(target, spec):
+        return "unchanged"
+    setattr(target, name, spec["value"])
+    return "updated"
+
+
+# Property types whose repr carries a memory address or an object handle, so two readings of the
+# same value differ and a snapshot restore would never compare equal.
+_UNSTABLE_REPR_TYPES = ("App::PropertyPythonObject", "App::PropertyLink", "App::PropertyXLink")
+
+
+def _varset_state(varset: str) -> Callable[[object], object]:
+    """Return a reader of ``varset``'s full property state, for the rollback proof.
+
+    The state is ``None`` while the object does not exist, else every property's type, group,
+    documentation, value and bound expression. The shape fingerprint holds none of it.
+    """
+
+    def read(document: object) -> object:
+        target = document.getObject(varset)
+        if target is None:
+            return None
+        expressions = dict(target.ExpressionEngine)
+        state = {}
+        for prop in sorted(target.PropertiesList):
+            type_id = target.getTypeIdOfProperty(prop)
+            try:
+                # Such a property has no stable repr and this tool never writes one, so only
+                # its presence and type are compared.
+                unstable = type_id.startswith(_UNSTABLE_REPR_TYPES)
+                value = "<skipped>" if unstable else repr(getattr(target, prop))
+            except Exception:  # noqa: BLE001 - an unreadable value still differs from a readable one
+                value = "<unreadable>"
+            state[prop] = (
+                type_id,
+                target.getGroupOfProperty(prop),
+                target.getDocumentationOfProperty(prop),
+                value,
+                expressions.get(prop),
+            )
+        return (target.TypeId, state)
+
+    return read
+
+
+def _unchanged_envelope(varset: str, names: list[str]) -> ResultEnvelope:
+    """The ``OK`` result of a call that changes nothing: no transaction, no mutation block."""
+    content = {
+        "varset": varset,
+        "added": [],
+        "updated": [],
+        "unchanged": names,
+        "undo_steps": 0,
+    }
+    return {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": None,
+        "structured_content": content,
+        "text": f"{varset}: {len(names)} parameter(s) already hold the values; no undo "
+        "step recorded, so document_undo would revert an earlier step.",
+    }
+
+
+def feature_parameters_define(
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    varset: str | None = None,
+    parameters: list | None = None,
+    confirm: dict | None = None,
+    audit_sink: object = None,
+) -> ResultEnvelope:
+    """Create the VarSet ``varset`` when missing, then add or update typed parameters on it.
+
+    Each parameter is ``{name, type, value, group?, description?}``; a ``length`` or ``angle``
+    value is a ``{value, unit}`` quantity in ``mm`` or ``deg``. A name the VarSet lacks is added;
+    one it holds with the same type is updated. ``added``, ``updated`` and ``unchanged`` (already
+    holding the value, not written) name them in request order and appear on an ``OK`` result
+    only, with ``undo_steps``: 1 when the call recorded an undo step, 0 when it changed nothing.
+    A call that changes nothing opens no transaction and has no ``mutation`` block, so
+    ``document_undo`` after it would revert an earlier step.
+
+    The rollback proof also reads the VarSet's properties back against their pre-mutation state,
+    because the shape fingerprint cannot see a VarSet change.
+
+    :raises ValidationError: the build has no ``App::VarSet``, or a field is malformed.
+    :raises ParameterRefusal: a ``ValidationError`` whose ``code`` is one of
+        ``parameters.unit_symbol_name``, ``parameters.reserved_name``,
+        ``parameters.duplicate_name``, ``parameters.not_a_varset``, ``parameters.type_conflict``
+        ``parameters.bound_by_expression``, ``parameters.metadata_immutable`` and
+        ``parameters.invalid_string``; the dispatcher puts it in ``detail.code``.
+    """
+    if not shim.varset_available():
+        raise ValidationError("App::VarSet is unavailable on this FreeCAD build")
+    outcome: dict[str, list[str]] = {"added": [], "updated": [], "unchanged": []}
+
+    def changes_nothing(_handle: str, document: object) -> bool:
+        specs = _parameter_specs(parameters)
+        _precheck_parameters(document, varset, specs)
+        target = document.getObject(varset)
+        return target is not None and all(_holds_value(target, spec) for spec in specs)
+
+    if registry.with_document(doc, changes_nothing):
+        return _unchanged_envelope(varset, [p["name"] for p in parameters])
+
+    def precheck(document: object) -> None:
+        _precheck_parameters(document, varset, _parameter_specs(parameters))
+
+    def op(document: object) -> list[str]:
+        target = document.getObject(varset)
+        if target is None:
+            target = document.addObject(_VARSET_TYPE, varset)
+            if target.Name != varset:
+                raise ValidationError(f"{varset} is not a usable FreeCAD object name")
+            target.Label = varset
+        for spec in _parameter_specs(parameters):
+            outcome[_write_parameter(target, spec)].append(spec["name"])
+        return [target.Name]
+
+    def report(document: object) -> dict:
+        # Undo is switched on inside the bracket when it can be; a document that stays at
+        # UndoMode 0 commits no step.
+        recorded = bool(outcome["added"] or outcome["updated"]) and bool(document.UndoMode)
+        steps = 1 if recorded else 0
+        return {"varset": varset, **outcome, "undo_steps": steps}
+
+    params = {"doc": doc, "varset": varset, "parameters": parameters, "confirm": confirm}
+    return _feature_mutation(
+        registry,
+        doc,
+        varset,
+        f"define parameters on {varset}",
+        "feature_parameters_define",
+        params,
+        op,
+        audit_sink,
+        precheck,
+        report,
+        _varset_state(varset),
+    )
+
+
+class ExpressionRefusal(CodedValidationError):
+    """A refused ``feature_set_expression`` request, carrying its ``detail.code`` (AD-17)."""
+
+
+_MAX_EXPRESSIONS = 100
+
+# FreeCAD ends the whole process (exit 139) while it parses an expression of chained binary
+# operators once it has enough terms. Probed on 1.1.4 with `evalExpression` on `1*1*...`: 500
+# terms pass and 600 (1,200 characters) crash; `1&&` fails at 550 terms (1,650 characters), `1+`
+# at 900; `1^` x 900 and `sin(` nested 300 deep (1,200 characters) pass, and parenthesis and
+# unary-minus nesting is refused by the parser at any depth. 400 characters hold at most 200
+# two-character terms, 2.7 times below the lowest crash.
+_MAX_EXPRESSION_LENGTH = 400
+
+_EXPRESSION_PATH = re.compile(r"\.?[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*|\[[0-9]+\])*")
+_EXPRESSION_ITEM_KEYS = frozenset({"object", "path", "expression"})
+
+# A spreadsheet range such as ``sum(A1:ZZ16384)``, with or without a sheet prefix on the second
+# cell. A range is evaluated cell by cell while the call holds the interpreter lock: one 31
+# character expression over ``C1:ZZ16384`` held a call for 1,087 s on 1.1.4, so the character
+# limit bounds parsing and this refusal bounds evaluation. A ternary that compares two cell
+# references also matches; none is worth the cost of a range.
+_CELL_RANGE = re.compile(
+    r"\$?[A-Za-z]{1,3}\$?[0-9]+\s*:\s*"
+    r"(?:(?:[A-Za-z_][A-Za-z0-9_]*|<<[^>]*>>)(?:#(?:[A-Za-z_][A-Za-z0-9_]*|<<[^>]*>>))?\.)?"
+    r"\$?[A-Za-z]{1,3}\$?[0-9]+"
+)
+
+_SHEET_TYPE = "Spreadsheet::Sheet"
+_BINDING_RECORD = "ExpressionEngine[{}]"
+
+# Each call names its transaction with the next number, so ``UndoNames`` shows whether the call
+# recorded a step: the document's step count stops growing at 20 steps and cannot tell.
+_EXPRESSION_CALLS = itertools.count(1)
+
+
+def _canonical_path(path: str) -> str:
+    """Return ``path`` without its leading dot; FreeCAD stores ``Placement.Base.x`` with one."""
+    return path.lstrip(".")
+
+
+def _expression_spec(raw: object, index: int) -> dict:
+    """Return one validated request item as ``{object, path, expression}``.
+
+    :raises ExpressionRefusal: the path or the expression text is not one FreeCAD stores as given.
+    :raises ValidationError: the item is not an object with exactly those three keys.
+    """
+    where = f"expressions[{index}]"
+    if not isinstance(raw, dict) or set(raw) != _EXPRESSION_ITEM_KEYS:
+        raise ValidationError(f"{where} must be an object with exactly object, path and expression")
+    name, path, text = raw["object"], raw["path"], raw["expression"]
+    if not isinstance(name, str) or not name:
+        raise ValidationError(f"{where}.object must be an object Name, got {name!r}")
+    if not isinstance(path, str) or not _EXPRESSION_PATH.fullmatch(path):
+        raise ExpressionRefusal(
+            "expression.invalid_path",
+            f"{where}.path {path!r} must be a property path such as Length, "
+            ".Constraints.width or .AttachmentOffset.Base.z",
+        )
+    if text is not None:
+        _check_expression_text(text, where)
+    return {"object": name, "path": path, "expression": text}
+
+
+def _check_expression_text(text: object, where: str) -> None:
+    """Refuse an expression text FreeCAD would cut, rewrite or crash on.
+
+    :raises ExpressionRefusal: ``expression.invalid_text``.
+    """
+    if not isinstance(text, str) or not text.strip():
+        raise ExpressionRefusal(
+            "expression.invalid_text",
+            f"{where}.expression must be a non-empty string, or null to clear the binding",
+        )
+    if len(text) > _MAX_EXPRESSION_LENGTH:
+        raise ExpressionRefusal(
+            "expression.invalid_text",
+            f"{where}.expression has {len(text)} characters; the limit is {_MAX_EXPRESSION_LENGTH} "
+            "because FreeCAD ends the process on a very long chained expression",
+        )
+    for position, character in enumerate(text):
+        if _unstorable(character):
+            raise ExpressionRefusal(
+                "expression.invalid_text",
+                f"{where}.expression holds U+{ord(character):04X} at index {position}, a "
+                "character FreeCAD cuts or changes when it stores the expression",
+            )
+    if _CELL_RANGE.search(text):
+        raise ExpressionRefusal(
+            "expression.range_unsupported",
+            f"{where}.expression holds a cell range such as A1:B2, which FreeCAD evaluates cell "
+            "by cell and can hold the call for minutes; read single cells",
+        )
+
+
+def _expression_specs(expressions: object) -> list[dict]:
+    """Return every request item, validated, in request order.
+
+    :raises ExpressionRefusal: one object and path appear twice.
+    :raises ValidationError: the list is empty or too long, or an item is malformed.
+    """
+    if not isinstance(expressions, list) or not 1 <= len(expressions) <= _MAX_EXPRESSIONS:
+        raise ValidationError(f"'expressions' must be a list of 1 to {_MAX_EXPRESSIONS} items")
+    specs = [_expression_spec(raw, index) for index, raw in enumerate(expressions)]
+    seen: set[tuple[str, str]] = set()
+    for spec in specs:
+        key = (spec["object"], _canonical_path(spec["path"]))
+        if key in seen:
+            raise ExpressionRefusal(
+                "expression.duplicate_path", f"{key[0]}.{key[1]} appears more than once"
+            )
+        seen.add(key)
+    return specs
+
+
+def _is_quantity(value: object) -> bool:
+    return hasattr(value, "getValueAs")
+
+
+def _is_numeric(value: object) -> bool:
+    return _is_quantity(value) or isinstance(value, (bool, int, float))
+
+
+def _magnitude(value: object) -> float:
+    """Return a number or a quantity as a float in FreeCAD's internal unit."""
+    return value.Value if _is_quantity(value) else float(value)
+
+
+_SHAPE_PROPERTY = "Part::PropertyPartShape"
+_ANGLE_PROPERTY = "App::PropertyAngle"
+_LENGTH_PROPERTY = "App::PropertyLength"
+
+
+def _range_problem(
+    obj: object, prop: str, candidate: object, current: object
+) -> tuple[str, str] | None:
+    """Return ``(code, message)`` when FreeCAD would keep a value other than ``candidate``.
+
+    FreeCAD applies an expression result with ``setPathValue``, which skips the range a property
+    enforces on a plain assignment, so a length below 0 and an angle beyond a full turn are stored
+    as given (a pad of -5 mm flips below its sketch, a revolution of 400 deg sweeps 40 deg). A
+    property type with its own range clamps a plain assignment, so assigning the value to a scratch
+    object of the same type shows what the property would keep; a type the scratch document cannot
+    create is not probed.
+    """
+    number = _magnitude(candidate)
+    type_id = obj.getTypeIdOfProperty(prop)
+    if (type_id == _LENGTH_PROPERTY and number < 0) or (
+        type_id == _ANGLE_PROPERTY and abs(number) > _ANGLE_LIMIT_DEGREES
+    ):
+        return "expression.value_out_of_range", f"{number} is outside what a {type_id} accepts"
+    if isinstance(current, bool):
+        return None
+    expected = round(number) if type(current) is int else number
+    assigned = candidate if _is_quantity(candidate) and type(current) is not int else expected
+
+    def assign(scratch: object) -> object:
+        if prop not in scratch.PropertiesList:
+            scratch.addProperty(type_id, prop, "", "")
+        setattr(scratch, prop, assigned)
+        return getattr(scratch, prop)
+
+    try:
+        kept = shim.probe_object(obj.TypeId, assign)
+    except Exception:  # noqa: BLE001 - a type the scratch document cannot hold is left unprobed
+        return None
+    if not math.isclose(_magnitude(kept), expected, rel_tol=1e-9, abs_tol=1e-9):
+        return (
+            "expression.value_out_of_range",
+            f"the property keeps {kept} when given {number}, so FreeCAD would not store the value",
+        )
+    return None
+
+
+def _path_value(obj: object, path: str) -> object:
+    """Read ``path`` on ``obj`` through FreeCAD's own path resolution, in the object's context."""
+    return obj.evalExpression("." + _canonical_path(path))
+
+
+def _value_problem(candidate: object, current: object) -> tuple[str, str] | None:
+    """Return ``(code, message)`` when ``candidate`` is a value FreeCAD would store wrongly.
+
+    FreeCAD stores an infinite value, a quantity of another dimension and a fraction on an integer
+    property without an error (probed on 1.1.4: ``1mm/0`` reads ``inf mm``, ``5 deg`` bound to a
+    length reads ``5 deg``, ``5 mm`` on a float reads ``5.0``, ``2.5`` on an integer reads ``3``).
+    A dimensionless quantity or a plain number takes the property's unit.
+    """
+    number = _magnitude(candidate)
+    if not math.isfinite(number):
+        return "expression.not_finite", f"the expression evaluates to {number}"
+    dimensioned = _is_quantity(candidate) and any(candidate.Unit.Signature)
+    if dimensioned and (not _is_quantity(current) or candidate.Unit != current.Unit):
+        return (
+            "expression.unit_mismatch",
+            f"the expression evaluates to {candidate}, which does not match the dimension of "
+            f"the property's value {current}",
+        )
+    if type(current) is int and number != round(number):
+        return (
+            "expression.not_integer",
+            f"the expression evaluates to {number}, which an integer property would round",
+        )
+    return None
+
+
+def _stored_expressions(obj: object) -> dict[str, str]:
+    """Return the object's bindings by canonical path."""
+    return {_canonical_path(path): text for path, text in obj.ExpressionEngine}
+
+
+def _check_expression_target(document: object, spec: dict, where: str) -> None:
+    """Check one item against the document without writing.
+
+    A clear is checked for its object only, so a binding on a path that no longer resolves can
+    still be removed.
+
+    :raises ExpressionRefusal: the path does not resolve to a writable number, or the expression
+        is not a number FreeCAD stores as written.
+    :raises ValidationError: the object is unknown.
+    """
+    obj = _resolve_object(document, spec["object"], f"{where}.object")
+    if spec["expression"] is None:
+        return
+    path = spec["path"]
+    if _canonical_path(path).endswith(".Value"):
+        raise ExpressionRefusal(
+            "expression.invalid_path",
+            f"{where}: bind the property itself, not its .Value: FreeCAD would keep a second "
+            "binding that its own property ignores",
+        )
+    if obj.TypeId == _SHEET_TYPE:
+        raise ExpressionRefusal(
+            "expression.unsupported_property",
+            f"{where}: {obj.Name} is a spreadsheet; FreeCAD ignores a binding on a cell and drops "
+            "it when the document is saved, so set the cell contents instead",
+        )
+    root = _property_root(path)
+    try:
+        if root not in obj.PropertiesList:
+            raise LookupError(f"{obj.Name} has no property {root!r}")
+        current = _path_value(obj, path)
+    except Exception as exc:  # noqa: BLE001 - FreeCAD raises several types for an unresolved path
+        raise ExpressionRefusal(
+            "expression.invalid_path", f"{where}: {obj.Name} path {path!r} does not resolve: {exc}"
+        ) from None
+    if not _is_numeric(current):
+        raise ExpressionRefusal(
+            "expression.unsupported_property",
+            f"{where}: {obj.Name} {path!r} holds a {type(current).__name__}, not a number, "
+            "quantity or bool; bind a numeric leaf such as .Placement.Base.x",
+        )
+    status = obj.getPropertyStatus(root)
+    if "ReadOnly" in status:
+        raise ExpressionRefusal(
+            "expression.unsupported_property", f"{where}: {obj.Name} {root!r} is read-only"
+        )
+    if root == "AttachmentOffset" and "Hidden" in status:
+        raise ExpressionRefusal(
+            "expression.unsupported_property",
+            f"{where}: {obj.Name} is not attached, so FreeCAD hides and ignores its "
+            "AttachmentOffset (AttachExtension.cpp); attach it first",
+        )
+    if obj.getTypeIdOfProperty(root) == _SHAPE_PROPERTY:
+        raise ExpressionRefusal(
+            "expression.unsupported_property",
+            f"{where}: {obj.Name} {root!r} is a shape; bind a property that drives it",
+        )
+    try:
+        candidate = obj.evalExpression(spec["expression"])
+    except Exception as exc:  # noqa: BLE001 - parse errors and unresolved references differ by type
+        raise ExpressionRefusal(
+            "expression.invalid_expression", f"{where}: {type(exc).__name__}: {exc}"
+        ) from None
+    if not _is_numeric(candidate):
+        raise ExpressionRefusal(
+            "expression.invalid_expression",
+            f"{where}: the expression evaluates to a {type(candidate).__name__}, not a number",
+        )
+    problem = _value_problem(candidate, current) or (
+        _range_problem(obj, root, candidate, current) if _canonical_path(path) == root else None
+    )
+    if problem is not None:
+        raise ExpressionRefusal(problem[0], f"{where}: {obj.Name} {path!r}: {problem[1]}")
+
+
+def _property_root(path: str) -> str:
+    """Return the property a path starts at: ``Constraints`` for ``.Constraints.width``."""
+    return re.split(r"[.\[]", _canonical_path(path))[0]
+
+
+def _changes_nothing(document: object, spec: dict) -> bool:
+    """Whether the item surely leaves its object as it is, judged before anything is written.
+
+    A bind of the stored text changes nothing. A clear changes nothing when no binding starts at
+    the same property: FreeCAD stores some paths under another spelling (``Constraints[2]`` as
+    ``.Constraints.<name>``), so a clear with a binding nearby is left to the bracket, which
+    compares the bindings before and after the write.
+    """
+    stored = _stored_expressions(document.getObject(spec["object"]))
+    if spec["expression"] is not None:
+        return stored.get(_canonical_path(spec["path"])) == spec["expression"]
+    return all(_property_root(key) != _property_root(spec["path"]) for key in stored)
+
+
+def _expression_state(document: object) -> dict[str, tuple]:
+    """Return every object's bindings, for the rollback proof: the shape fingerprint holds none."""
+    return {obj.Name: tuple(sorted(obj.ExpressionEngine)) for obj in document.Objects}
+
+
+def _value_row(document: object, spec: dict) -> dict:
+    """Return ``{object, path, value}``, the value read now; null with a ``reason`` if unread."""
+    row = {"object": spec["object"], "path": spec["path"]}
+    try:
+        number, unit, reason = scalar_reading(
+            _path_value(document.getObject(spec["object"]), spec["path"])
+        )
+    except Exception as exc:  # noqa: BLE001 - an unreadable value is reported, not raised
+        number, unit, reason = None, None, f"{type(exc).__name__}: {exc}"
+    row["value"] = {"value": number, "unit": unit} if unit and number is not None else number
+    if reason is not None:
+        row["reason"] = reason
+    return row
+
+
+def _binding_problems(document: object) -> dict[tuple[str, str], tuple[str, str]]:
+    """Return ``{(object, path): (code, message)}`` for each binding whose property reads wrongly.
+
+    A binding reads wrongly when its value is not finite, or differs from what its expression
+    evaluates to: FreeCAD stored another value (an integer past its range, a clamped length). A
+    bool is left out, because FreeCAD converts a number to a bool by design, and so is a binding
+    that cannot be evaluated, which the recompute already fails.
+    """
+    problems: dict[tuple[str, str], tuple[str, str]] = {}
+    for obj in document.Objects:
+        for key, text in list(getattr(obj, "ExpressionEngine", None) or []):
+            if _CELL_RANGE.search(text):
+                # Evaluating a range can hold the call for minutes, and a binding made outside
+                # this tool may hold one.
+                continue
+            try:
+                value = _path_value(obj, key)
+                expected = obj.evalExpression(text)
+            except Exception:  # noqa: BLE001 - an unevaluable binding is the recompute's to fail
+                continue
+            if isinstance(value, bool) or not (_is_numeric(value) and _is_numeric(expected)):
+                continue
+            reading = _magnitude(value)
+            where = f"{obj.Name} {key}"
+            if not math.isfinite(reading):
+                problems[obj.Name, key] = ("expression.not_finite", f"{where} reads {value}")
+            elif not math.isclose(reading, _magnitude(expected), rel_tol=1e-9, abs_tol=1e-9):
+                problems[obj.Name, key] = (
+                    "expression.value_out_of_range",
+                    f"{where} reads {value} but {text!r} evaluates to {expected}; FreeCAD "
+                    "stored another value",
+                )
+    return problems
+
+
+def _unchanged_expression_envelope(rows: list[dict]) -> ResultEnvelope:
+    """The ``OK`` result of a call that changes nothing: no transaction, no mutation block."""
+    content = {"bound": [], "cleared": [], "unchanged": rows, "undo_steps": 0}
+    return {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": None,
+        "structured_content": content,
+        "text": f"{len(rows)} expression(s) already as requested; no undo step recorded, "
+        "so document_undo would revert an earlier step.",
+    }
+
+
+def feature_set_expression(
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    expressions: list | None = None,
+    confirm: dict | None = None,
+    audit_sink: object = None,
+) -> ResultEnvelope:
+    """Bind or clear expressions on property paths, all in one transaction.
+
+    Each item is ``{object, path, expression}``: ``path`` names a numeric property or a numeric
+    leaf of one (``Length``, ``.Constraints.width``, ``.AttachmentOffset.Base.z``) and
+    ``expression`` is the text to bind, or ``null`` to clear the binding. ``bound``, ``cleared``
+    and ``unchanged`` list ``{object, path, value}`` in request order with the value read after
+    the recompute; ``undo_steps`` is the number of undo steps the call added. A call that changes
+    nothing opens no transaction and has no ``mutation`` block, so ``document_undo`` after it
+    would revert an earlier step.
+
+    A cycle that FreeCAD refuses at ``setExpression``, a binding that fails the recompute, and two
+    items that address the same stored binding abort the call; the rollback proof reads every
+    object's bindings back. An item whose text FreeCAD stores as the expression already bound
+    (``a*2`` for ``a * 2``) is ``unchanged``, found after the transaction opened.
+
+    :raises ValidationError: an unknown object, or a malformed list or item.
+    :raises ExpressionRefusal: a ``ValidationError`` whose ``code`` is one of
+        ``expression.invalid_path``, ``expression.unsupported_property``,
+        ``expression.invalid_text``, ``expression.invalid_expression``,
+        ``expression.not_finite``, ``expression.unit_mismatch``, ``expression.not_integer``,
+        ``expression.range_unsupported``, ``expression.value_out_of_range`` and
+        ``expression.duplicate_path``; the dispatcher puts it in ``detail.code``.
+    """
+
+    def check(document: object) -> list[dict]:
+        specs = _expression_specs(expressions)
+        for index, spec in enumerate(specs):
+            _check_expression_target(document, spec, f"expressions[{index}]")
+        return specs
+
+    def rows_when_nothing_changes(_handle: str, document: object) -> list[dict] | None:
+        specs = check(document)
+        if all(_changes_nothing(document, spec) for spec in specs):
+            return [_value_row(document, spec) for spec in specs]
+        return None
+
+    unchanged_rows = registry.with_document(doc, rows_when_nothing_changes)
+    if unchanged_rows is not None:
+        return _unchanged_expression_envelope(unchanged_rows)
+
+    applied: list[dict] = []
+    removed: set[tuple[str, str]] = set()
+    problems_before: list[dict] = []
+    label = f"set expressions {next(_EXPRESSION_CALLS)}"
+
+    def precheck(document: object) -> None:
+        check(document)
+
+    def op(document: object) -> list[str]:
+        problems_before.append(_binding_problems(document))
+        touched: list[str] = []
+        written: dict[tuple[str, str], int] = {}
+        for index, spec in enumerate(_expression_specs(expressions)):
+            if _changes_nothing(document, spec):
+                continue
+            obj = document.getObject(spec["object"])
+            before = _stored_expressions(obj)
+            engine_paths = {_canonical_path(path): path for path, _ in obj.ExpressionEngine}
+            try:
+                obj.setExpression(_canonical_path(spec["path"]), spec["expression"])
+            except Exception as exc:  # noqa: BLE001 - a cycle is refused here with a RuntimeError
+                message = f"expressions[{index}] {spec['object']} {spec['path']}: {exc}"
+                if "cyclic" in str(exc).lower():
+                    raise transaction.RecomputeFailure("expression.cycle", message) from exc
+                raise RuntimeError(message) from exc
+            after = _stored_expressions(obj)
+            for key in {k for k in before.keys() | after.keys() if before.get(k) != after.get(k)}:
+                if (obj.Name, key) in written:
+                    raise RuntimeError(
+                        f"expressions[{index}] and expressions[{written[obj.Name, key]}] "
+                        f"address the same binding, {obj.Name} {key}"
+                    )
+                written[obj.Name, key] = index
+            if before == after:
+                continue
+            removed.update(
+                (obj.Name, _BINDING_RECORD.format(engine_paths[k]))
+                for k in before.keys() - after.keys()
+            )
+            applied.append(spec)
+            if obj.Name not in touched:
+                touched.append(obj.Name)
+        return touched
+
+    def recompute_check(document: object) -> None:
+        new = {
+            key: problem
+            for key, problem in sorted(_binding_problems(document).items())
+            if problems_before[0].get(key) != problem
+        }
+        if new:
+            code = next(iter(new.values()))[0]
+            raise transaction.RecomputeFailure(
+                code, "; ".join(message for _, message in new.values())
+            )
+
+    def report(document: object) -> dict:
+        content: dict = {"bound": [], "cleared": [], "unchanged": []}
+        for spec in _expression_specs(expressions):
+            if spec not in applied:
+                group = "unchanged"
+            else:
+                group = "bound" if spec["expression"] is not None else "cleared"
+            content[group].append(_value_row(document, spec))
+        # The call recorded a step when its own transaction name heads the undo list. The
+        # document's step count is no measure: it stops growing once the stack holds 20 steps,
+        # and a no-change call on a document with touched objects still commits a step.
+        names = list(document.UndoNames)
+        content["undo_steps"] = 1 if names and names[0] == f"buddy: {label}" else 0
+        return content
+
+    params = {"doc": doc, "expressions": expressions, "confirm": confirm}
+    return _feature_mutation(
+        registry,
+        doc,
+        "",
+        label,
+        "feature_set_expression",
+        params,
+        op,
+        audit_sink,
+        precheck,
+        report,
+        _expression_state,
+        recompute_check=recompute_check,
+        removed_bindings=removed,
+    )
+
+
+# --------------------------------------------------------------------------------------------
+# Object deletion
+# --------------------------------------------------------------------------------------------
+
+
+class ObjectDeleteRefusal(CodedValidationError):
+    """A refused ``document_object_delete`` request, carrying its ``detail.code`` (AD-17)."""
+
+
+def _names(objects: object) -> set[str]:
+    return {obj.Name for obj in objects or ()}
+
+
+def _origin_objects(owner: object) -> list[object]:
+    """Return the origin objects ``owner`` owns: its ``App::Origin`` and that Origin's features.
+
+    A Part::LocalCoordinateSystem carries its axes and planes itself (``OriginFeatures`` with no
+    ``Origin`` link). The ``Origin`` attribute is checked by type: a FEM post function has an
+    ``Origin`` property that is a vector.
+    """
+    origin = getattr(owner, "Origin", None)
+    if getattr(origin, "TypeId", None) == _ORIGIN_TYPE:
+        return [origin, *(origin.OriginFeatures or ())]
+    return list(getattr(owner, "OriginFeatures", None) or ())
+
+
+def _origin_owner(document: object, obj: object) -> object | None:
+    """Return the object that owns the origin object ``obj``; ``None`` when ``obj`` is not one.
+
+    A Body, Part or local coordinate system owns axes, planes and a point. Deleting one of them
+    alone leaves the owner without a plane the sketches attach to.
+    """
+    for candidate in document.Objects:
+        if candidate.TypeId == _ORIGIN_TYPE or candidate.Name == obj.Name:
+            continue
+        if obj.Name in _names(_origin_objects(candidate)):
+            return candidate
+    return None
+
+
+def _owned_by(owner: object) -> list[object]:
+    """Return what deleting ``owner`` takes with it: a Body's group, and its origin objects."""
+    owned = []
+    if owner.TypeId == _BODY_TYPE:
+        owned.extend(owner.Group)
+    owned.extend(_origin_objects(owner))
+    if owner.isDerivedFrom(_LINK_TYPE) and owner.ElementCount:
+        # The GUI delete removes the elements of a link array with it (ViewProviderLink::onDelete).
+        owned.extend(owner.ElementList)
+    return owned
+
+
+def _with_owned(document: object, names: set[str]) -> set[str]:
+    """Return ``names`` plus everything the Bodies and Parts among them own."""
+    expanded = set(names)
+    for name in names:
+        expanded.update(_names(_owned_by(document.getObject(name))))
+    return expanded
+
+
+def _is_member_container(obj: object) -> bool:
+    """Whether ``obj`` only lists members in ``Group``: a Body, Part, group or a subclass of one."""
+    return obj.hasExtension("App::GroupExtension") and not any(
+        obj.isDerivedFrom(type_id) for type_id in _OPERAND_GROUP_TYPES
+    )
+
+
+def _expression_names(obj: object, members: list[object]) -> bool:
+    """Whether an expression on ``obj`` names one of ``members``, by Name or as ``<<Label>>``.
+
+    A Name counts at the start of an identifier path only, so ``VS.Pad2`` (a property of another
+    object) does not name the object ``Pad2``. A match that is not a real reference makes the
+    caller refuse, which is the safe side.
+    """
+    for _path, expression in getattr(obj, "ExpressionEngine", None) or ():
+        text = str(expression)
+        for member in members:
+            by_name = rf"(?<![A-Za-z0-9_.#]){re.escape(member.Name)}(?![A-Za-z0-9_])"
+            if re.search(by_name, text) or f"<<{member.Label}>>" in text:
+                return True
+    return False
+
+
+def _dependents(document: object, delete_set: set[str]) -> list[str]:
+    """Return the objects outside ``delete_set`` whose ``OutList`` holds a member of it.
+
+    A pure container (a Body, Part or group) that holds a member only in its ``Group`` is not a
+    dependent: removing the member leaves the container valid. Any other holder is, including a
+    ``PartDesign::Boolean``, whose ``Group`` is its list of operand Bodies. A container with an
+    expression that names a member is a dependent too, because the expression fails once the
+    member is gone. ``OutList`` includes the objects an expression names, so an object bound to a
+    deleted one is a dependent.
+    """
+    found = []
+    for obj in document.Objects:
+        if obj.Name in delete_set:
+            continue
+        held = _names(obj.OutList) & delete_set
+        if not held:
+            continue
+        only_members = _is_member_container(obj) and held <= _names(obj.Group)
+        if only_members and not _expression_names(obj, [document.getObject(n) for n in held]):
+            continue
+        found.append(obj.Name)
+    return found
+
+
+def _delete_plan(
+    document: object, objects: object, with_dependents: bool
+) -> tuple[list[str], list[str]]:
+    """Return ``(names to delete, names deleted only as dependents)``, both in document order.
+
+    :raises ValidationError: ``objects`` is empty or malformed, or names an unknown object.
+    :raises ObjectDeleteRefusal: ``delete.origin_object`` for an Origin or Origin feature whose
+        owner is not deleted too; ``delete.has_dependents`` when objects outside the set depend on
+        it and ``with_dependents`` is false.
+    """
+    if not isinstance(objects, list) or not objects:
+        raise ValidationError("objects must be a non-empty list of object names")
+    requested = {_resolve_object(document, name, "objects").Name for name in objects}
+    for name in sorted(requested):
+        owner = _origin_owner(document, document.getObject(name))
+        if owner is not None and owner.Name not in requested:
+            raise ObjectDeleteRefusal(
+                "delete.origin_object",
+                f"{name} belongs to the Origin of {owner.Name}; delete {owner.Name} to remove it",
+            )
+    base_set = _with_owned(document, requested)
+    delete_set = set(base_set)
+    dependents = _dependents(document, delete_set)
+    if dependents and not with_dependents:
+        raise ObjectDeleteRefusal(
+            "delete.has_dependents",
+            f"objects that depend on the delete set: {', '.join(dependents)}; "
+            "pass with_dependents true to delete them too",
+        )
+    while dependents:
+        delete_set = _with_owned(document, delete_set | set(dependents))
+        dependents = _dependents(document, delete_set)
+    ordered = [obj.Name for obj in document.Objects if obj.Name in delete_set]
+    return ordered, [name for name in ordered if name not in base_set]
+
+
+def _owning_body(document: object, obj: object) -> object | None:
+    """Return the Body whose ``Group`` holds ``obj``, or ``None``."""
+    for candidate in document.Objects:
+        if candidate.TypeId == _BODY_TYPE and obj.Name in _names(candidate.Group):
+            return candidate
+    return None
+
+
+def _object_state(document: object) -> tuple:
+    """Read the object set the shape fingerprint cannot see, for the rollback proof.
+
+    Per object: name, label, type, the names it depends on, for a Body its ``Tip`` and ``Group``,
+    and ``Visibility``. The dependency names matter: an object that FreeCAD restores without its
+    expression dependency has the same name and label as before.
+    """
+    state = []
+    for obj in document.Objects:
+        body_state = ()
+        if obj.TypeId == _BODY_TYPE:
+            tip = obj.Tip.Name if obj.Tip is not None else None
+            body_state = (tip, tuple(member.Name for member in obj.Group))
+        state.append(
+            (
+                obj.Name,
+                obj.Label,
+                obj.TypeId,
+                tuple(sorted(_names(obj.OutList))),
+                body_state,
+                getattr(obj, "Visibility", None),
+            )
+        )
+    return tuple(sorted(state))
+
+
+def document_object_delete(
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    objects: list | None = None,
+    with_dependents: bool = False,
+    confirm: dict | None = None,
+    audit_sink: object = None,
+) -> ResultEnvelope:
+    """Delete objects, and with them what a Body, Part or link array owns, inside the AD-5 bracket.
+
+    A Body takes its ``Group`` members, its Origin and the Origin features with it. A feature of a
+    Body that stays goes through ``Body.removeObject`` first, so ``Tip`` and the next feature's
+    ``BaseFeature`` stay valid. Objects outside the delete set whose ``OutList`` holds a deleted
+    object are dependents: with ``with_dependents`` false any dependent refuses the call, with
+    true the closure of dependents is deleted too. ``deleted`` on an ``OK`` result names every
+    removed object in document order and ``dependents`` the ones removed only for that reason.
+
+    The rollback proof reads the object set back (``_object_state``), because a deleted shape-less
+    object does not change the shape fingerprint.
+
+    :raises ValidationError: ``objects`` is empty or names an unknown object.
+    :raises ObjectDeleteRefusal: ``delete.has_dependents`` or ``delete.origin_object``; the
+        dispatcher puts the code in ``detail.code``.
+    """
+    plan: dict[str, list[str]] = {"deleted": [], "dependents": []}
+    deleted: set[str] = set()
+
+    def precheck(document: object) -> None:
+        plan["deleted"], plan["dependents"] = _delete_plan(document, objects, with_dependents)
+        deleted.update(plan["deleted"])
+
+    def op(document: object) -> list[str]:
+        touched = list(plan["deleted"])
+        for name in reversed(plan["deleted"]):
+            target = document.getObject(name)
+            if target is None:
+                # Removing a Body can remove its Origin and members first; that is the delete
+                # this loop is carrying out, and the survivors check below still runs.
+                continue
+            body = _owning_body(document, target)
+            if body is not None and body.Name not in deleted:
+                previous = getattr(target, "BaseFeature", None)
+                shown = target.Visibility
+                body.removeObject(target)
+                if shown and previous is not None and previous.Name not in deleted:
+                    # PartDesign ViewProvider::onDelete shows the previous feature when the
+                    # deleted one was visible; Document.removeObject alone leaves the Body empty.
+                    previous.Visibility = True
+                    touched.append(previous.Name)
+                if body.Name not in touched:
+                    touched.append(body.Name)
+            document.removeObject(name)
+        survivors = [name for name in plan["deleted"] if document.getObject(name) is not None]
+        if survivors:
+            raise RuntimeError(f"FreeCAD did not delete: {', '.join(survivors)}")
+        return touched
+
+    def report(_document: object) -> dict:
+        return dict(plan)
+
+    params = {
+        "doc": doc,
+        "objects": objects,
+        "with_dependents": with_dependents,
+        "confirm": confirm,
+    }
+    first = objects[0] if isinstance(objects, list) and objects else ""
+    return _feature_mutation(
+        registry,
+        doc,
+        first,
+        f"delete {', '.join(map(str, objects or ()))}",
+        "document_object_delete",
+        params,
+        op,
+        audit_sink,
+        precheck,
+        report,
+        _object_state,
+        deleted,
     )

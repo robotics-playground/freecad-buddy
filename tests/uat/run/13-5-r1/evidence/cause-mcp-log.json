@@ -1,0 +1,173 @@
+[
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:RlJMrELDquSrBVMi52gsYQ",
+   "code": "import Mesh, MeshPart\nfs = []\nfor n in ('BoxA', 'Cyl', 'Sph'):\n    f = doc.addObject('Mesh::Feature', 'Raw' + n)\n    f.Mesh = MeshPart.meshFromShape(Shape=doc.getObject(n).Shape, LinearDeflection=0.1, AngularDeflection=0.5, Relative=False)\n    fs.append(f)\nMesh.export(fs, r'/repo/tests/uat/run/13-5-r1/evidence/cause-raw-three.3mf')\nMesh.export(fs[:1], r'/repo/tests/uat/run/13-5-r1/evidence/cause-raw-one.3mf')\nfor f in fs: doc.removeObject(f.Name)\ndoc.recompute()"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:RlJMrELDquSrBVMi52gsYQ",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:RlJMrELDquSrBVMi52gsYQ\nfingerprint_after: None\nstdout: \nvalue_repr: None",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "tool": "export_3mf",
+  "args": {
+   "doc": "fcb-doc:RlJMrELDquSrBVMi52gsYQ",
+   "path": "/repo/tests/uat/run/13-5-r1/evidence/tc-07-11-one.3mf",
+   "objects": [
+    "BoxA"
+   ]
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:jL9fmJSHgofc9osK0nihGQ",
+    "path": "/repo/tests/uat/run/13-5-r1/evidence/tc-07-11-one.3mf",
+    "bytes": 1112,
+    "facets": 12,
+    "verified": false,
+    "objects": [
+     "BoxA"
+    ]
+   },
+   "text": "3MF export written -> /repo/tests/uat/run/13-5-r1/evidence/tc-07-11-one.3mf.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "tool": "verify_export_3mf",
+  "args": {
+   "doc": "fcb-doc:RlJMrELDquSrBVMi52gsYQ",
+   "export_id": "fcb-export:jL9fmJSHgofc9osK0nihGQ"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "schema": "fcb.validation-report/1",
+    "subject": {
+     "path": "/repo/tests/uat/run/13-5-r1/evidence/tc-07-11-one.3mf"
+    },
+    "checks": [
+     {
+      "id": "lib3mf.parses",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "lib3mf.unit_millimeter",
+      "measured": {
+       "unit": 1,
+       "source_is_mm": true
+      },
+      "passed": true
+     },
+     {
+      "id": "lib3mf.manifold_and_oriented",
+      "measured": {
+       "meshes": 1,
+       "non_manifold": 0
+      },
+      "passed": true
+     },
+     {
+      "id": "lib3mf.metadata_present",
+      "measured": 1,
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.watertight",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.winding_consistent",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.is_volume",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.volume_band",
+      "measured": 1000.0,
+      "expected": 1000.0,
+      "tolerance": {
+       "abs": 39.99999999999999
+      },
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.euler",
+      "measured": 2,
+      "passed": true
+     },
+     {
+      "id": "self_read.facet_count",
+      "measured": 12,
+      "expected": 12,
+      "passed": true,
+      "detail": {
+       "message": "facets 12 vs 12"
+      }
+     },
+     {
+      "id": "self_read.vertex_count",
+      "measured": 8,
+      "expected": 8,
+      "passed": true,
+      "detail": {
+       "message": "vertices 8 vs 8"
+      }
+     },
+     {
+      "id": "oracle.agreement",
+      "measured": {
+       "lib3mf": true
+      },
+      "passed": true,
+      "detail": {
+       "message": "oracles agree"
+      }
+     }
+    ],
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15
+    },
+    "volume_band": 40.0,
+    "tess": {
+     "linear": 0.1,
+     "angular": 0.5
+    },
+    "verdict": "OK"
+   },
+   "text": "banner: {2 fields}\nchecks: [12 items]\nschema: fcb.validation-report/1\nsubject: {1 fields}\ntess: {2 fields}\nverdict: OK\nvolume_band: 40.0"
+  }
+ }
+]

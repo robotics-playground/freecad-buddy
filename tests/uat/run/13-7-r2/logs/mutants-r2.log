@@ -1,0 +1,46 @@
+### RT1_drop_isValid
+RED: test_Should_flag_a_failed_boolean_When_one_shape_is_an_invalid_solid_at_distance_zero
+RESULT run=34 fail=1 err=0
+
+### RT2_allow_negative_solid
+RED: test_Should_flag_a_failed_boolean_When_a_reversed_solid_contains_the_other_shape
+RED: test_Should_flag_a_failed_boolean_When_a_reversed_solid_overlaps_a_box
+RESULT run=34 fail=2 err=0
+
+### RT3_trust_shell
+RED: test_Should_fail_only_the_pairs_with_the_untrusted_object_When_objects_mixes_shapes
+RED: test_Should_flag_a_failed_boolean_When_a_closed_shell_contains_a_solid
+RESULT run=34 fail=2 err=0
+
+### RT4_text_unrounded
+RED: test_Should_not_count_a_pair_as_overlapping_When_its_volume_rounds_to_zero
+RESULT run=34 fail=1 err=0
+
+### F1_no_copy
+RED: test_Should_leave_a_fresh_fingerprint_digest_equal_When_pairs_are_measured
+RESULT run=34 fail=1 err=0
+
+### e1_bound_21
+RED: test_Should_map_bad_input_to_invalid_input_When_dispatched (arguments={'doc': 'fcb-doc:mtD-sbLEowA8rxM1rK48Jw', 'objects': ['A0', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10', 'A11', 'A12', 'A13', 'A14', 'A15', 'A16', 'A17', 'A18', 'A19', 'A20']})
+RESULT run=34 fail=1 err=0
+
+### guard_off
+RED: test_Should_refuse_the_call_with_a_code_When_a_pair_is_above_the_face_limit
+RESULT run=34 fail=1 err=0
+
+### deadline_off
+RED: test_Should_stop_with_a_code_and_the_count_When_the_deadline_passes_between_pairs
+RESULT run=34 fail=1 err=0
+
+### trust_rule_off
+RED: test_Should_fail_only_the_pairs_with_the_untrusted_object_When_objects_mixes_shapes
+RED: test_Should_flag_a_failed_boolean_When_a_closed_shell_contains_a_solid
+RED: test_Should_flag_a_failed_boolean_When_a_compound_holds_a_face_beside_a_solid
+RED: test_Should_flag_a_failed_boolean_When_a_reversed_solid_contains_the_other_shape
+RED: test_Should_flag_a_failed_boolean_When_a_reversed_solid_overlaps_a_box
+RED: test_Should_flag_a_failed_boolean_When_an_invalid_solid_contains_the_other_shape
+RED: test_Should_flag_a_failed_boolean_When_both_shapes_are_faces
+RED: test_Should_flag_a_failed_boolean_When_one_shape_is_an_invalid_solid_at_distance_zero
+RESULT run=34 fail=8 err=0
+
+src clean

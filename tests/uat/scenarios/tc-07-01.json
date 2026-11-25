@@ -180,13 +180,13 @@
     },
     {
       "step": "unknown_fn",
-      "path": "status",
-      "equals": "INVALID_INPUT"
+      "path": "is_error",
+      "equals": true
     },
     {
       "step": "unknown_fn",
-      "path": "detail.message",
-      "equals": "unknown assertion fn: 'expect_genus'"
+      "path": "text",
+      "regex": "Input validation error: .*expect_genus.* is not valid under any of the given schemas"
     },
     {
       "step": "fit",

@@ -1,0 +1,578 @@
+{
+ "freecad_version": "1.1.4",
+ "tree": {
+  "text": "OK: 3 objects, 3 shown.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\nframing: does not fit, cached, served from cache; unverified key component(s): geometry\nv [BOX] BoxA \"Alpha\"\nv [CYLINDER] Cyl \"Beta\"\nv [SPHERE] Sph \"Gamma\"",
+  "is_error": false
+ },
+ "11.write.step": {
+  "status": "OK",
+  "verified": false,
+  "objects": [
+   "BoxA",
+   "Cyl",
+   "Sph"
+  ]
+ },
+ "11.write.stl": {
+  "status": "OK",
+  "verified": false,
+  "objects": [
+   "BoxA",
+   "Cyl",
+   "Sph"
+  ]
+ },
+ "11.write.3mf": {
+  "status": "OK",
+  "verified": false,
+  "objects": [
+   "BoxA",
+   "Cyl",
+   "Sph"
+  ]
+ },
+ "11.verify.step": {
+  "status": "OK",
+  "checks": [
+   [
+    "export_step.volume",
+    true,
+    1649.26
+   ],
+   [
+    "export_step.valid",
+    true,
+    true
+   ],
+   [
+    "export_step.topology_counts",
+    true,
+    {
+     "faces": 10,
+     "edges": 18,
+     "solids": 3
+    }
+   ],
+   [
+    "export_step.object_volume:BoxA",
+    true,
+    1000.0
+   ],
+   [
+    "export_step.object_volume:Cyl",
+    true,
+    125.66
+   ],
+   [
+    "export_step.object_volume:Sph",
+    true,
+    523.6
+   ],
+   [
+    "export_step.objects_matched",
+    true,
+    3
+   ],
+   [
+    "export_step.schema",
+    true,
+    "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF"
+   ]
+  ]
+ },
+ "11.verify.stl": {
+  "status": "OK",
+  "checks": [
+   [
+    "trimesh_stl.watertight",
+    true,
+    true
+   ],
+   [
+    "trimesh_stl.winding_consistent",
+    true,
+    true
+   ],
+   [
+    "trimesh_stl.is_volume",
+    true,
+    true
+   ],
+   [
+    "trimesh_stl.volume_band",
+    true,
+    1634.03
+   ],
+   [
+    "trimesh_stl.euler",
+    true,
+    6
+   ],
+   [
+    "stl2.facets",
+    true,
+    626
+   ],
+   [
+    "stl2.manifold_edge_pairing",
+    true,
+    0
+   ],
+   [
+    "stl2.local_winding",
+    true,
+    true
+   ],
+   [
+    "stl2.non_degenerate",
+    true,
+    0
+   ],
+   [
+    "self_read.facet_count",
+    true,
+    626
+   ],
+   [
+    "self_read.vertex_count",
+    true,
+    319
+   ],
+   [
+    "oracle.agreement",
+    true,
+    {
+     "trimesh_stl": true,
+     "stdlib_stl": true
+    }
+   ]
+  ]
+ },
+ "11.verify.3mf": {
+  "status": "SPEC_FAILED",
+  "checks": [
+   [
+    "lib3mf.parses",
+    false,
+    "Lib3MFException 5: A content type is duplicated."
+   ],
+   [
+    "self_read.facet_count",
+    true,
+    626
+   ],
+   [
+    "self_read.vertex_count",
+    true,
+    319
+   ],
+   [
+    "oracle.agreement",
+    true,
+    {
+     "lib3mf": false
+    }
+   ]
+  ]
+ },
+ "11.omitted.step": {
+  "write": "OK",
+  "objects": [
+   "BoxA",
+   "Cyl",
+   "Sph"
+  ],
+  "verify": "OK",
+  "checks": [
+   [
+    "export_step.volume",
+    true,
+    1649.26
+   ],
+   [
+    "export_step.valid",
+    true,
+    true
+   ],
+   [
+    "export_step.topology_counts",
+    true,
+    {
+     "faces": 10,
+     "edges": 18,
+     "solids": 3
+    }
+   ],
+   [
+    "export_step.object_volume:BoxA",
+    true,
+    1000.0
+   ],
+   [
+    "export_step.object_volume:Cyl",
+    true,
+    125.66
+   ],
+   [
+    "export_step.object_volume:Sph",
+    true,
+    523.6
+   ],
+   [
+    "export_step.objects_matched",
+    true,
+    3
+   ],
+   [
+    "export_step.schema",
+    true,
+    "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF"
+   ]
+  ]
+ },
+ "11.omitted.stl": {
+  "write": "OK",
+  "objects": [
+   "BoxA",
+   "Cyl",
+   "Sph"
+  ],
+  "verify": "OK",
+  "checks": [
+   [
+    "trimesh_stl.watertight",
+    true,
+    true
+   ],
+   [
+    "trimesh_stl.winding_consistent",
+    true,
+    true
+   ],
+   [
+    "trimesh_stl.is_volume",
+    true,
+    true
+   ],
+   [
+    "trimesh_stl.volume_band",
+    true,
+    1634.03
+   ],
+   [
+    "trimesh_stl.euler",
+    true,
+    6
+   ],
+   [
+    "stl2.facets",
+    true,
+    626
+   ],
+   [
+    "stl2.manifold_edge_pairing",
+    true,
+    0
+   ],
+   [
+    "stl2.local_winding",
+    true,
+    true
+   ],
+   [
+    "stl2.non_degenerate",
+    true,
+    0
+   ],
+   [
+    "self_read.facet_count",
+    true,
+    626
+   ],
+   [
+    "self_read.vertex_count",
+    true,
+    319
+   ],
+   [
+    "oracle.agreement",
+    true,
+    {
+     "trimesh_stl": true,
+     "stdlib_stl": true
+    }
+   ]
+  ]
+ },
+ "11.omitted.3mf": {
+  "write": "OK",
+  "objects": [
+   "BoxA",
+   "Cyl",
+   "Sph"
+  ],
+  "verify": "SPEC_FAILED",
+  "checks": [
+   [
+    "lib3mf.parses",
+    false,
+    "Lib3MFException 5: A content type is duplicated."
+   ],
+   [
+    "self_read.facet_count",
+    true,
+    626
+   ],
+   [
+    "self_read.vertex_count",
+    true,
+    319
+   ],
+   [
+    "oracle.agreement",
+    true,
+    {
+     "lib3mf": false
+    }
+   ]
+  ]
+ },
+ "11.planted.step": {
+  "status": "SPEC_FAILED",
+  "failed": [
+   "export_step.volume",
+   "export_step.object_volume:Cyl"
+  ],
+  "message": "export_step.volume; export_step.object_volume:Cyl"
+ },
+ "11.planted.3mf": {
+  "status": "SPEC_FAILED",
+  "failed": [
+   "lib3mf.parses"
+  ],
+  "message": "lib3mf.parses"
+ },
+ "11.unknown": {
+  "status": "INVALID_INPUT",
+  "message": "unknown object: NoSuchObject",
+  "file_exists": false
+ },
+ "11.empty": {
+  "status": "INVALID_INPUT",
+  "message": "document has no objects to export"
+ },
+ "11.reimport": {
+  "name": "Reimport",
+  "solid": true,
+  "volume": {
+   "value": 1649.26,
+   "unit": "mm^3"
+  },
+  "area": {
+   "value": 1064.96,
+   "unit": "mm^2"
+  },
+  "bbox": {
+   "xmin": {
+    "value": -4.96,
+    "unit": "mm"
+   },
+   "xmax": {
+    "value": 32.0,
+    "unit": "mm"
+   },
+   "ymin": {
+    "value": -1.99,
+    "unit": "mm"
+   },
+   "ymax": {
+    "value": 64.96,
+    "unit": "mm"
+   },
+   "zmin": {
+    "value": -5.0,
+    "unit": "mm"
+   },
+   "zmax": {
+    "value": 10.0,
+    "unit": "mm"
+   }
+  },
+  "com": null,
+  "counts": {
+   "faces": 10,
+   "edges": 18,
+   "vertices": 12,
+   "solids": 3
+  }
+ },
+ "handles": {
+  "H": "fcb-doc:RlJMrELDquSrBVMi52gsYQ",
+  "H1": "fcb-doc:_RfclkocCePlAgtinccqTQ",
+  "H2": "fcb-doc:ZPOqe2kWpmfZGNeJuX6QjQ",
+  "HRT12": "fcb-doc:kYWDBhp-zEgtQ-LI7yYQOw"
+ },
+ "12.single": {
+  "write": "OK",
+  "objects": [
+   "Box"
+  ],
+  "verify": "OK",
+  "checks": [
+   [
+    "export_step.volume",
+    true,
+    6000.0
+   ],
+   [
+    "export_step.valid",
+    true,
+    true
+   ],
+   [
+    "export_step.topology_counts",
+    true,
+    {
+     "faces": 6,
+     "edges": 12,
+     "solids": 1
+    }
+   ],
+   [
+    "export_step.schema",
+    true,
+    "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF"
+   ]
+  ]
+ },
+ "12.empty_list": {
+  "write": "OK",
+  "objects": [
+   "Box"
+  ]
+ },
+ "12.two": {
+  "write": "OK",
+  "objects": [
+   "BoxA",
+   "BoxB"
+  ],
+  "verify": "OK",
+  "checks": [
+   [
+    "export_step.volume",
+    true,
+    2000.0
+   ],
+   [
+    "export_step.valid",
+    true,
+    true
+   ],
+   [
+    "export_step.topology_counts",
+    true,
+    {
+     "faces": 12,
+     "edges": 24,
+     "solids": 2
+    }
+   ],
+   [
+    "export_step.object_volume:BoxA",
+    true,
+    1000.0
+   ],
+   [
+    "export_step.object_volume:BoxB",
+    true,
+    1000.0
+   ],
+   [
+    "export_step.objects_matched",
+    true,
+    2
+   ],
+   [
+    "export_step.schema",
+    true,
+    "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF"
+   ]
+  ]
+ },
+ "12.hidden": {
+  "write": "OK",
+  "objects": [
+   "BoxA"
+  ]
+ },
+ "12.reimport": {
+  "name": "Reimport",
+  "solid": true,
+  "volume": {
+   "value": 6000.0,
+   "unit": "mm^3"
+  },
+  "area": {
+   "value": 2200.0,
+   "unit": "mm^2"
+  },
+  "bbox": {
+   "xmin": {
+    "value": 0.0,
+    "unit": "mm"
+   },
+   "xmax": {
+    "value": 10.0,
+    "unit": "mm"
+   },
+   "ymin": {
+    "value": 0.0,
+    "unit": "mm"
+   },
+   "ymax": {
+    "value": 20.0,
+    "unit": "mm"
+   },
+   "zmin": {
+    "value": 0.0,
+    "unit": "mm"
+   },
+   "zmax": {
+    "value": 30.0,
+    "unit": "mm"
+   }
+  },
+  "com": {
+   "x": {
+    "value": 5.0,
+    "unit": "mm"
+   },
+   "y": {
+    "value": 10.0,
+    "unit": "mm"
+   },
+   "z": {
+    "value": 15.0,
+    "unit": "mm"
+   }
+  },
+  "counts": {
+   "faces": 6,
+   "edges": 12,
+   "vertices": 8,
+   "solids": 1
+  }
+ },
+ "11.step_products": [
+  "tc07_three_bodies",
+  "Alpha",
+  "Beta",
+  "Gamma"
+ ],
+ "11.3mf_object_tags": [
+  "<object id=\"1\" type=\"model\" name=\"Alpha\">",
+  "<object id=\"2\" type=\"model\" name=\"Beta\">",
+  "<object id=\"3\" type=\"model\" name=\"Gamma\">"
+ ]
+}

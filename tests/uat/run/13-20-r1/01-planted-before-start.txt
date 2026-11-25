@@ -1,0 +1,14 @@
+dead pid chosen: 999999 (kill -0 fails: sh: 7: kill: No such process
+
+rc=1)
+pid 1: supervisord
+--- before start: 2026-11-24T07:00:01Z
+total 20
+drwxr-xr-x 2 cua cua 4096 Nov 24 07:00 .
+drwxr-xr-x 1 cua cua 4096 Nov 24 07:00 ..
+-rw-r--r-- 1 cua cua   61 Nov 24 07:00 rpc-1.json
+-rw-r--r-- 1 cua cua    9 Nov 24 07:00 rpc-777777.json
+-rw-r--r-- 1 cua cua   66 Nov 24 07:00 rpc-999999.json
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/rpc-1.json: {"schema":1,"pid":1,"host":"127.0.0.1","port":1,"token":"x"}
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/rpc-777777.json: not json
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/rpc-999999.json: {"schema":1,"pid":999999,"host":"127.0.0.1","port":1,"token":"x"}

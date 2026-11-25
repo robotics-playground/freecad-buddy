@@ -1,0 +1,1446 @@
+{
+ "cases": [
+  {
+   "label": "box mid z15",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Box",
+    "plane": {
+     "normal": "z",
+     "offset": {
+      "value": 15,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 1,
+    "closed_wires": 1,
+    "area": {
+     "value": 200.0,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 60.0,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 20.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 15.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 15.0,
+      "unit": "mm"
+     }
+    }
+   },
+   "text": "1 wire(s), 1 closed, length 60.0 mm, area 200.0 mm^2.",
+   "reference": {
+    "wires": 1,
+    "closed": 1,
+    "length": 60.0,
+    "area": 199.99999999999997,
+    "slice_wires": 1
+   },
+   "analytic": [
+    1,
+    1,
+    200,
+    60
+   ],
+   "elapsed_s": 0.06
+  },
+  {
+   "label": "box at bottom face z0",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Box",
+    "plane": {
+     "normal": "z",
+     "offset": {
+      "value": 0,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 1,
+    "closed_wires": 1,
+    "area": {
+     "value": 200.0,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 60.0,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 20.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 0.0,
+      "unit": "mm"
+     }
+    }
+   },
+   "text": "1 wire(s), 1 closed, length 60.0 mm, area 200.0 mm^2.",
+   "reference": {
+    "wires": 1,
+    "closed": 1,
+    "length": 60.0,
+    "area": 199.99999999999997,
+    "slice_wires": 0
+   },
+   "analytic": [
+    1,
+    1,
+    200,
+    60
+   ],
+   "elapsed_s": 0.12
+  },
+  {
+   "label": "box 1e-6 inside bottom",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Box",
+    "plane": {
+     "normal": "z",
+     "offset": {
+      "value": 1e-06,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 1,
+    "closed_wires": 1,
+    "area": {
+     "value": 200.0,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 60.0,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 20.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 1e-06,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 1e-06,
+      "unit": "mm"
+     }
+    }
+   },
+   "text": "1 wire(s), 1 closed, length 60.0 mm, area 200.0 mm^2.",
+   "reference": {
+    "wires": 1,
+    "closed": 1,
+    "length": 60.0,
+    "area": 199.99999999999997,
+    "slice_wires": 0
+   },
+   "analytic": [
+    1,
+    1,
+    200,
+    60
+   ],
+   "elapsed_s": 0.11
+  },
+  {
+   "label": "box at top face z30",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Box",
+    "plane": {
+     "normal": "z",
+     "offset": {
+      "value": 30,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 1,
+    "closed_wires": 1,
+    "area": {
+     "value": 200.0,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 60.0,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 20.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 30.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 30.0,
+      "unit": "mm"
+     }
+    }
+   },
+   "text": "1 wire(s), 1 closed, length 60.0 mm, area 200.0 mm^2.",
+   "reference": {
+    "wires": 1,
+    "closed": 1,
+    "length": 60.0,
+    "area": 199.99999999999997,
+    "slice_wires": 1
+   },
+   "analytic": [
+    1,
+    1,
+    200,
+    60
+   ],
+   "elapsed_s": 0.06
+  },
+  {
+   "label": "box 1e-6 inside top",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Box",
+    "plane": {
+     "normal": "z",
+     "offset": {
+      "value": 29.999999,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 1,
+    "closed_wires": 1,
+    "area": {
+     "value": 200.0,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 60.0,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 20.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 30.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 30.0,
+      "unit": "mm"
+     }
+    }
+   },
+   "text": "1 wire(s), 1 closed, length 60.0 mm, area 200.0 mm^2.",
+   "reference": {
+    "wires": 1,
+    "closed": 1,
+    "length": 60.0,
+    "area": 199.99999999999997,
+    "slice_wires": 0
+   },
+   "analytic": [
+    1,
+    1,
+    200,
+    60
+   ],
+   "elapsed_s": 0.11
+  },
+  {
+   "label": "box miss z40",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Box",
+    "plane": {
+     "normal": "z",
+     "offset": {
+      "value": 40,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 0,
+    "closed_wires": 0,
+    "area": {
+     "value": 0.0,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 0.0,
+     "unit": "mm"
+    },
+    "bbox": null
+   },
+   "text": "0 wire(s), 0 closed, length 0.0 mm, area 0.0 mm^2.",
+   "reference": {
+    "wires": 0,
+    "closed": 0,
+    "length": 0,
+    "area": 0.0,
+    "slice_wires": 0
+   },
+   "analytic": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "elapsed_s": 0.06
+  },
+  {
+   "label": "box x5",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Box",
+    "plane": {
+     "normal": "x",
+     "offset": {
+      "value": 5,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 1,
+    "closed_wires": 1,
+    "area": {
+     "value": 600.0,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 100.0,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 5.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 5.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 20.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 30.0,
+      "unit": "mm"
+     }
+    }
+   },
+   "text": "1 wire(s), 1 closed, length 100.0 mm, area 600.0 mm^2.",
+   "reference": {
+    "wires": 1,
+    "closed": 1,
+    "length": 100.0,
+    "area": 600.0,
+    "slice_wires": 1
+   },
+   "analytic": [
+    1,
+    1,
+    600,
+    100
+   ],
+   "elapsed_s": 0.11
+  },
+  {
+   "label": "box oblique [1,1,1] through centre",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Box",
+    "plane": {
+     "normal": [
+      1,
+      1,
+      1
+     ],
+     "offset": {
+      "value": 17.320508075688775,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 1,
+    "closed_wires": 1,
+    "area": {
+     "value": 346.41,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 84.85,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 20.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 30.0,
+      "unit": "mm"
+     }
+    }
+   },
+   "text": "1 wire(s), 1 closed, length 84.85 mm, area 346.41 mm^2.",
+   "reference": {
+    "wires": 1,
+    "closed": 1,
+    "length": 84.85281374238569,
+    "area": 346.41016151377573,
+    "slice_wires": 1
+   },
+   "analytic": null,
+   "elapsed_s": 0.11
+  },
+  {
+   "label": "cylinder z10",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Cyl",
+    "plane": {
+     "normal": "z",
+     "offset": {
+      "value": 10,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 1,
+    "closed_wires": 1,
+    "area": {
+     "value": 78.54,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 31.42,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": -5.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 5.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": -5.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 5.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 10.0,
+      "unit": "mm"
+     }
+    }
+   },
+   "text": "1 wire(s), 1 closed, length 31.42 mm, area 78.54 mm^2.",
+   "reference": {
+    "wires": 1,
+    "closed": 1,
+    "length": 31.41592653589793,
+    "area": 78.53981633974483,
+    "slice_wires": 1
+   },
+   "analytic": [
+    1,
+    1,
+    78.53981633974483,
+    31.41592653589793
+   ],
+   "elapsed_s": 0.06
+  },
+  {
+   "label": "cylinder x0 through axis",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Cyl",
+    "plane": {
+     "normal": "x",
+     "offset": {
+      "value": 0,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 1,
+    "closed_wires": 1,
+    "area": {
+     "value": 200.0,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 60.0,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": -5.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 5.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 20.0,
+      "unit": "mm"
+     }
+    }
+   },
+   "text": "1 wire(s), 1 closed, length 60.0 mm, area 200.0 mm^2.",
+   "reference": {
+    "wires": 1,
+    "closed": 1,
+    "length": 60.0,
+    "area": 199.99999999999997,
+    "slice_wires": 1
+   },
+   "analytic": [
+    1,
+    1,
+    200,
+    60
+   ],
+   "elapsed_s": 0.111
+  },
+  {
+   "label": "plate 4 holes z2.5",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Plate",
+    "plane": {
+     "normal": "z",
+     "offset": {
+      "value": 2.5,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 5,
+    "closed_wires": 5,
+    "area": {
+     "value": 5886.9,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 395.4,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 100.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 60.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 2.5,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 2.5,
+      "unit": "mm"
+     }
+    }
+   },
+   "text": "5 wire(s), 5 closed, length 395.4 mm, area 5886.9 mm^2.",
+   "reference": {
+    "wires": 5,
+    "closed": 5,
+    "length": 395.398223686155,
+    "area": 5886.9026644707665,
+    "slice_wires": 5
+   },
+   "analytic": [
+    5,
+    5,
+    5886.902664470767,
+    395.398223686155
+   ],
+   "elapsed_s": 0.059
+  },
+  {
+   "label": "bullseye z4",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Bullseye",
+    "plane": {
+     "normal": "z",
+     "offset": {
+      "value": 4,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 3,
+    "closed_wires": 3,
+    "area": {
+     "value": 1884.96,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 376.99,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": -30.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 30.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": -30.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 30.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 4.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 4.0,
+      "unit": "mm"
+     }
+    }
+   },
+   "text": "3 wire(s), 3 closed, length 376.99 mm, area 1884.96 mm^2.",
+   "reference": {
+    "wires": 3,
+    "closed": 3,
+    "length": 376.9911184307752,
+    "area": 1884.9555921538768,
+    "slice_wires": 3
+   },
+   "analytic": [
+    3,
+    3,
+    1884.9555921538758,
+    376.99111843077515
+   ],
+   "elapsed_s": 0.11
+  },
+  {
+   "label": "shell z15",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Shell",
+    "plane": {
+     "normal": "z",
+     "offset": {
+      "value": 15,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 1,
+    "closed_wires": 1,
+    "area": null,
+    "length": {
+     "value": 60.0,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 20.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 15.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 15.0,
+      "unit": "mm"
+     }
+    }
+   },
+   "text": "1 wire(s), 1 closed, length 60.0 mm, area unmeasured.",
+   "reference": {
+    "wires": 1,
+    "closed": 1,
+    "length": 60.0,
+    "area": 0.0,
+    "slice_wires": 0
+   },
+   "analytic": [
+    1,
+    1,
+    null,
+    60
+   ],
+   "elapsed_s": 0.06
+  },
+  {
+   "label": "moved box z115 (own Placement)",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Moved",
+    "plane": {
+     "normal": "z",
+     "offset": {
+      "value": 115,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 1,
+    "closed_wires": 1,
+    "area": {
+     "value": 200.0,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 60.0,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 20.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 115.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 115.0,
+      "unit": "mm"
+     }
+    }
+   },
+   "text": "1 wire(s), 1 closed, length 60.0 mm, area 200.0 mm^2.",
+   "reference": {
+    "wires": 1,
+    "closed": 1,
+    "length": 60.0,
+    "area": 199.99999999999997,
+    "slice_wires": 1
+   },
+   "analytic": [
+    1,
+    1,
+    200,
+    60
+   ],
+   "elapsed_s": 0.11
+  },
+  {
+   "label": "moved box z15 (misses)",
+   "args": {
+    "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+    "object": "Moved",
+    "plane": {
+     "normal": "z",
+     "offset": {
+      "value": 15,
+      "unit": "mm"
+     }
+    }
+   },
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 0,
+    "closed_wires": 0,
+    "area": {
+     "value": 0.0,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 0.0,
+     "unit": "mm"
+    },
+    "bbox": null
+   },
+   "text": "0 wire(s), 0 closed, length 0.0 mm, area 0.0 mm^2.",
+   "reference": {
+    "wires": 0,
+    "closed": 0,
+    "length": 0,
+    "area": 0.0,
+    "slice_wires": 0
+   },
+   "analytic": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "elapsed_s": 0.11
+  }
+ ],
+ "extra": {
+  "cyl polylines cap 5": {
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 1,
+    "closed_wires": 1,
+    "area": {
+     "value": 78.54,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 31.42,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": -5.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 5.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": -5.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 5.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 10.0,
+      "unit": "mm"
+     }
+    },
+    "polylines": [
+     [
+      [
+       5.0,
+       0.0,
+       10.0
+      ],
+      [
+       4.96,
+       -0.6,
+       10.0
+      ],
+      [
+       4.86,
+       -1.19,
+       10.0
+      ],
+      [
+       4.68,
+       -1.77,
+       10.0
+      ],
+      [
+       4.43,
+       -2.32,
+       10.0
+      ]
+     ]
+    ],
+    "truncated": true
+   },
+   "elapsed_s": 0.023
+  },
+  "cyl polylines default": {
+   "status": "OK",
+   "detail": null,
+   "sc": {
+    "wires": 1,
+    "closed_wires": 1,
+    "area": {
+     "value": 78.54,
+     "unit": "mm^2"
+    },
+    "length": {
+     "value": 31.42,
+     "unit": "mm"
+    },
+    "bbox": {
+     "xmin": {
+      "value": -5.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 5.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": -5.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 5.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 10.0,
+      "unit": "mm"
+     }
+    },
+    "polylines": [
+     [
+      [
+       5.0,
+       0.0,
+       10.0
+      ],
+      [
+       4.96,
+       -0.6,
+       10.0
+      ],
+      [
+       4.86,
+       -1.19,
+       10.0
+      ],
+      [
+       4.68,
+       -1.77,
+       10.0
+      ],
+      [
+       4.43,
+       -2.32,
+       10.0
+      ],
+      [
+       4.12,
+       -2.84,
+       10.0
+      ],
+      [
+       3.75,
+       -3.31,
+       10.0
+      ],
+      [
+       3.32,
+       -3.74,
+       10.0
+      ],
+      [
+       2.85,
+       -4.11,
+       10.0
+      ],
+      [
+       2.33,
+       -4.42,
+       10.0
+      ],
+      [
+       1.78,
+       -4.67,
+       10.0
+      ],
+      [
+       1.21,
+       -4.85,
+       10.0
+      ],
+      [
+       0.62,
+       -4.96,
+       10.0
+      ],
+      [
+       0.01,
+       -5.0,
+       10.0
+      ],
+      [
+       -0.59,
+       -4.97,
+       10.0
+      ],
+      [
+       -1.18,
+       -4.86,
+       10.0
+      ],
+      [
+       -1.76,
+       -4.68,
+       10.0
+      ],
+      [
+       -2.31,
+       -4.44,
+       10.0
+      ],
+      [
+       -2.82,
+       -4.13,
+       10.0
+      ],
+      [
+       -3.3,
+       -3.76,
+       10.0
+      ],
+      [
+       -3.73,
+       -3.33,
+       10.0
+      ],
+      [
+       -4.1,
+       -2.86,
+       10.0
+      ],
+      [
+       -4.42,
+       -2.35,
+       10.0
+      ],
+      [
+       -4.67,
+       -1.8,
+       10.0
+      ],
+      [
+       -4.85,
+       -1.22,
+       10.0
+      ],
+      [
+       -4.96,
+       -0.63,
+       10.0
+      ],
+      [
+       -5.0,
+       -0.03,
+       10.0
+      ],
+      [
+       -4.97,
+       0.57,
+       10.0
+      ],
+      [
+       -4.86,
+       1.17,
+       10.0
+      ],
+      [
+       -4.69,
+       1.74,
+       10.0
+      ],
+      [
+       -4.44,
+       2.29,
+       10.0
+      ],
+      [
+       -4.13,
+       2.81,
+       10.0
+      ],
+      [
+       -3.77,
+       3.29,
+       10.0
+      ],
+      [
+       -3.34,
+       3.72,
+       10.0
+      ],
+      [
+       -2.87,
+       4.09,
+       10.0
+      ],
+      [
+       -2.36,
+       4.41,
+       10.0
+      ],
+      [
+       -1.81,
+       4.66,
+       10.0
+      ],
+      [
+       -1.24,
+       4.84,
+       10.0
+      ],
+      [
+       -0.65,
+       4.96,
+       10.0
+      ],
+      [
+       -0.04,
+       5.0,
+       10.0
+      ],
+      [
+       0.56,
+       4.97,
+       10.0
+      ],
+      [
+       1.15,
+       4.87,
+       10.0
+      ],
+      [
+       1.73,
+       4.69,
+       10.0
+      ],
+      [
+       2.28,
+       4.45,
+       10.0
+      ],
+      [
+       2.8,
+       4.14,
+       10.0
+      ],
+      [
+       3.28,
+       3.78,
+       10.0
+      ],
+      [
+       3.71,
+       3.35,
+       10.0
+      ],
+      [
+       4.08,
+       2.88,
+       10.0
+      ],
+      [
+       4.4,
+       2.37,
+       10.0
+      ],
+      [
+       4.66,
+       1.82,
+       10.0
+      ],
+      [
+       4.84,
+       1.25,
+       10.0
+      ],
+      [
+       4.96,
+       0.66,
+       10.0
+      ],
+      [
+       5.0,
+       0.0,
+       10.0
+      ]
+     ]
+    ],
+    "truncated": false
+   },
+   "elapsed_s": 0.067
+  },
+  "deflection below floor": {
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "points.deflection 1e-09 is below the minimum 2.4494897427831778e-05 mm (1e-06 of the object's bounding-box diagonal)",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1547, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 1173, in query_section\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 1142, in read\n    raise ValidationError(\nfreecad_buddy.usecases.documents.ValidationError: points.deflection 1e-09 is below the minimum 2.4494897427831778e-05 mm (1e-06 of the object's bounding-box diagonal)\n"
+    }
+   },
+   "sc": {},
+   "elapsed_s": 0.089
+  },
+  "deflection zero": {
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "points.deflection must be positive, got 0.0",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1547, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 1119, in query_section\n    request = None if points is None else _section_points(points)\n                                          ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 1013, in _section_points\n    raise ValidationError(f\"points.deflection must be positive, got {deflection}\")\nfreecad_buddy.usecases.documents.ValidationError: points.deflection must be positive, got 0.0\n"
+    }
+   },
+   "sc": {},
+   "elapsed_s": 0.062
+  },
+  "reversed solid": {
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "section.untrusted_shape",
+    "message": "object Reversed cannot be sectioned: the shape holds a solid with non-positive volume (reversed)"
+   },
+   "text": "object Reversed cannot be sectioned: the shape holds a solid with non-positive volume (reversed)"
+  },
+  "zero normal": {
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "plane.normal must not be the zero vector",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1547, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 1118, in query_section\n    normal, offset = _section_plane(plane)\n                     ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 997, in _section_plane\n    raise ValidationError(\"plane.normal must not be the zero vector\")\nfreecad_buddy.usecases.documents.ValidationError: plane.normal must not be the zero vector\n"
+    }
+   },
+   "text": ""
+  },
+  "unknown object": {
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown object: Nope",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1547, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 1173, in query_section\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 1126, in read\n    face_count = len(_named_shape(document, object).Faces)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 760, in _named_shape\n    obj = _resolve_object(document, name)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 202, in _resolve_object\n    raise ValidationError(f\"unknown object: {name}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown object: Nope\n"
+    }
+   },
+   "text": ""
+  }
+ },
+ "build": {
+  "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+  "stdout": "",
+  "value_repr": "{'Box': ['Solid', 1, 6, True], 'Cyl': ['Solid', 1, 3, True], 'Plate': ['Solid', 1, 10, True], 'Bullseye': ['Compound', 2, 7, True], 'Shell': ['Shell', 0, 6, True], 'Moved': ['Solid', 1, 6, True], 'Reversed': ['Solid', 1, 6, True]}",
+  "fingerprint_after": null
+ },
+ "reference_raw": {
+  "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ",
+  "stdout": "",
+  "value_repr": "'[{\"wires\": 1, \"closed\": 1, \"length\": 60.0, \"area\": 199.99999999999997, \"slice_wires\": 1}, {\"wires\": 1, \"closed\": 1, \"length\": 60.0, \"area\": 199.99999999999997, \"slice_wires\": 0}, {\"wires\": 1, \"closed\": 1, \"length\": 60.0, \"area\": 199.99999999999997, \"slice_wires\": 0}, {\"wires\": 1, \"closed\": 1, \"length\": 60.0, \"area\": 199.99999999999997, \"slice_wires\": 1}, {\"wires\": 1, \"closed\": 1, \"length\": 60.0, \"area\": 199.99999999999997, \"slice_wires\": 0}, {\"wires\": 0, \"closed\": 0, \"length\": 0, \"area\": 0.0, \"slice_wires\": 0}, {\"wires\": 1, \"closed\": 1, \"length\": 100.0, \"area\": 600.0, \"slice_wires\": 1}, {\"wires\": 1, \"closed\": 1, \"length\": 84.85281374238569, \"area\": 346.41016151377573, \"slice_wires\": 1}, {\"wires\": 1, \"closed\": 1, \"length\": 31.41592653589793, \"area\": 78.53981633974483, \"slice_wires\": 1}, {\"wires\": 1, \"closed\": 1, \"length\": 60.0, \"area\": 199.99999999999997, \"slice_wires\": 1}, {\"wires\": 5, \"closed\": 5, \"length\": 395.398223686155, \"area\": 5886.9026644707665, \"slice_wires\": 5}, {\"wires\": 3, \"closed\": 3, \"length\": 376.9911184307752, \"area\": 1884.9555921538768, \"slice_wires\": 3}, {\"wires\": 1, \"closed\": 1, \"length\": 60.0, \"area\": 0.0, \"slice_wires\": 0}, {\"wires\": 1, \"closed\": 1, \"length\": 60.0, \"area\": 199.99999999999997, \"slice_wires\": 1}, {\"wires\": 0, \"closed\": 0, \"length\": 0, \"area\": 0.0, \"slice_wires\": 0}]'",
+  "fingerprint_after": null
+ },
+ "fingerprint_before": "'8062723987bfed3bd66cc3e7ccc9ceaa57c22d653a8d1779d0b5e99d0e1c7ada'",
+ "fingerprint_after": "'8062723987bfed3bd66cc3e7ccc9ceaa57c22d653a8d1779d0b5e99d0e1c7ada'",
+ "doc": "fcb-doc:0vk86ZTN2u0xpjgAogcSjQ"
+}

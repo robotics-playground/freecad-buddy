@@ -1,0 +1,99 @@
+{
+ "tool": "document_object_delete",
+ "args": {
+  "doc": "fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA",
+  "objects": [
+   "Body001"
+  ]
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "mutation": {
+    "schema": "fcb.mutation/2",
+    "fingerprint_before": {
+     "digest": "05f5a5457275bd01be9ff8e8344d12800688d390d0553b1849a063bb1ba73626",
+     "serializer": "exportBinary"
+    },
+    "fingerprint_after": {
+     "digest": "196fb5db848d195438b1caed1e5c9e1ae261d521887629bc0032e72823608b69",
+     "serializer": "exportBinary"
+    },
+    "changed": [
+     {
+      "name": "Body001",
+      "volume": null,
+      "area": null,
+      "com": null
+     },
+     {
+      "name": "Pad3",
+      "volume": null,
+      "area": null,
+      "com": null
+     },
+     {
+      "name": "Sketch3",
+      "volume": null,
+      "area": null,
+      "com": null
+     }
+    ],
+    "post_verify": {
+     "recompute_clean": true,
+     "is_valid": true,
+     "fully_constrained": null,
+     "tnp_audit": {
+      "status": "CLEAN",
+      "element_map_version": "15.70200.5",
+      "counts": {
+       "PASS": 7
+      },
+      "findings": []
+     },
+     "passed": true,
+     "explanation": null
+    },
+    "rolled_back": false,
+    "rollback_proven": null,
+    "touched": [
+     "Body001",
+     "Origin002",
+     "X_Axis001",
+     "Y_Axis001",
+     "Z_Axis001",
+     "XY_Plane001",
+     "XZ_Plane001",
+     "YZ_Plane001",
+     "Origin003",
+     "Sketch3",
+     "Pad3"
+    ]
+   },
+   "deleted": [
+    "Body001",
+    "Origin002",
+    "X_Axis001",
+    "Y_Axis001",
+    "Z_Axis001",
+    "XY_Plane001",
+    "XZ_Plane001",
+    "YZ_Plane001",
+    "Origin003",
+    "Sketch3",
+    "Pad3"
+   ],
+   "dependents": []
+  },
+  "text": "Mutation committed; fingerprint 196fb5db848d.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+  "framing": {
+   "fits": false,
+   "ratio": 0.7,
+   "checked": "computed",
+   "stale_reason": null
+  }
+ }
+}

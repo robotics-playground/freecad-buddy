@@ -1,0 +1,24 @@
+2026-11-24 07:11:22,316 INFO freecad_buddy.hosts.gui_addon.bootstrap: operator settings: FREECAD_BUDDY_AUTO_APPROVE='1' (preference), FREECAD_BUDDY_SCRIPT_EXEC='1' (preference), FREECAD_BUDDY_UNATTENDED='' (unset), FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED='' (unset), FREECAD_BUDDY_NO_AUTO_MCP='' (unset), FREECAD_BUDDY_MCP_CMD='' (unset), FREECAD_BUDDY_AUDIT_LOG='/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/audit.jsonl' (default), FREECAD_BUDDY_WORKDIR='/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir' (default), uv path ''
+2026-11-24 07:11:22,316 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-11-24 07:11:22,316 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-11-24 07:11:22,316 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-11-24 07:11:23,629 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:39531
+2026-11-24 07:11:23,630 INFO freecad_buddy.hosts.gui_addon.bootstrap: uv: /usr/local/bin/uv
+2026-11-24 07:11:23,630 INFO freecad_buddy.hosts.gui_addon.bootstrap: provisioning the MCP proxy venv at /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv from freecad_buddy-0.1.1-py3-none-any.whl; log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/provision.log
+2026-11-24 07:11:46,765 INFO freecad_buddy.hosts.gui_addon.bootstrap: MCP proxy venv ready at /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv
+2026-11-24 07:11:46,766 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 622) -> http://127.0.0.1:8765/mcp; proxy log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log
+2026-11-24 07:13:46,647 INFO freecad_buddy.dispatch: INVALID_INPUT: points.deflection 1e-09 is below the minimum 2.4494897427831778e-05 mm (1e-06 of the object's bounding-box diagonal)
+2026-11-24 07:13:46,708 INFO freecad_buddy.dispatch: INVALID_INPUT: points.deflection must be positive, got 0.0
+2026-11-24 07:13:46,838 INFO freecad_buddy.dispatch: INVALID_INPUT: plane.normal must not be the zero vector
+2026-11-24 07:13:46,898 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: Nope
+2026-11-24 07:34:58,802 INFO freecad_buddy.hosts.gui_addon.bootstrap: operator settings: FREECAD_BUDDY_AUTO_APPROVE='1' (preference), FREECAD_BUDDY_SCRIPT_EXEC='1' (preference), FREECAD_BUDDY_UNATTENDED='' (unset), FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED='' (unset), FREECAD_BUDDY_NO_AUTO_MCP='' (unset), FREECAD_BUDDY_MCP_CMD='' (unset), FREECAD_BUDDY_AUDIT_LOG='/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/audit.jsonl' (default), FREECAD_BUDDY_WORKDIR='/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir' (default), uv path ''
+2026-11-24 07:34:58,803 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 1 leftover temp artifact(s)
+2026-11-24 07:34:58,803 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-11-24 07:34:58,803 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-11-24 07:35:00,174 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:44603
+2026-11-24 07:35:00,175 INFO freecad_buddy.hosts.gui_addon.bootstrap: uv: /usr/local/bin/uv
+2026-11-24 07:35:00,349 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 1265) -> http://127.0.0.1:8765/mcp; proxy log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log
+2026-11-24 07:35:42,770 INFO freecad_buddy.dispatch: INVALID_INPUT: points.deflection 1e-09 is below the minimum 2.4494897427831778e-05 mm (1e-06 of the object's bounding-box diagonal)
+2026-11-24 07:35:42,784 INFO freecad_buddy.dispatch: INVALID_INPUT: points.deflection must be positive, got 0.0
+2026-11-24 07:35:42,944 INFO freecad_buddy.dispatch: INVALID_INPUT: plane.normal must not be the zero vector
+2026-11-24 07:35:43,004 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: Nope

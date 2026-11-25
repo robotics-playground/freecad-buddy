@@ -11,7 +11,8 @@ with the case's reference ``assertions.checks`` against the fixture's object, an
 DETECT / PASS_CLEAN outcome. A planted ``DETECT`` case is detected when the verdict is
 non-OK; a ``clean_control`` is a false alarm when the verdict is non-OK. Computes
 ``sensitivity``/``false_alarm`` + a Wilson CI, hashes the validator source
-(``usecases/verify.py`` + ``usecases/fingerprint.py`` + ``usecases/assertions.py``) into
+(``usecases/verify.py`` + ``usecases/fingerprint.py`` + ``usecases/assertions.py`` +
+``contracts/assertions.py``) into
 ``validator_sha``, and rewrites ONLY
 the ``verify_shape`` block of ``_registry/validators.yaml`` via the shared
 ``merge_validators_yaml`` read-merge-write (preserving the ``verify_export_*`` blocks and the file
@@ -51,6 +52,7 @@ VALIDATOR_SOURCES = (
     SRC / "freecad_buddy" / "usecases" / "verify.py",
     SRC / "freecad_buddy" / "usecases" / "fingerprint.py",
     SRC / "freecad_buddy" / "usecases" / "assertions.py",
+    SRC / "freecad_buddy" / "contracts" / "assertions.py",
     SRC / "freecad_buddy" / "contracts" / "numbers.py",
 )
 

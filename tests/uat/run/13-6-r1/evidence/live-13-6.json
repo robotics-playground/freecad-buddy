@@ -1,0 +1,891 @@
+{
+  "mass_schema": {
+    "type": "object",
+    "properties": {
+      "doc": {
+        "type": "string",
+        "description": "opaque fcb-doc handle"
+      },
+      "object": {
+        "type": "string"
+      },
+      "objects": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 1,
+        "maxItems": 50
+      }
+    },
+    "required": [
+      "doc"
+    ],
+    "additionalProperties": false
+  },
+  "document_create": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+      "doc": "fcb-doc:BPpNIBZMG9qPdDMKL-IFbQ",
+      "name": "verify_13_6",
+      "label": "verify_13_6"
+    },
+    "text": "doc: fcb-doc:BPpNIBZMG9qPdDMKL-IFbQ\nlabel: verify_13_6\nname: verify_13_6"
+  },
+  "build_small": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+      "doc": "fcb-doc:BPpNIBZMG9qPdDMKL-IFbQ",
+      "stdout": "",
+      "value_repr": "'[\"BodyA\", \"BodyABox\", \"BodyB\", \"BodyBBox\", \"BodyC\", \"BodyCBox\", \"Group\", \"Origin\", \"Origin001\", \"Origin002\", \"Origin003\", \"Origin004\", \"Origin005\", \"Shell\", \"XY_Plane\", \"XY_Plane001\", \"XY_Plane002\", \"XZ_Plane\", \"XZ_Plane001\", \"XZ_Plane002\", \"X_Axis\", \"X_Axis001\", \"X_Axis002\", \"YZ_Plane\", \"YZ_Plane001\", \"YZ_Plane002\", \"Y_Axis\", \"Y_Axis001\", \"Y_Axis002\", \"Z_Axis\", \"Z_Axis001\", \"Z_Axis002\"]'",
+      "fingerprint_after": null
+    },
+    "text": "doc: fcb-doc:BPpNIBZMG9qPdDMKL-IFbQ\nfingerprint_after: None\nstdout: \nvalue_repr: <392 chars>\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+    "framing": {
+      "fits": false,
+      "ratio": null,
+      "checked": "computed",
+      "stale_reason": null
+    }
+  },
+  "objects_call": {
+    "structured": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "objects": [
+          {
+            "name": "BodyA",
+            "solid": true,
+            "volume": {
+              "value": 6000.0,
+              "unit": "mm^3"
+            },
+            "area": {
+              "value": 2200.0,
+              "unit": "mm^2"
+            },
+            "bbox": {
+              "xmin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "xmax": {
+                "value": 10.0,
+                "unit": "mm"
+              },
+              "ymin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "ymax": {
+                "value": 20.0,
+                "unit": "mm"
+              },
+              "zmin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "zmax": {
+                "value": 30.0,
+                "unit": "mm"
+              }
+            },
+            "com": {
+              "x": {
+                "value": 5.0,
+                "unit": "mm"
+              },
+              "y": {
+                "value": 10.0,
+                "unit": "mm"
+              },
+              "z": {
+                "value": 15.0,
+                "unit": "mm"
+              }
+            },
+            "counts": {
+              "faces": 6,
+              "edges": 12,
+              "vertices": 8,
+              "solids": 1
+            },
+            "is_valid": true
+          },
+          {
+            "name": "Shell",
+            "solid": false,
+            "volume": null,
+            "area": {
+              "value": 94.0,
+              "unit": "mm^2"
+            },
+            "bbox": {
+              "xmin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "xmax": {
+                "value": 3.0,
+                "unit": "mm"
+              },
+              "ymin": {
+                "value": 60.0,
+                "unit": "mm"
+              },
+              "ymax": {
+                "value": 64.0,
+                "unit": "mm"
+              },
+              "zmin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "zmax": {
+                "value": 5.0,
+                "unit": "mm"
+              }
+            },
+            "com": null,
+            "counts": {
+              "faces": 6,
+              "edges": 12,
+              "vertices": 8,
+              "solids": 0
+            },
+            "is_valid": true
+          },
+          {
+            "name": "BodyB",
+            "solid": true,
+            "volume": {
+              "value": 125.0,
+              "unit": "mm^3"
+            },
+            "area": {
+              "value": 150.0,
+              "unit": "mm^2"
+            },
+            "bbox": {
+              "xmin": {
+                "value": 60.0,
+                "unit": "mm"
+              },
+              "xmax": {
+                "value": 65.0,
+                "unit": "mm"
+              },
+              "ymin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "ymax": {
+                "value": 5.0,
+                "unit": "mm"
+              },
+              "zmin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "zmax": {
+                "value": 5.0,
+                "unit": "mm"
+              }
+            },
+            "com": {
+              "x": {
+                "value": 62.5,
+                "unit": "mm"
+              },
+              "y": {
+                "value": 2.5,
+                "unit": "mm"
+              },
+              "z": {
+                "value": 2.5,
+                "unit": "mm"
+              }
+            },
+            "counts": {
+              "faces": 6,
+              "edges": 12,
+              "vertices": 8,
+              "solids": 1
+            },
+            "is_valid": true
+          },
+          {
+            "name": "Group",
+            "shape": null
+          },
+          {
+            "name": "BodyC",
+            "solid": true,
+            "volume": {
+              "value": 960.0,
+              "unit": "mm^3"
+            },
+            "area": {
+              "value": 928.0,
+              "unit": "mm^2"
+            },
+            "bbox": {
+              "xmin": {
+                "value": 120.0,
+                "unit": "mm"
+              },
+              "xmax": {
+                "value": 160.0,
+                "unit": "mm"
+              },
+              "ymin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "ymax": {
+                "value": 8.0,
+                "unit": "mm"
+              },
+              "zmin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "zmax": {
+                "value": 3.0,
+                "unit": "mm"
+              }
+            },
+            "com": {
+              "x": {
+                "value": 140.0,
+                "unit": "mm"
+              },
+              "y": {
+                "value": 4.0,
+                "unit": "mm"
+              },
+              "z": {
+                "value": 1.5,
+                "unit": "mm"
+              }
+            },
+            "counts": {
+              "faces": 6,
+              "edges": 12,
+              "vertices": 8,
+              "solids": 1
+            },
+            "is_valid": true
+          },
+          {
+            "name": "BodyA",
+            "solid": true,
+            "volume": {
+              "value": 6000.0,
+              "unit": "mm^3"
+            },
+            "area": {
+              "value": 2200.0,
+              "unit": "mm^2"
+            },
+            "bbox": {
+              "xmin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "xmax": {
+                "value": 10.0,
+                "unit": "mm"
+              },
+              "ymin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "ymax": {
+                "value": 20.0,
+                "unit": "mm"
+              },
+              "zmin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "zmax": {
+                "value": 30.0,
+                "unit": "mm"
+              }
+            },
+            "com": {
+              "x": {
+                "value": 5.0,
+                "unit": "mm"
+              },
+              "y": {
+                "value": 10.0,
+                "unit": "mm"
+              },
+              "z": {
+                "value": 15.0,
+                "unit": "mm"
+              }
+            },
+            "counts": {
+              "faces": 6,
+              "edges": 12,
+              "vertices": 8,
+              "solids": 1
+            },
+            "is_valid": true
+          }
+        ]
+      },
+      "text": "BodyA: volume 6000.0 mm^3 (solid), 6 faces, 12 edges.\nShell: volume n/a (non-solid), 6 faces, 12 edges.\nBodyB: volume 125.0 mm^3 (solid), 6 faces, 12 edges.\nGroup: no shape.\nBodyC: volume 960.0 mm^3 (solid), 6 faces, 12 edges.\nBodyA: volume 6000.0 mm^3 (solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+        "fits": false,
+        "ratio": null,
+        "checked": "computed",
+        "stale_reason": null
+      }
+    },
+    "elapsed_s": 0.03460119999363087,
+    "text": [
+      "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"objects\":[{\"name\":\"BodyA\",\"solid\":true,\"volume\":{\"value\":6000.0,\"unit\":\"mm^3\"},\"area\":{\"value\":2200.0,\"unit\":\"mm^2\"},\"bbox\":{\"xmin\":{\"value\":0.0,\"unit\":\"mm\"},\"xmax\":{\"value\":10.0,\"unit\":\"mm\"},\"ymin\":{\"value\":0.0,\"unit\":\"mm\"},\"ymax\":{\"value\":20.0,\"unit\":\"mm\"},\"zmin\":{\"value\":0.0,\"unit\":\"mm\"},\"zmax\":{\"value\":30.0,\"unit\":\"mm\"}},\"com\":{\"x\":{\"value\":5.0,\"unit\":\"mm\"},\"y\":{\"value\":10.0,\"unit\":\"mm\"},\"z\":{\"value\":15.0,\"unit\":\"mm\"}},\"counts\":{\"faces\":6,\"edges\":12,\"vertices\":8,\"solids\":1},\"is_valid\":true},{\"name\":\"Shell\",\"solid\":false,\"volume\":null,\"area\":{\"value\":94.0,\"unit\":\"mm^2\"},\"bbox\":{\"xmin\":{\"value\":0.0,\"unit\":\"mm\"},\"xmax\":{\"value\":3.0,\"unit\":\"mm\"},\"ymin\":{\"value\":60.0,\"unit\":\"mm\"},\"ymax\":{\"value\":64.0,\"unit\":\"mm\"},\"zmin\":{\"value\":0.0,\"unit\":\"mm\"},\"zmax\":{\"value\":5.0,\"unit\":\"mm\"}},\"com\":null,\"counts\":{\"faces\":6,\"edges\":12,\"vertices\":8,\"solids\":0},\"is_valid\":true},{\"name\":\"BodyB\",\"solid\":true,\"volume\":{\"value\":125.0,\"unit\":\"mm^3\"},\"area\":{\"value\":150.0,\"unit\":\"mm^2\"},\"bbox\":{\"xmin\":{\"value\":60.0,\"unit\":\"mm\"},\"xmax\":{\"value\":65.0,\"unit\":\"mm\"},\"ymin\":{\"value\":0.0,\"unit\":\"mm\"},\"ymax\":{\"value\":5.0,\"unit\":\"mm\"},\"zmin\":{\"value\":0.0,\"unit\":\"mm\"},\"zmax\":{\"value\":5.0,\"unit\":\"mm\"}},\"com\":{\"x\":{\"value\":62.5,\"unit\":\"mm\"},\"y\":{\"value\":2.5,\"unit\":\"mm\"},\"z\":{\"value\":2.5,\"unit\":\"mm\"}},\"counts\":{\"faces\":6,\"edges\":12,\"vertices\":8,\"solids\":1},\"is_valid\":true},{\"name\":\"Group\",\"shape\":null},{\"name\":\"BodyC\",\"solid\":true,\"volume\":{\"value\":960.0,\"unit\":\"mm^3\"},\"area\":{\"value\":928.0,\"unit\":\"mm^2\"},\"bbox\":{\"xmin\":{\"value\":120.0,\"unit\":\"mm\"},\"xmax\":{\"value\":160.0,\"unit\":\"mm\"},\"ymin\":{\"value\":0.0,\"unit\":\"mm\"},\"ymax\":{\"value\":8.0,\"unit\":\"mm\"},\"zmin\":{\"value\":0.0,\"unit\":\"mm\"},\"zmax\":{\"value\":3.0,\"unit\":\"mm\"}},\"com\":{\"x\":{\"value\":140.0,\"unit\":\"mm\"},\"y\":{\"value\":4.0,\"unit\":\"mm\"},\"z\":{\"value\":1.5,\"unit\":\"mm\"}},\"counts\":{\"faces\":6,\"edges\":12,\"vertices\":8,\"solids\":1},\"is_valid\":true},{\"name\":\"BodyA\",\"solid\":true,\"volume\":{\"value\":6000.0,\"unit\":\"mm^3\"},\"area\":{\"value\":2200.0,\"unit\":\"mm^2\"},\"bbox\":{\"xmin\":{\"value\":0.0,\"unit\":\"mm\"},\"xmax\":{\"value\":10.0,\"unit\":\"mm\"},\"ymin\":{\"value\":0.0,\"unit\":\"mm\"},\"ymax\":{\"value\":20.0,\"unit\":\"mm\"},\"zmin\":{\"value\":0.0,\"unit\":\"mm\"},\"zmax\":{\"value\":30.0,\"unit\":\"mm\"}},\"com\":{\"x\":{\"value\":5.0,\"unit\":\"mm\"},\"y\":{\"value\":10.0,\"unit\":\"mm\"},\"z\":{\"value\":15.0,\"unit\":\"mm\"}},\"counts\":{\"faces\":6,\"edges\":12,\"vertices\":8,\"solids\":1},\"is_valid\":true}]},\"text\":\"BodyA: volume 6000.0 mm^3 (solid), 6 faces, 12 edges.\\nShell: volume n/a (non-solid), 6 faces, 12 edges.\\nBodyB: volume 125.0 mm^3 (solid), 6 faces, 12 edges.\\nGroup: no shape.\\nBodyC: volume 960.0 mm^3 (solid), 6 faces, 12 edges.\\nBodyA: volume 6000.0 mm^3 (solid), 6 faces, 12 edges.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"computed\",\"stale_reason\":null}}"
+    ]
+  },
+  "object_calls": {
+    "BodyA": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "name": "BodyA",
+        "solid": true,
+        "volume": {
+          "value": 6000.0,
+          "unit": "mm^3"
+        },
+        "area": {
+          "value": 2200.0,
+          "unit": "mm^2"
+        },
+        "bbox": {
+          "xmin": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "xmax": {
+            "value": 10.0,
+            "unit": "mm"
+          },
+          "ymin": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "ymax": {
+            "value": 20.0,
+            "unit": "mm"
+          },
+          "zmin": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "zmax": {
+            "value": 30.0,
+            "unit": "mm"
+          }
+        },
+        "com": {
+          "x": {
+            "value": 5.0,
+            "unit": "mm"
+          },
+          "y": {
+            "value": 10.0,
+            "unit": "mm"
+          },
+          "z": {
+            "value": 15.0,
+            "unit": "mm"
+          }
+        },
+        "counts": {
+          "faces": 6,
+          "edges": 12,
+          "vertices": 8,
+          "solids": 1
+        },
+        "is_valid": true
+      },
+      "text": "BodyA: volume 6000.0 mm^3 (solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+        "fits": false,
+        "ratio": null,
+        "checked": "cached",
+        "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+    },
+    "BodyB": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "name": "BodyB",
+        "solid": true,
+        "volume": {
+          "value": 125.0,
+          "unit": "mm^3"
+        },
+        "area": {
+          "value": 150.0,
+          "unit": "mm^2"
+        },
+        "bbox": {
+          "xmin": {
+            "value": 60.0,
+            "unit": "mm"
+          },
+          "xmax": {
+            "value": 65.0,
+            "unit": "mm"
+          },
+          "ymin": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "ymax": {
+            "value": 5.0,
+            "unit": "mm"
+          },
+          "zmin": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "zmax": {
+            "value": 5.0,
+            "unit": "mm"
+          }
+        },
+        "com": {
+          "x": {
+            "value": 62.5,
+            "unit": "mm"
+          },
+          "y": {
+            "value": 2.5,
+            "unit": "mm"
+          },
+          "z": {
+            "value": 2.5,
+            "unit": "mm"
+          }
+        },
+        "counts": {
+          "faces": 6,
+          "edges": 12,
+          "vertices": 8,
+          "solids": 1
+        },
+        "is_valid": true
+      },
+      "text": "BodyB: volume 125.0 mm^3 (solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+        "fits": false,
+        "ratio": null,
+        "checked": "cached",
+        "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+    },
+    "BodyC": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "name": "BodyC",
+        "solid": true,
+        "volume": {
+          "value": 960.0,
+          "unit": "mm^3"
+        },
+        "area": {
+          "value": 928.0,
+          "unit": "mm^2"
+        },
+        "bbox": {
+          "xmin": {
+            "value": 120.0,
+            "unit": "mm"
+          },
+          "xmax": {
+            "value": 160.0,
+            "unit": "mm"
+          },
+          "ymin": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "ymax": {
+            "value": 8.0,
+            "unit": "mm"
+          },
+          "zmin": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "zmax": {
+            "value": 3.0,
+            "unit": "mm"
+          }
+        },
+        "com": {
+          "x": {
+            "value": 140.0,
+            "unit": "mm"
+          },
+          "y": {
+            "value": 4.0,
+            "unit": "mm"
+          },
+          "z": {
+            "value": 1.5,
+            "unit": "mm"
+          }
+        },
+        "counts": {
+          "faces": 6,
+          "edges": 12,
+          "vertices": 8,
+          "solids": 1
+        },
+        "is_valid": true
+      },
+      "text": "BodyC: volume 960.0 mm^3 (solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+        "fits": false,
+        "ratio": null,
+        "checked": "cached",
+        "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+    },
+    "Group": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+        "code": "INVALID_INPUT",
+        "message": "object has no queryable shape: Group",
+        "data": {
+          "exception": "ValidationError",
+          "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1441, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 670, in query_mass_properties\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 660, in read\n    raise ValidationError(f\"object has no queryable shape: {object}\")\nfreecad_buddy.usecases.documents.ValidationError: object has no queryable shape: Group\n"
+        }
+      },
+      "structured_content": {},
+      "text": ""
+    },
+    "Shell": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "name": "Shell",
+        "solid": false,
+        "volume": null,
+        "area": {
+          "value": 94.0,
+          "unit": "mm^2"
+        },
+        "bbox": {
+          "xmin": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "xmax": {
+            "value": 3.0,
+            "unit": "mm"
+          },
+          "ymin": {
+            "value": 60.0,
+            "unit": "mm"
+          },
+          "ymax": {
+            "value": 64.0,
+            "unit": "mm"
+          },
+          "zmin": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "zmax": {
+            "value": 5.0,
+            "unit": "mm"
+          }
+        },
+        "com": null,
+        "counts": {
+          "faces": 6,
+          "edges": 12,
+          "vertices": 8,
+          "solids": 0
+        },
+        "is_valid": true
+      },
+      "text": "Shell: volume n/a (non-solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+        "fits": false,
+        "ratio": null,
+        "checked": "cached",
+        "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+    }
+  },
+  "direct_read": {
+    "BodyA": {
+      "bbox": [
+        0.0,
+        10.0,
+        0.0,
+        20.0,
+        0.0,
+        30.0
+      ],
+      "volume": 6000.0,
+      "area": 2200.0,
+      "is_valid": true,
+      "faces": 6,
+      "solids": 1
+    },
+    "BodyB": {
+      "bbox": [
+        60.0,
+        65.0,
+        0.0,
+        5.0,
+        0.0,
+        5.0
+      ],
+      "volume": 124.99999999999997,
+      "area": 149.99999999999997,
+      "is_valid": true,
+      "faces": 6,
+      "solids": 1
+    },
+    "BodyC": {
+      "bbox": [
+        120.0,
+        160.0,
+        0.0,
+        8.0,
+        0.0,
+        3.0
+      ],
+      "volume": 960.0,
+      "area": 928.0,
+      "is_valid": true,
+      "faces": 6,
+      "solids": 1
+    },
+    "Group": null,
+    "Shell": {
+      "bbox": [
+        0.0,
+        3.0,
+        60.0,
+        64.0,
+        0.0,
+        5.0
+      ],
+      "volume": 60.0,
+      "area": 93.99999999999999,
+      "is_valid": true,
+      "faces": 6,
+      "solids": 0
+    }
+  },
+  "bad_inputs": {
+    "both": {
+      "isError": true,
+      "structured": {
+        "schema": "fcb.result-envelope/1",
+        "status": "INVALID_INPUT",
+        "detail": {
+          "code": "INVALID_INPUT",
+          "message": "give exactly one of 'object' and 'objects'",
+          "data": {
+            "exception": "ValidationError",
+            "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1441, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 653, in query_mass_properties\n    names = _mass_object_names(object, objects)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 624, in _mass_object_names\n    raise ValidationError(\"give exactly one of 'object' and 'objects'\")\nfreecad_buddy.usecases.documents.ValidationError: give exactly one of 'object' and 'objects'\n"
+          }
+        },
+        "structured_content": {},
+        "text": ""
+      },
+      "text": [
+        "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"INVALID_INPUT\",\"message\":\"give exactly one of 'object' and 'objects'\",\"data\":{\"exception\":\"ValidationError\",\"traceback\":\"Traceback (most recent call last):\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\\\", line 143, in _invoke\\n    return method.handler(**params)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 1441, in handler\\n    envelope = raw(**params)\\n               ^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 837, in <lambda>\\n    return lambda **p: fn(doc_registry, **p)\\n                       ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 653, in query_mass_properties\\n    names = _mass_object_names(object, objects)\\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 624, in _mass_object_names\\n    raise ValidationError(\\\"give exactly one of 'object' and 'objects'\\\")\\nfreecad_buddy.usecases.documents.ValidationError: give exactly one of 'object' and 'objects'\\n\"}},\"structured_content\":{},\"text\":\"\"}"
+      ]
+    },
+    "neither": {
+      "isError": true,
+      "structured": {
+        "schema": "fcb.result-envelope/1",
+        "status": "INVALID_INPUT",
+        "detail": {
+          "code": "INVALID_INPUT",
+          "message": "give exactly one of 'object' and 'objects'",
+          "data": {
+            "exception": "ValidationError",
+            "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1441, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 653, in query_mass_properties\n    names = _mass_object_names(object, objects)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 624, in _mass_object_names\n    raise ValidationError(\"give exactly one of 'object' and 'objects'\")\nfreecad_buddy.usecases.documents.ValidationError: give exactly one of 'object' and 'objects'\n"
+          }
+        },
+        "structured_content": {},
+        "text": ""
+      },
+      "text": [
+        "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"INVALID_INPUT\",\"message\":\"give exactly one of 'object' and 'objects'\",\"data\":{\"exception\":\"ValidationError\",\"traceback\":\"Traceback (most recent call last):\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\\\", line 143, in _invoke\\n    return method.handler(**params)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 1441, in handler\\n    envelope = raw(**params)\\n               ^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 837, in <lambda>\\n    return lambda **p: fn(doc_registry, **p)\\n                       ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 653, in query_mass_properties\\n    names = _mass_object_names(object, objects)\\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 624, in _mass_object_names\\n    raise ValidationError(\\\"give exactly one of 'object' and 'objects'\\\")\\nfreecad_buddy.usecases.documents.ValidationError: give exactly one of 'object' and 'objects'\\n\"}},\"structured_content\":{},\"text\":\"\"}"
+      ]
+    },
+    "unknown": {
+      "isError": true,
+      "structured": {
+        "schema": "fcb.result-envelope/1",
+        "status": "INVALID_INPUT",
+        "detail": {
+          "code": "INVALID_INPUT",
+          "message": "unknown object: Nope",
+          "data": {
+            "exception": "ValidationError",
+            "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1441, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 670, in query_mass_properties\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 656, in read\n    resolved = [_resolve_object(document, name) for name in names]\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 656, in <listcomp>\n    resolved = [_resolve_object(document, name) for name in names]\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 200, in _resolve_object\n    raise ValidationError(f\"unknown object: {name}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown object: Nope\n"
+          }
+        },
+        "structured_content": {},
+        "text": ""
+      },
+      "text": [
+        "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"INVALID_INPUT\",\"message\":\"unknown object: Nope\",\"data\":{\"exception\":\"ValidationError\",\"traceback\":\"Traceback (most recent call last):\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\\\", line 143, in _invoke\\n    return method.handler(**params)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 1441, in handler\\n    envelope = raw(**params)\\n               ^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 837, in <lambda>\\n    return lambda **p: fn(doc_registry, **p)\\n                       ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 670, in query_mass_properties\\n    return registry.with_document(doc, read)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\\\", line 418, in with_document\\n    return fn(handle, document)\\n           ^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 656, in read\\n    resolved = [_resolve_object(document, name) for name in names]\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 656, in <listcomp>\\n    resolved = [_resolve_object(document, name) for name in names]\\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 200, in _resolve_object\\n    raise ValidationError(f\\\"unknown object: {name}\\\")\\nfreecad_buddy.usecases.documents.ValidationError: unknown object: Nope\\n\"}},\"structured_content\":{},\"text\":\"\"}"
+      ]
+    },
+    "fifty_one": {
+      "isError": true,
+      "structured": null,
+      "text": [
+        "Input validation error: ['BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA', 'BodyA'] is too long"
+      ]
+    }
+  },
+  "heavy_build": {
+    "names": [
+      "Heavy00",
+      "Heavy01",
+      "Heavy02",
+      "Heavy03",
+      "Heavy04",
+      "Heavy05",
+      "Heavy06",
+      "Heavy07",
+      "Heavy08",
+      "Heavy09",
+      "Heavy10",
+      "Heavy11",
+      "Heavy12",
+      "Heavy13",
+      "Heavy14",
+      "Heavy15",
+      "Heavy16",
+      "Heavy17",
+      "Heavy18",
+      "Heavy19",
+      "Heavy20",
+      "Heavy21",
+      "Heavy22",
+      "Heavy23",
+      "Heavy24",
+      "Heavy25",
+      "Heavy26",
+      "Heavy27",
+      "Heavy28",
+      "Heavy29",
+      "Heavy30",
+      "Heavy31",
+      "Heavy32",
+      "Heavy33",
+      "Heavy34",
+      "Heavy35",
+      "Heavy36",
+      "Heavy37",
+      "Heavy38",
+      "Heavy39",
+      "Heavy40",
+      "Heavy41",
+      "Heavy42",
+      "Heavy43",
+      "Heavy44",
+      "Heavy45",
+      "Heavy46",
+      "Heavy47",
+      "Heavy48",
+      "Heavy49"
+    ],
+    "faces": 172,
+    "edges": 425,
+    "valid": true,
+    "volume": 671511.3483139002,
+    "build_s": 4.089961099991342
+  },
+  "heavy_call": {
+    "elapsed_s": [
+      3.677947400006815,
+      3.68193269999756,
+      3.712221199995838
+    ],
+    "status": "OK",
+    "record_count": 50,
+    "first_record": {
+      "name": "Heavy00",
+      "solid": true,
+      "volume": {
+        "value": 671511.35,
+        "unit": "mm^3"
+      },
+      "area": {
+        "value": 132425.2,
+        "unit": "mm^2"
+      },
+      "bbox": {
+        "xmin": {
+          "value": 0.0,
+          "unit": "mm"
+        },
+        "xmax": {
+          "value": 200.0,
+          "unit": "mm"
+        },
+        "ymin": {
+          "value": 200.0,
+          "unit": "mm"
+        },
+        "ymax": {
+          "value": 400.0,
+          "unit": "mm"
+        },
+        "zmin": {
+          "value": 0.0,
+          "unit": "mm"
+        },
+        "zmax": {
+          "value": 20.0,
+          "unit": "mm"
+        }
+      },
+      "com": null,
+      "counts": {
+        "faces": 172,
+        "edges": 425,
+        "vertices": 255,
+        "solids": 1
+      },
+      "is_valid": true
+    }
+  },
+  "handle": "fcb-doc:BPpNIBZMG9qPdDMKL-IFbQ"
+}

@@ -1,0 +1,10 @@
+--- after stop
+addon.log
+audit.jsonl
+mcp-proxy.log
+provision.log
+rpc-1.json
+rpc-777777.json
+freecad pids: 
+curl: (7) Failed to connect to 127.0.0.1 port 8765 after 0 ms: Couldn't connect to server
+healthz: unreachable

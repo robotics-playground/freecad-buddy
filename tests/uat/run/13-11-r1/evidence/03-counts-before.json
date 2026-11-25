@@ -1,0 +1,26 @@
+{
+ "tool": "script_exec",
+ "args": {
+  "doc": "fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA",
+  "code": "b = doc.getObject(\"Body\"); p2 = doc.getObject(\"Pad2\")\nresult = {\"UndoCount\": doc.UndoCount, \"RedoCount\": doc.RedoCount, \"UndoNames\": doc.UndoNames, \"RedoNames\": doc.RedoNames,\n          \"objects\": len(doc.Objects), \"tip\": b.Tip.Name if b and b.Tip else None,\n          \"group\": [o.Name for o in b.Group] if b else None,\n          \"pad2\": None if p2 is None else {\"outlist\": [o.Name for o in p2.OutList], \"expr\": p2.ExpressionEngine,\n                  \"length\": p2.Length.Value, \"zmax\": p2.Shape.BoundBox.ZMax, \"base\": p2.BaseFeature.Name if p2.BaseFeature else None,\n                  \"visible\": p2.Visibility},\n          \"VS_inlist\": [o.Name for o in doc.getObject(\"VS\").InList] if doc.getObject(\"VS\") else None,\n          \"invalid\": [o.Name for o in doc.Objects if \"Invalid\" in o.State]}\n"
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "doc": "fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA",
+   "stdout": "",
+   "value_repr": "{'UndoCount': 1, 'RedoCount': 0, 'UndoNames': ['fixture'], 'RedoNames': [], 'objects': 25, 'tip': 'Pad2', 'group': ['Sketch1', 'Pad1', 'Sketch2', 'Pad2'], 'pad2': {'outlist': ['Sketch2', 'Pad1', 'VS', 'VS'], 'expr': [('Length', 'VS.L')], 'length': 5.0, 'zmax': 15.0, 'base': 'Pad1', 'visible': True}, 'VS_inlist': ['Pad2'], 'invalid': []}",
+   "fingerprint_after": null
+  },
+  "text": "doc: fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA\nfingerprint_after: None\nstdout: \nvalue_repr: <338 chars>",
+  "framing": {
+   "fits": true,
+   "ratio": 0.95,
+   "checked": "computed",
+   "stale_reason": null
+  }
+ }
+}

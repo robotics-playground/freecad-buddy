@@ -1,0 +1,7 @@
+{"case": "sweep_doubled_back", "fixture_s": 0.0, "status": "REFUSED", "code": "sweep.degenerate_spine", "detail": "the spine doubles back on itself inside one edge; FreeCAD cannot sweep along it and would hold the bridge. Split it into separate edges or redraw it", "elapsed_s": 0.01}
+{"case":"loft_lines_40x200","rc":0,"note":"no result"}
+{"case":"loft_bspline_max","rc":0,"note":"no result"}
+{"case":"loft_500x16","rc":0,"note":"no result"}
+{"case": "sweep_100x100_lines", "fixture_s": 0.01, "status": "OK", "detail": "{}", "volume": 706.393344704777, "valid": true, "elapsed_s": 13.09}
+{"case": "sweep_bspline500_helix20", "fixture_s": 0.0, "status": "OK", "detail": "{}", "volume": 8894.585242823114, "valid": true, "elapsed_s": 0.48}
+{"case": "sweep_250_helix25", "fixture_s": 0.02, "status": "OK", "detail": "{}", "volume": 11102.131172608591, "valid": true, "elapsed_s": 18.3}

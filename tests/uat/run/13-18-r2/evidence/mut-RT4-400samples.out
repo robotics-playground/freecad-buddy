@@ -1,0 +1,5 @@
+label=RT4-400samples rc=0 elapsed=6s
+FEATURES_FILE=D:\Work\Personal\Sources\fcb-verify-13-18\src\freecad_buddy\usecases\features.py
+ERROR: test_Should_accept_a_long_helix_When_it_has_more_than_a_hundred_turns (infc.test_feature_tools.SweepTest.test_Should_accept_a_long_helix_When_it_has_more_than_a_hundred_turns)
+RESULT fail=0 error=1 run=68
+RED infc.test_feature_tools.SweepTest.test_Should_accept_a_long_helix_When_it_has_more_than_a_hundred_turns

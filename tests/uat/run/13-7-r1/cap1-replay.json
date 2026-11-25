@@ -1,0 +1,739 @@
+{
+ "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+ "calls": [
+  {
+   "tool": "document_create",
+   "args": {
+    "label": "Interference137"
+   },
+   "elapsed_s": 0.257,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+     "name": "Interference137",
+     "label": "Interference137"
+    },
+    "text": "doc: fcb-doc:kavVR1uDg8ZueNueOjaj7w\nlabel: Interference137\nname: Interference137"
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:kavVR1uDg8ZueNueOjaj7w\",\"name\":\"Interference137\",\"label\":\"Interference137\"},\"text\":\"doc: fcb-doc:kavVR1uDg8ZueNueOjaj7w\\nlabel: Interference137\\nname: Interference137\"}"
+   ]
+  },
+  {
+   "tool": "script_exec",
+   "args": {
+    "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+    "code": "\nimport Part, FreeCAD as App\ndef add(n, s):\n    o = doc.addObject(\"Part::Feature\", n); o.Shape = s\nV = App.Vector\nadd(\"A\", Part.makeBox(10, 10, 10))                       # reference box\nadd(\"Sep\", Part.makeBox(10, 10, 10, V(20, 0, 0)))        # 10 mm gap from A\nadd(\"Over\", Part.makeBox(10, 10, 10, V(5, 5, 5)))        # 5x5x5 overlap with A = 125\nadd(\"FaceTouch\", Part.makeBox(10, 10, 10, V(0, 0, 10)))  # shares A's top face\nadd(\"VertTouch\", Part.makeBox(10, 10, 10, V(-10, -10, -10)))  # shares one vertex with A\nadd(\"Cyl\", Part.makeCylinder(3, 30, V(5, 5, -10)))       # through A: pi*9*10\nc = [(0, 0), (10, 10), (10, 0), (0, 10), (0, 0)]\nadd(\"Bowtie\", Part.Face(Part.makePolygon([V(x, y, 0) for x, y in c])).extrude(V(0, 0, 10)))\ndoc.recompute()\nresult = \"built\"\n"
+   },
+   "elapsed_s": 0.108,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+     "stdout": "",
+     "value_repr": "'built'",
+     "fingerprint_after": null
+    },
+    "text": "doc: fcb-doc:kavVR1uDg8ZueNueOjaj7w\nfingerprint_after: None\nstdout: \nvalue_repr: 'built'\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+    "framing": {
+     "fits": false,
+     "ratio": null,
+     "checked": "computed",
+     "stale_reason": null
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:kavVR1uDg8ZueNueOjaj7w\",\"stdout\":\"\",\"value_repr\":\"'built'\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:kavVR1uDg8ZueNueOjaj7w\\nfingerprint_after: None\\nstdout: \\nvalue_repr: 'built'\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"computed\",\"stale_reason\":null}}"
+   ]
+  },
+  {
+   "tool": "script_exec",
+   "args": {
+    "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+    "code": "\nimport json\nfrom freecad_buddy.usecases.fingerprint import fingerprint\nresult = json.dumps({\"digest\": fingerprint(doc, fresh=True)[\"digest\"], \"undo\": doc.UndoCount,\n  \"names\": [o.Name for o in doc.Objects],\n  \"placements\": {o.Name: [round(x, 9) for x in o.Placement.Base] + [round(x, 9) for x in o.Placement.Rotation.Q] for o in doc.Objects},\n  \"touched\": [o.Name for o in doc.Objects if \"Touched\" in o.State]})\n"
+   },
+   "elapsed_s": 0.077,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+     "stdout": "",
+     "value_repr": "'{\"digest\": \"14c0b77f2f814e6acfc4c75872fff4402c28cf4004d0100da0cedf25cf4d042b\", \"undo\": 0, \"names\": [\"A\", \"Sep\", \"Over\", \"FaceTouch\", \"VertTouch\", \"Cyl\", \"Bowtie\"], \"placements\": {\"A\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"Sep\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"Over\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"FaceTouch\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"VertTouch\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"Cyl\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"Bowtie\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]}, \"touched\": []}'",
+     "fingerprint_after": null
+    },
+    "text": "doc: fcb-doc:kavVR1uDg8ZueNueOjaj7w\nfingerprint_after: None\nstdout: \nvalue_repr: <518 chars>\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+    "framing": {
+     "fits": false,
+     "ratio": null,
+     "checked": "computed",
+     "stale_reason": null
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:kavVR1uDg8ZueNueOjaj7w\",\"stdout\":\"\",\"value_repr\":\"'{\\\"digest\\\": \\\"14c0b77f2f814e6acfc4c75872fff4402c28cf4004d0100da0cedf25cf4d042b\\\", \\\"undo\\\": 0, \\\"names\\\": [\\\"A\\\", \\\"Sep\\\", \\\"Over\\\", \\\"FaceTouch\\\", \\\"VertTouch\\\", \\\"Cyl\\\", \\\"Bowtie\\\"], \\\"placements\\\": {\\\"A\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"Sep\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"Over\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"FaceTouch\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"VertTouch\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"Cyl\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"Bowtie\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]}, \\\"touched\\\": []}'\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:kavVR1uDg8ZueNueOjaj7w\\nfingerprint_after: None\\nstdout: \\nvalue_repr: <518 chars>\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"computed\",\"stale_reason\":null}}"
+   ]
+  },
+  {
+   "tool": "query_interference",
+   "args": {
+    "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+    "objects": [
+     "A",
+     "Sep",
+     "Over",
+     "FaceTouch",
+     "VertTouch",
+     "Cyl",
+     "Bowtie"
+    ]
+   },
+   "elapsed_s": 0.118,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "pairs": [
+      {
+       "a": "A",
+       "b": "Sep",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "A",
+       "b": "Over",
+       "common_volume": {
+        "value": 125.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "A",
+       "b": "FaceTouch",
+       "common_volume": null,
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": true
+      },
+      {
+       "a": "A",
+       "b": "VertTouch",
+       "common_volume": null,
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": true
+      },
+      {
+       "a": "A",
+       "b": "Cyl",
+       "common_volume": {
+        "value": 282.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "A",
+       "b": "Bowtie",
+       "common_volume": null,
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": true
+      },
+      {
+       "a": "Sep",
+       "b": "Over",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 5.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Sep",
+       "b": "FaceTouch",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Sep",
+       "b": "VertTouch",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 20.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Sep",
+       "b": "Cyl",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 12.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Sep",
+       "b": "Bowtie",
+       "common_volume": null,
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": true
+      },
+      {
+       "a": "Over",
+       "b": "FaceTouch",
+       "common_volume": {
+        "value": 125.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Over",
+       "b": "VertTouch",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 8.66,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Over",
+       "b": "Cyl",
+       "common_volume": {
+        "value": 70.69,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Over",
+       "b": "Bowtie",
+       "common_volume": null,
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": true
+      },
+      {
+       "a": "FaceTouch",
+       "b": "VertTouch",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "FaceTouch",
+       "b": "Cyl",
+       "common_volume": {
+        "value": 282.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "FaceTouch",
+       "b": "Bowtie",
+       "common_volume": null,
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": true
+      },
+      {
+       "a": "VertTouch",
+       "b": "Cyl",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 4.07,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "VertTouch",
+       "b": "Bowtie",
+       "common_volume": null,
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": true
+      },
+      {
+       "a": "Cyl",
+       "b": "Bowtie",
+       "common_volume": null,
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": true
+      }
+     ]
+    },
+    "text": "21 pair(s), 5 overlapping, 8 boolean failed.\nA/FaceTouch: BOOLEAN FAILED, overlap unknown.\nA/VertTouch: BOOLEAN FAILED, overlap unknown.\nA/Bowtie: BOOLEAN FAILED, overlap unknown.\nSep/Bowtie: BOOLEAN FAILED, overlap unknown.\nOver/Bowtie: BOOLEAN FAILED, overlap unknown.\nFaceTouch/Bowtie: BOOLEAN FAILED, overlap unknown.\nVertTouch/Bowtie: BOOLEAN FAILED, overlap unknown.\nCyl/Bowtie: BOOLEAN FAILED, overlap unknown.\nA/Over: common volume 125.0 mm^3.\nA/Cyl: common volume 282.74 mm^3.\nOver/FaceTouch: common volume 125.0 mm^3.\nOver/Cyl: common volume 70.69 mm^3.\nFaceTouch/Cyl: common volume 282.74 mm^3.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+    "framing": {
+     "fits": false,
+     "ratio": null,
+     "checked": "cached",
+     "stale_reason": "served from cache; unverified key component(s): geometry"
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"pairs\":[{\"a\":\"A\",\"b\":\"Sep\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"A\",\"b\":\"Over\",\"common_volume\":{\"value\":125.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"A\",\"b\":\"FaceTouch\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true},{\"a\":\"A\",\"b\":\"VertTouch\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true},{\"a\":\"A\",\"b\":\"Cyl\",\"common_volume\":{\"value\":282.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"A\",\"b\":\"Bowtie\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true},{\"a\":\"Sep\",\"b\":\"Over\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":5.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Sep\",\"b\":\"FaceTouch\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Sep\",\"b\":\"VertTouch\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":20.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Sep\",\"b\":\"Cyl\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":12.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Sep\",\"b\":\"Bowtie\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true},{\"a\":\"Over\",\"b\":\"FaceTouch\",\"common_volume\":{\"value\":125.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Over\",\"b\":\"VertTouch\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":8.66,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Over\",\"b\":\"Cyl\",\"common_volume\":{\"value\":70.69,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Over\",\"b\":\"Bowtie\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true},{\"a\":\"FaceTouch\",\"b\":\"VertTouch\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"FaceTouch\",\"b\":\"Cyl\",\"common_volume\":{\"value\":282.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"FaceTouch\",\"b\":\"Bowtie\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true},{\"a\":\"VertTouch\",\"b\":\"Cyl\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":4.07,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"VertTouch\",\"b\":\"Bowtie\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true},{\"a\":\"Cyl\",\"b\":\"Bowtie\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true}]},\"text\":\"21 pair(s), 5 overlapping, 8 boolean failed.\\nA/FaceTouch: BOOLEAN FAILED, overlap unknown.\\nA/VertTouch: BOOLEAN FAILED, overlap unknown.\\nA/Bowtie: BOOLEAN FAILED, overlap unknown.\\nSep/Bowtie: BOOLEAN FAILED, overlap unknown.\\nOver/Bowtie: BOOLEAN FAILED, overlap unknown.\\nFaceTouch/Bowtie: BOOLEAN FAILED, overlap unknown.\\nVertTouch/Bowtie: BOOLEAN FAILED, overlap unknown.\\nCyl/Bowtie: BOOLEAN FAILED, overlap unknown.\\nA/Over: common volume 125.0 mm^3.\\nA/Cyl: common volume 282.74 mm^3.\\nOver/FaceTouch: common volume 125.0 mm^3.\\nOver/Cyl: common volume 70.69 mm^3.\\nFaceTouch/Cyl: common volume 282.74 mm^3.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"cached\",\"stale_reason\":\"served from cache; unverified key component(s): geometry\"}}"
+   ]
+  },
+  {
+   "tool": "query_interference",
+   "args": {
+    "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+    "pairs": [
+     [
+      "A",
+      "Sep"
+     ],
+     [
+      "Over",
+      "A"
+     ],
+     [
+      "A",
+      "FaceTouch"
+     ],
+     [
+      "VertTouch",
+      "A"
+     ],
+     [
+      "A",
+      "Cyl"
+     ],
+     [
+      "Bowtie",
+      "A"
+     ]
+    ]
+   },
+   "elapsed_s": 0.057,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "pairs": [
+      {
+       "a": "A",
+       "b": "Sep",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Over",
+       "b": "A",
+       "common_volume": {
+        "value": 125.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "A",
+       "b": "FaceTouch",
+       "common_volume": null,
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": true
+      },
+      {
+       "a": "VertTouch",
+       "b": "A",
+       "common_volume": null,
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": true
+      },
+      {
+       "a": "A",
+       "b": "Cyl",
+       "common_volume": {
+        "value": 282.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Bowtie",
+       "b": "A",
+       "common_volume": null,
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": true
+      }
+     ]
+    },
+    "text": "6 pair(s), 2 overlapping, 3 boolean failed.\nA/FaceTouch: BOOLEAN FAILED, overlap unknown.\nVertTouch/A: BOOLEAN FAILED, overlap unknown.\nBowtie/A: BOOLEAN FAILED, overlap unknown.\nOver/A: common volume 125.0 mm^3.\nA/Cyl: common volume 282.74 mm^3.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+    "framing": {
+     "fits": false,
+     "ratio": null,
+     "checked": "cached",
+     "stale_reason": "served from cache; unverified key component(s): geometry"
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"pairs\":[{\"a\":\"A\",\"b\":\"Sep\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Over\",\"b\":\"A\",\"common_volume\":{\"value\":125.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"A\",\"b\":\"FaceTouch\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true},{\"a\":\"VertTouch\",\"b\":\"A\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true},{\"a\":\"A\",\"b\":\"Cyl\",\"common_volume\":{\"value\":282.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Bowtie\",\"b\":\"A\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true}]},\"text\":\"6 pair(s), 2 overlapping, 3 boolean failed.\\nA/FaceTouch: BOOLEAN FAILED, overlap unknown.\\nVertTouch/A: BOOLEAN FAILED, overlap unknown.\\nBowtie/A: BOOLEAN FAILED, overlap unknown.\\nOver/A: common volume 125.0 mm^3.\\nA/Cyl: common volume 282.74 mm^3.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"cached\",\"stale_reason\":\"served from cache; unverified key component(s): geometry\"}}"
+   ]
+  },
+  {
+   "tool": "script_exec",
+   "args": {
+    "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+    "code": "\nimport json\nfrom freecad_buddy.usecases.fingerprint import fingerprint\nresult = json.dumps({\"digest\": fingerprint(doc, fresh=True)[\"digest\"], \"undo\": doc.UndoCount,\n  \"names\": [o.Name for o in doc.Objects],\n  \"placements\": {o.Name: [round(x, 9) for x in o.Placement.Base] + [round(x, 9) for x in o.Placement.Rotation.Q] for o in doc.Objects},\n  \"touched\": [o.Name for o in doc.Objects if \"Touched\" in o.State]})\n"
+   },
+   "elapsed_s": 0.026,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+     "stdout": "",
+     "value_repr": "'{\"digest\": \"0065270801d9903d623d82c47db82f3148b88bad092cee8427180a2b93ad567e\", \"undo\": 0, \"names\": [\"A\", \"Sep\", \"Over\", \"FaceTouch\", \"VertTouch\", \"Cyl\", \"Bowtie\"], \"placements\": {\"A\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"Sep\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"Over\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"FaceTouch\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"VertTouch\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"Cyl\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"Bowtie\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]}, \"touched\": []}'",
+     "fingerprint_after": null
+    },
+    "text": "doc: fcb-doc:kavVR1uDg8ZueNueOjaj7w\nfingerprint_after: None\nstdout: \nvalue_repr: <518 chars>\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+    "framing": {
+     "fits": false,
+     "ratio": null,
+     "checked": "cached",
+     "stale_reason": "served from cache; unverified key component(s): geometry"
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:kavVR1uDg8ZueNueOjaj7w\",\"stdout\":\"\",\"value_repr\":\"'{\\\"digest\\\": \\\"0065270801d9903d623d82c47db82f3148b88bad092cee8427180a2b93ad567e\\\", \\\"undo\\\": 0, \\\"names\\\": [\\\"A\\\", \\\"Sep\\\", \\\"Over\\\", \\\"FaceTouch\\\", \\\"VertTouch\\\", \\\"Cyl\\\", \\\"Bowtie\\\"], \\\"placements\\\": {\\\"A\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"Sep\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"Over\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"FaceTouch\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"VertTouch\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"Cyl\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"Bowtie\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]}, \\\"touched\\\": []}'\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:kavVR1uDg8ZueNueOjaj7w\\nfingerprint_after: None\\nstdout: \\nvalue_repr: <518 chars>\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"cached\",\"stale_reason\":\"served from cache; unverified key component(s): geometry\"}}"
+   ]
+  },
+  {
+   "tool": "script_exec",
+   "args": {
+    "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+    "code": "\nimport json, math\nout = []\nfor a, b in [['A', 'Sep'], ['A', 'Over'], ['A', 'FaceTouch'], ['A', 'VertTouch'], ['A', 'Cyl'], ['A', 'Bowtie'], ['Sep', 'Over'], ['Sep', 'FaceTouch'], ['Sep', 'VertTouch'], ['Sep', 'Cyl'], ['Sep', 'Bowtie'], ['Over', 'FaceTouch'], ['Over', 'VertTouch'], ['Over', 'Cyl'], ['Over', 'Bowtie'], ['FaceTouch', 'VertTouch'], ['FaceTouch', 'Cyl'], ['FaceTouch', 'Bowtie'], ['VertTouch', 'Cyl'], ['VertTouch', 'Bowtie'], ['Cyl', 'Bowtie'], ['A', 'Sep'], ['Over', 'A'], ['A', 'FaceTouch'], ['VertTouch', 'A'], ['A', 'Cyl'], ['Bowtie', 'A']]:\n    sa, sb = doc.getObject(a).Shape, doc.getObject(b).Shape\n    try:\n        cm = sa.common(sb); vol = cm.Volume; nsub = len(cm.SubShapes); bbv = cm.BoundBox.isValid(); err = None\n    except Exception as e:\n        vol = None; nsub = None; bbv = None; err = repr(e)\n    try:\n        d = sa.distToShape(sb)[0]\n    except Exception as e:\n        d = repr(e)\n    out.append({\"a\": a, \"b\": b, \"common_volume\": vol, \"common_subshapes\": nsub, \"common_bbox_valid\": bbv, \"common_error\": err, \"dist\": d})\nresult = json.dumps(out)\n"
+   },
+   "elapsed_s": 0.198,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+     "stdout": "",
+     "value_repr": "'[{\"a\": \"A\", \"b\": \"Sep\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 10.0}, {\"a\": \"A\", \"b\": \"Over\", \"common_volume\": 124.99999999999997, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"A\", \"b\": \"FaceTouch\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"A\", \"b\": \"VertTouch\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"A\", \"b\": \"Cyl\", \"common_volume\": 282.7433388230814, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"A\", \"b\": \"Bowtie\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Sep\", \"b\": \"Over\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 5.0}, {\"a\": \"Sep\", \"b\": \"FaceTouch\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 10.0}, {\"a\": \"Sep\", \"b\": \"VertTouch\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 20.0}, {\"a\": \"Sep\", \"b\": \"Cyl\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 12.0}, {\"a\": \"Sep\", \"b\": \"Bowtie\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Over\", \"b\": \"FaceTouch\", \"common_volume\": 124.99999999999997, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Over\", \"b\": \"VertTouch\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 8.660254037844387}, {\"a\": \"Over\", \"b\": \"Cyl\", \"common_volume\": 70.68583470577035, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Over\", \"b\": \"Bowtie\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"FaceTouch\", \"b\": \"VertTouch\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 10.0}, {\"a\": \"FaceTouch\", \"b\": \"Cyl\", \"common_volume\": 282.7433388230814, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"FaceTouch\", \"b\": \"Bowtie\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"VertTouch\", \"b\": \"Cyl\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 4.071067811865475}, {\"a\": \"VertTouch\", \"b\": \"Bowtie\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Cyl\", \"b\": \"Bowtie\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"A\", \"b\": \"Sep\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 10.0}, {\"a\": \"Over\", \"b\": \"A\", \"common_volume\": 124.99999999999997, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"A\", \"b\": \"FaceTouch\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"VertTouch\", \"b\": \"A\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"A\", \"b\": \"Cyl\", \"common_volume\": 282.7433388230814, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Bowtie\", \"b\": \"A\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}]'",
+     "fingerprint_after": null
+    },
+    "text": "doc: fcb-doc:kavVR1uDg8ZueNueOjaj7w\nfingerprint_after: None\nstdout: \nvalue_repr: <3836 chars>\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+    "framing": {
+     "fits": false,
+     "ratio": null,
+     "checked": "cached",
+     "stale_reason": "served from cache; unverified key component(s): geometry"
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:kavVR1uDg8ZueNueOjaj7w\",\"stdout\":\"\",\"value_repr\":\"'[{\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"Sep\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 10.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"Over\\\", \\\"common_volume\\\": 124.99999999999997, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"FaceTouch\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"VertTouch\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"Cyl\\\", \\\"common_volume\\\": 282.7433388230814, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"Bowtie\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Sep\\\", \\\"b\\\": \\\"Over\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 5.0}, {\\\"a\\\": \\\"Sep\\\", \\\"b\\\": \\\"FaceTouch\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 10.0}, {\\\"a\\\": \\\"Sep\\\", \\\"b\\\": \\\"VertTouch\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 20.0}, {\\\"a\\\": \\\"Sep\\\", \\\"b\\\": \\\"Cyl\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 12.0}, {\\\"a\\\": \\\"Sep\\\", \\\"b\\\": \\\"Bowtie\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Over\\\", \\\"b\\\": \\\"FaceTouch\\\", \\\"common_volume\\\": 124.99999999999997, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Over\\\", \\\"b\\\": \\\"VertTouch\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 8.660254037844387}, {\\\"a\\\": \\\"Over\\\", \\\"b\\\": \\\"Cyl\\\", \\\"common_volume\\\": 70.68583470577035, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Over\\\", \\\"b\\\": \\\"Bowtie\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"FaceTouch\\\", \\\"b\\\": \\\"VertTouch\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 10.0}, {\\\"a\\\": \\\"FaceTouch\\\", \\\"b\\\": \\\"Cyl\\\", \\\"common_volume\\\": 282.7433388230814, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"FaceTouch\\\", \\\"b\\\": \\\"Bowtie\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"VertTouch\\\", \\\"b\\\": \\\"Cyl\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 4.071067811865475}, {\\\"a\\\": \\\"VertTouch\\\", \\\"b\\\": \\\"Bowtie\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Cyl\\\", \\\"b\\\": \\\"Bowtie\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"Sep\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 10.0}, {\\\"a\\\": \\\"Over\\\", \\\"b\\\": \\\"A\\\", \\\"common_volume\\\": 124.99999999999997, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"FaceTouch\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"VertTouch\\\", \\\"b\\\": \\\"A\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"Cyl\\\", \\\"common_volume\\\": 282.7433388230814, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Bowtie\\\", \\\"b\\\": \\\"A\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}]'\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:kavVR1uDg8ZueNueOjaj7w\\nfingerprint_after: None\\nstdout: \\nvalue_repr: <3836 chars>\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"cached\",\"stale_reason\":\"served from cache; unverified key component(s): geometry\"}}"
+   ]
+  },
+  {
+   "tool": "query_interference",
+   "args": {
+    "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+    "pairs": [
+     [
+      "A",
+      "A"
+     ]
+    ]
+   },
+   "elapsed_s": 0.013,
+   "isError": true,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "INVALID_INPUT",
+    "detail": {
+     "code": "INVALID_INPUT",
+     "message": "a pair must name two different objects: A",
+     "data": {
+      "exception": "ValidationError",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1481, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 789, in query_interference\n    name_pairs = _interference_pairs(objects, pairs)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 723, in _interference_pairs\n    raise ValidationError(f\"a pair must name two different objects: {pair[0]}\")\nfreecad_buddy.usecases.documents.ValidationError: a pair must name two different objects: A\n"
+     }
+    },
+    "structured_content": {},
+    "text": ""
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"INVALID_INPUT\",\"message\":\"a pair must name two different objects: A\",\"data\":{\"exception\":\"ValidationError\",\"traceback\":\"Traceback (most recent call last):\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\\\", line 143, in _invoke\\n    return method.handler(**params)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 1481, in handler\\n    envelope = raw(**params)\\n               ^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 837, in <lambda>\\n    return lambda **p: fn(doc_registry, **p)\\n                       ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 789, in query_interference\\n    name_pairs = _interference_pairs(objects, pairs)\\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 723, in _interference_pairs\\n    raise ValidationError(f\\\"a pair must name two different objects: {pair[0]}\\\")\\nfreecad_buddy.usecases.documents.ValidationError: a pair must name two different objects: A\\n\"}},\"structured_content\":{},\"text\":\"\"}"
+   ]
+  },
+  {
+   "tool": "query_interference",
+   "args": {
+    "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+    "objects": [
+     "A",
+     "Nope"
+    ]
+   },
+   "elapsed_s": 0.013,
+   "isError": true,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "INVALID_INPUT",
+    "detail": {
+     "code": "INVALID_INPUT",
+     "message": "unknown object: Nope",
+     "data": {
+      "exception": "ValidationError",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1481, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 809, in query_interference\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 793, in read\n    shapes = {name: _interference_shape(document, name) for name in sorted(names)}\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 793, in <dictcomp>\n    shapes = {name: _interference_shape(document, name) for name in sorted(names)}\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 732, in _interference_shape\n    obj = _resolve_object(document, name)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 200, in _resolve_object\n    raise ValidationError(f\"unknown object: {name}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown object: Nope\n"
+     }
+    },
+    "structured_content": {},
+    "text": ""
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"INVALID_INPUT\",\"message\":\"unknown object: Nope\",\"data\":{\"exception\":\"ValidationError\",\"traceback\":\"Traceback (most recent call last):\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\\\", line 143, in _invoke\\n    return method.handler(**params)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 1481, in handler\\n    envelope = raw(**params)\\n               ^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 837, in <lambda>\\n    return lambda **p: fn(doc_registry, **p)\\n                       ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 809, in query_interference\\n    return registry.with_document(doc, read)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\\\", line 418, in with_document\\n    return fn(handle, document)\\n           ^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 793, in read\\n    shapes = {name: _interference_shape(document, name) for name in sorted(names)}\\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 793, in <dictcomp>\\n    shapes = {name: _interference_shape(document, name) for name in sorted(names)}\\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 732, in _interference_shape\\n    obj = _resolve_object(document, name)\\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 200, in _resolve_object\\n    raise ValidationError(f\\\"unknown object: {name}\\\")\\nfreecad_buddy.usecases.documents.ValidationError: unknown object: Nope\\n\"}},\"structured_content\":{},\"text\":\"\"}"
+   ]
+  },
+  {
+   "tool": "query_interference",
+   "args": {
+    "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+    "objects": [
+     "A",
+     "Sep",
+     "Over",
+     "FaceTouch",
+     "VertTouch",
+     "Cyl",
+     "Bowtie"
+    ],
+    "pairs": [
+     [
+      "A",
+      "Sep"
+     ],
+     [
+      "Over",
+      "A"
+     ],
+     [
+      "A",
+      "FaceTouch"
+     ],
+     [
+      "VertTouch",
+      "A"
+     ],
+     [
+      "A",
+      "Cyl"
+     ],
+     [
+      "Bowtie",
+      "A"
+     ]
+    ]
+   },
+   "elapsed_s": 0.013,
+   "isError": true,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "INVALID_INPUT",
+    "detail": {
+     "code": "INVALID_INPUT",
+     "message": "give exactly one of 'objects' and 'pairs'",
+     "data": {
+      "exception": "ValidationError",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1481, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 789, in query_interference\n    name_pairs = _interference_pairs(objects, pairs)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 701, in _interference_pairs\n    raise ValidationError(\"give exactly one of 'objects' and 'pairs'\")\nfreecad_buddy.usecases.documents.ValidationError: give exactly one of 'objects' and 'pairs'\n"
+     }
+    },
+    "structured_content": {},
+    "text": ""
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"INVALID_INPUT\",\"message\":\"give exactly one of 'objects' and 'pairs'\",\"data\":{\"exception\":\"ValidationError\",\"traceback\":\"Traceback (most recent call last):\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\\\", line 143, in _invoke\\n    return method.handler(**params)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 1481, in handler\\n    envelope = raw(**params)\\n               ^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 837, in <lambda>\\n    return lambda **p: fn(doc_registry, **p)\\n                       ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 789, in query_interference\\n    name_pairs = _interference_pairs(objects, pairs)\\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\\\", line 701, in _interference_pairs\\n    raise ValidationError(\\\"give exactly one of 'objects' and 'pairs'\\\")\\nfreecad_buddy.usecases.documents.ValidationError: give exactly one of 'objects' and 'pairs'\\n\"}},\"structured_content\":{},\"text\":\"\"}"
+   ]
+  },
+  {
+   "tool": "query_interference",
+   "args": {
+    "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+    "objects": [
+     "X0",
+     "X1",
+     "X2",
+     "X3",
+     "X4",
+     "X5",
+     "X6",
+     "X7",
+     "X8",
+     "X9",
+     "X10",
+     "X11",
+     "X12",
+     "X13",
+     "X14",
+     "X15",
+     "X16",
+     "X17",
+     "X18",
+     "X19",
+     "X20"
+    ]
+   },
+   "elapsed_s": 0.055,
+   "isError": true,
+   "structured": null,
+   "text": [
+    "Input validation error: ['X0', 'X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9', 'X10', 'X11', 'X12', 'X13', 'X14', 'X15', 'X16', 'X17', 'X18', 'X19', 'X20'] is too long"
+   ]
+  },
+  {
+   "tool": "script_exec",
+   "args": {
+    "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+    "code": "\nimport json\nfrom freecad_buddy.usecases.fingerprint import fingerprint\nresult = json.dumps({\"digest\": fingerprint(doc, fresh=True)[\"digest\"], \"undo\": doc.UndoCount,\n  \"names\": [o.Name for o in doc.Objects],\n  \"placements\": {o.Name: [round(x, 9) for x in o.Placement.Base] + [round(x, 9) for x in o.Placement.Rotation.Q] for o in doc.Objects},\n  \"touched\": [o.Name for o in doc.Objects if \"Touched\" in o.State]})\n"
+   },
+   "elapsed_s": 0.041,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "doc": "fcb-doc:kavVR1uDg8ZueNueOjaj7w",
+     "stdout": "",
+     "value_repr": "'{\"digest\": \"0065270801d9903d623d82c47db82f3148b88bad092cee8427180a2b93ad567e\", \"undo\": 0, \"names\": [\"A\", \"Sep\", \"Over\", \"FaceTouch\", \"VertTouch\", \"Cyl\", \"Bowtie\"], \"placements\": {\"A\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"Sep\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"Over\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"FaceTouch\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"VertTouch\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"Cyl\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \"Bowtie\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]}, \"touched\": []}'",
+     "fingerprint_after": null
+    },
+    "text": "doc: fcb-doc:kavVR1uDg8ZueNueOjaj7w\nfingerprint_after: None\nstdout: \nvalue_repr: <518 chars>\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+    "framing": {
+     "fits": false,
+     "ratio": null,
+     "checked": "cached",
+     "stale_reason": "served from cache; unverified key component(s): geometry"
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:kavVR1uDg8ZueNueOjaj7w\",\"stdout\":\"\",\"value_repr\":\"'{\\\"digest\\\": \\\"0065270801d9903d623d82c47db82f3148b88bad092cee8427180a2b93ad567e\\\", \\\"undo\\\": 0, \\\"names\\\": [\\\"A\\\", \\\"Sep\\\", \\\"Over\\\", \\\"FaceTouch\\\", \\\"VertTouch\\\", \\\"Cyl\\\", \\\"Bowtie\\\"], \\\"placements\\\": {\\\"A\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"Sep\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"Over\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"FaceTouch\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"VertTouch\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"Cyl\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], \\\"Bowtie\\\": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]}, \\\"touched\\\": []}'\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:kavVR1uDg8ZueNueOjaj7w\\nfingerprint_after: None\\nstdout: \\nvalue_repr: <518 chars>\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"cached\",\"stale_reason\":\"served from cache; unverified key component(s): geometry\"}}"
+   ]
+  }
+ ]
+}

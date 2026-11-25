@@ -1,0 +1,3 @@
+== rt1a_face_limit_10000
+  RED test_Should_finish_well_inside_the_query_budget_When_shapes_are_at_the_limits (name='Prism') (name='Prism')
+  RESULT run=42 fail=1 err=0

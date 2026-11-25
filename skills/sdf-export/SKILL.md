@@ -49,7 +49,8 @@ point your MCP client at it) and confirm the Phase-5 tool set is present.
   keeps a link, joint, or sensor where you meant it. Record the frame for every
   origin.
 - Compute inertials from FreeCAD's **native mass properties**
-  (`query_mass_properties`), because a dynamic model's inertials are
+  (`query_mass_properties` gives volume and center of mass, null for a compound; mass comes
+  from density and no tool returns the inertia tensor), because a dynamic model's inertials are
   simulation-critical; do not copy a visual origin into the inertial origin unless
   it's physically justified, and record the method if a value is approximated.
 - Choose **collision geometry for stable, fast physics**, not visual fidelity — a
@@ -77,7 +78,7 @@ Reasoning → export:
 2. Links/joints: bodies → links; the assembly's prismatic finger joint → an SDF
    `<joint type="prismatic">` with an explicit `<pose relative_to="...">` and a
    normalized axis in the joint frame.
-3. Inertials: `query_mass_properties` per link → SI inertials; collision = simplified
+3. Inertials: one `query_mass_properties` call with `objects` for every link → volume and COM (no mass or inertia in the result: take mass from the material density) → SI inertials; collision = simplified
    primitives for stable contact, visual = the full mesh.
 4. `export_sdf` then `verify_export_sdf` → re-parse: schema-valid, frames resolve,
    axes normalized, inertials positive, meshes resolve. Done only then.

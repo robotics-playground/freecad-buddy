@@ -1,0 +1,7 @@
+ran=56 failures=5 errors=1
+RED infc.test_tnp_guard.ExpressionBindingTest.test_Should_pass_When_the_op_wrote_the_removal_of_a_binding :: + CLEAN
+RED infc.test_feature_expressions.BindTest.test_Should_clear_the_binding_and_keep_the_value_When_the_expression_is_null ::  : {'code': 'mutation.spec_failed', 'message': 'TNP audit flagged 1 reference(s): Box.ExpressionEngine[Length] BROKEN'}
+RED infc.test_feature_expressions.BindTest.test_Should_not_flag_the_audit_When_a_binding_is_added_replaced_and_cleared ::  : {'code': 'mutation.spec_failed', 'message': 'TNP audit flagged 1 reference(s): Box.ExpressionEngine[Length] BROKEN'}
+RED infc.test_feature_expressions.IntegrityTest.test_Should_clear_the_binding_When_it_sits_on_a_path_that_resolves_to_nothing ::  : {'code': 'mutation.spec_failed', 'message': 'TNP audit flagged 1 reference(s): Box.ExpressionEngine[.Length.x] BROKEN; rollback could not be proven: the snapshot-restored document does not match the pre-mutation fingerprint 225818688dc3b313eb33ac9f88648c4f40052dbb1995190f659d84eae5247b5d or the p
+RED infc.test_feature_expressions.IntegrityTest.test_Should_clear_the_binding_When_the_path_names_the_constraint_by_index ::  : {'code': 'mutation.spec_failed', 'message': 'TNP audit flagged 1 reference(s): Sketch.ExpressionEngine[.Constraints.span] BROKEN'}
+RED infc.test_feature_expressions.UndoTest.test_Should_restore_the_binding_When_a_clear_is_undone :: KeyError: 'Box'

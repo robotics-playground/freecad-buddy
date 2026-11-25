@@ -1,0 +1,1636 @@
+[
+ {
+  "step": "list",
+  "has_define": true,
+  "has_query": true,
+  "count": 50
+ },
+ {
+  "step": "create",
+  "tool": "document_create",
+  "args": {
+   "label": "CAP2d_VarSet"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.187,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+    "name": "CAP2d_VarSet",
+    "label": "CAP2d_VarSet"
+   },
+   "text": "doc: fcb-doc:923T77Ge4werA5YVJcGXDQ\nlabel: CAP2d_VarSet\nname: CAP2d_VarSet"
+  }
+ },
+ {
+  "step": "define",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "width",
+     "type": "length",
+     "value": {
+      "value": 20,
+      "unit": "mm"
+     },
+     "description": "plate width"
+    },
+    {
+     "name": "height",
+     "type": "length",
+     "value": {
+      "value": 10,
+      "unit": "mm"
+     }
+    },
+    {
+     "name": "shift",
+     "type": "length",
+     "value": {
+      "value": 5,
+      "unit": "mm"
+     },
+     "group": "Placement"
+    }
+   ]
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.067,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "changed": [],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Params"
+     ]
+    },
+    "varset": "Params",
+    "added": [
+     "width",
+     "height",
+     "shift"
+    ],
+    "updated": []
+   },
+   "text": "Mutation committed; fingerprint 4f53cda18c2b.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "step": "body",
+  "tool": "feature_body_create",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "name": "Body"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.038,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Body"
+     ]
+    },
+    "feature": "Body",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Body",
+     "readable": false
+    }
+   },
+   "text": "Mutation committed; fingerprint 283569b3f782.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "step": "datum",
+  "tool": "feature_datum",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "body": "Body",
+   "name": "Lift",
+   "kind": "plane",
+   "attachment": {
+    "kind": "mapped_name",
+    "object": "XY_Plane"
+   },
+   "map_mode": "ObjectXY"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.13,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "25f2c23070cc96ac42df7daee431247c88f94c88db4baf666e852af410ebdc4d",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Lift",
+       "volume": 0.0,
+       "area": 8e+100,
+       "com": [
+        -5e+99,
+        -5e+99,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Lift",
+      "Body"
+     ]
+    },
+    "feature": "Lift",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Lift",
+     "readable": true,
+     "body": "",
+     "is_tip": false,
+     "shape_summary": {
+      "solid_count": 0,
+      "face_count": 1,
+      "edge_count": 0,
+      "vertex_count": 0,
+      "is_valid": true,
+      "volume": 0.0,
+      "area": 8e+100,
+      "bbox": [
+       2e+100,
+       2e+100,
+       0.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint 25f2c23070cc.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "step": "sketch",
+  "tool": "sketch_create",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "name": "Profile",
+   "face": {
+    "kind": "mapped_name",
+    "object": "Lift",
+    "mapped_name": "Face1"
+   },
+   "body": "Body"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.195,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "25f2c23070cc96ac42df7daee431247c88f94c88db4baf666e852af410ebdc4d",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "d34762af57deea3b85bb4a581fbaade2fba093551390edb2e62534b9bdbf6b8b",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Profile",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "PASS": 1
+       },
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Profile"
+     ]
+    },
+    "sketch": "Profile",
+    "sketch_state": {
+     "schema": "fcb.sketch-state/1",
+     "sketch": "Profile",
+     "readable": true,
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 0,
+     "constraint_count": 0,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    }
+   },
+   "text": "Mutation committed; fingerprint d34762af57de.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "step": "geometry",
+  "tool": "sketch_add_geometry",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "sketch": "Profile",
+   "geometry": [
+    {
+     "kind": "line_segment",
+     "start": [
+      0,
+      0
+     ],
+     "end": [
+      20,
+      0
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      20,
+      0
+     ],
+     "end": [
+      20,
+      8
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      20,
+      8
+     ],
+     "end": [
+      0,
+      8
+     ]
+    },
+    {
+     "kind": "line_segment",
+     "start": [
+      0,
+      8
+     ],
+     "end": [
+      0,
+      0
+     ]
+    }
+   ],
+   "constraints": [
+    {
+     "type": "Coincident",
+     "first": 0,
+     "first_pos": 2,
+     "second": 1,
+     "second_pos": 1
+    },
+    {
+     "type": "Coincident",
+     "first": 1,
+     "first_pos": 2,
+     "second": 2,
+     "second_pos": 1
+    },
+    {
+     "type": "Coincident",
+     "first": 2,
+     "first_pos": 2,
+     "second": 3,
+     "second_pos": 1
+    },
+    {
+     "type": "Coincident",
+     "first": 3,
+     "first_pos": 2,
+     "second": 0,
+     "second_pos": 1
+    },
+    {
+     "type": "Horizontal",
+     "first": 0
+    },
+    {
+     "type": "Horizontal",
+     "first": 2
+    },
+    {
+     "type": "Vertical",
+     "first": 1
+    },
+    {
+     "type": "Vertical",
+     "first": 3
+    },
+    {
+     "type": "Coincident",
+     "first": 0,
+     "first_pos": 1,
+     "second": -1,
+     "second_pos": 1
+    },
+    {
+     "type": "DistanceX",
+     "first": 0,
+     "first_pos": 1,
+     "second": 0,
+     "second_pos": 2,
+     "value": {
+      "value": 20,
+      "unit": "mm"
+     },
+     "name": "width"
+    },
+    {
+     "type": "DistanceY",
+     "first": 1,
+     "first_pos": 1,
+     "second": 1,
+     "second_pos": 2,
+     "value": {
+      "value": 8,
+      "unit": "mm"
+     },
+     "name": "depth"
+    }
+   ]
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.154,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "d34762af57deea3b85bb4a581fbaade2fba093551390edb2e62534b9bdbf6b8b",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "a6332da17e91067a07abc5537663bb194ba36a8a0cdf9f597ca205e462cc098b",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Profile",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        10.0,
+        4.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "PASS": 2
+       },
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Profile"
+     ]
+    },
+    "sketch": "Profile",
+    "sketch_state": {
+     "schema": "fcb.sketch-state/1",
+     "sketch": "Profile",
+     "readable": true,
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 4,
+     "constraint_count": 11,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    },
+    "geo_ids": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "constraint_ids": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   },
+   "text": "Mutation committed; fingerprint a6332da17e91.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "pad",
+  "tool": "feature_pad",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "body": "Body",
+   "profile": "Profile",
+   "name": "Pad",
+   "length": {
+    "value": 10,
+    "unit": "mm"
+   }
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.235,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "a6332da17e91067a07abc5537663bb194ba36a8a0cdf9f597ca205e462cc098b",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "19d9283ea6e00851a310e8b545836886ce5d7ba2bf71647765b9a84d0f510c4c",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 1600.0,
+       "area": 880.0,
+       "com": [
+        10.0,
+        4.0,
+        5.0
+       ]
+      },
+      {
+       "name": "Pad",
+       "volume": 1600.0,
+       "area": 880.0,
+       "com": [
+        10.0,
+        4.0,
+        5.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "PASS": 2
+       },
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Pad",
+      "Body"
+     ]
+    },
+    "feature": "Pad",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Pad",
+     "readable": true,
+     "body": "Body",
+     "is_tip": true,
+     "shape_summary": {
+      "solid_count": 1,
+      "face_count": 6,
+      "edge_count": 12,
+      "vertex_count": 8,
+      "is_valid": true,
+      "volume": 1600.0,
+      "area": 880.0,
+      "bbox": [
+       20.0,
+       8.0,
+       10.0
+      ]
+     }
+    }
+   },
+   "text": "Mutation committed; fingerprint 19d9283ea6e0.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "bind",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "code": "doc = App.ActiveDocument if False else None\nimport FreeCAD as App\nd = [x for x in App.listDocuments().values() if x.Label == 'CAP2d_VarSet'][0]\np = d.getObject('Profile'); pad = d.getObject('Pad')\nd.openTransaction('bind expressions')\np.setExpression('Constraints.width', 'Params.width')\npad.setExpression('Length', 'Params.height')\np.setExpression('.AttachmentOffset.Base.x', 'Params.shift')\nd.commitTransaction(); d.recompute()\nprint(sorted(p.ExpressionEngine), pad.ExpressionEngine, pad.Shape.Volume)\n"
+  },
+  "note": "script_exec used ONLY for expression binding: feature_set_expression is Story 13-10, not built",
+  "isError": false,
+  "elapsed_s": 0.031,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+    "stdout": "[('.AttachmentOffset.Base.x', 'Params.shift'), ('.Constraints.width', 'Params.width')] [('Length', 'Params.height')] 1599.9999999999995\n",
+    "value_repr": null,
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:923T77Ge4werA5YVJcGXDQ\nfingerprint_after: None\nstdout: <136 chars>\nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "query1",
+  "tool": "query_parameters",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.024,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "varsets": [
+     {
+      "object": "Params",
+      "label": "Params",
+      "parameters": [
+       {
+        "name": "height",
+        "type": "length",
+        "value": 10.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "shift",
+        "type": "length",
+        "value": 5.0,
+        "unit": "mm",
+        "group": "Placement",
+        "description": ""
+       },
+       {
+        "name": "width",
+        "type": "length",
+        "value": 20.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": "plate width"
+       }
+      ]
+     }
+    ],
+    "spreadsheets": [],
+    "bindings": [
+     {
+      "object": "Pad",
+      "path": "Length",
+      "expression": "Params.height"
+     },
+     {
+      "object": "Profile",
+      "path": ".AttachmentOffset.Base.x",
+      "expression": "Params.shift"
+     },
+     {
+      "object": "Profile",
+      "path": ".Constraints.width",
+      "expression": "Params.width"
+     }
+    ],
+    "totals": {
+     "varset_parameters": 3,
+     "spreadsheet_parameters": 0,
+     "bindings": 3
+    },
+    "truncated": false
+   },
+   "text": "3 VarSet parameter(s) in 1 VarSet(s), 0 spreadsheet parameter(s), 3 binding(s).\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "mass1",
+  "tool": "query_mass_properties",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "object": "Pad"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.02,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Pad",
+    "solid": true,
+    "volume": {
+     "value": 1600.0,
+     "unit": "mm^3"
+    },
+    "area": {
+     "value": 880.0,
+     "unit": "mm^2"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 5.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 25.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 8.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 10.0,
+      "unit": "mm"
+     }
+    },
+    "com": {
+     "x": {
+      "value": 15.0,
+      "unit": "mm"
+     },
+     "y": {
+      "value": 4.0,
+      "unit": "mm"
+     },
+     "z": {
+      "value": 5.0,
+      "unit": "mm"
+     }
+    },
+    "counts": {
+     "faces": 6,
+     "edges": 12,
+     "vertices": 8,
+     "solids": 1
+    },
+    "is_valid": true
+   },
+   "text": "Pad: volume 1600.0 mm^3 (solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "edit",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "width",
+     "type": "length",
+     "value": {
+      "value": 30,
+      "unit": "mm"
+     }
+    },
+    {
+     "name": "height",
+     "type": "length",
+     "value": {
+      "value": 15,
+      "unit": "mm"
+     }
+    },
+    {
+     "name": "shift",
+     "type": "length",
+     "value": {
+      "value": 8,
+      "unit": "mm"
+     }
+    }
+   ]
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.209,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "b48d72056b247f46d998102dec177ed51f3a408418363a824959013cda537e21",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "0fcf115cda05306a4fb882b31fd0b56ac54a21848ed15a1c2d0fdd75a9d06550",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Body",
+       "volume": 3600.0,
+       "area": 1620.0,
+       "com": [
+        23.0,
+        4.0,
+        7.5
+       ]
+      },
+      {
+       "name": "Pad",
+       "volume": 3600.0,
+       "area": 1620.0,
+       "com": [
+        23.0,
+        4.0,
+        7.5
+       ]
+      },
+      {
+       "name": "Profile",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        23.0,
+        4.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "PASS": 6
+       },
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Params"
+     ]
+    },
+    "varset": "Params",
+    "added": [],
+    "updated": [
+     "width",
+     "height",
+     "shift"
+    ]
+   },
+   "text": "Mutation committed; fingerprint 0fcf115cda05.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "query2",
+  "tool": "query_parameters",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.028,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "varsets": [
+     {
+      "object": "Params",
+      "label": "Params",
+      "parameters": [
+       {
+        "name": "height",
+        "type": "length",
+        "value": 15.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "shift",
+        "type": "length",
+        "value": 8.0,
+        "unit": "mm",
+        "group": "Placement",
+        "description": ""
+       },
+       {
+        "name": "width",
+        "type": "length",
+        "value": 30.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": "plate width"
+       }
+      ]
+     }
+    ],
+    "spreadsheets": [],
+    "bindings": [
+     {
+      "object": "Pad",
+      "path": "Length",
+      "expression": "Params.height"
+     },
+     {
+      "object": "Profile",
+      "path": ".AttachmentOffset.Base.x",
+      "expression": "Params.shift"
+     },
+     {
+      "object": "Profile",
+      "path": ".Constraints.width",
+      "expression": "Params.width"
+     }
+    ],
+    "totals": {
+     "varset_parameters": 3,
+     "spreadsheet_parameters": 0,
+     "bindings": 3
+    },
+    "truncated": false
+   },
+   "text": "3 VarSet parameter(s) in 1 VarSet(s), 0 spreadsheet parameter(s), 3 binding(s).\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "mass2",
+  "tool": "query_mass_properties",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "object": "Pad"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.063,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Pad",
+    "solid": true,
+    "volume": {
+     "value": 3600.0,
+     "unit": "mm^3"
+    },
+    "area": {
+     "value": 1620.0,
+     "unit": "mm^2"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 8.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 38.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 8.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 15.0,
+      "unit": "mm"
+     }
+    },
+    "com": {
+     "x": {
+      "value": 23.0,
+      "unit": "mm"
+     },
+     "y": {
+      "value": 4.0,
+      "unit": "mm"
+     },
+     "z": {
+      "value": 7.5,
+      "unit": "mm"
+     }
+    },
+    "counts": {
+     "faces": 6,
+     "edges": 12,
+     "vertices": 8,
+     "solids": 1
+    },
+    "is_valid": true
+   },
+   "text": "Pad: volume 3600.0 mm^3 (solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "undo",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "expect_fingerprint": {
+    "digest": "b48d72056b247f46d998102dec177ed51f3a408418363a824959013cda537e21",
+    "serializer": "exportBinary"
+   }
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.047,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+    "name": "CAP2d_VarSet",
+    "undone": "buddy: define parameters on Params",
+    "fingerprint_before": "0fcf115cda05306a4fb882b31fd0b56ac54a21848ed15a1c2d0fdd75a9d06550",
+    "fingerprint_after": "b48d72056b247f46d998102dec177ed51f3a408418363a824959013cda537e21",
+    "matches_pre_op": true,
+    "restored_objects": [
+     "Params",
+     "Body",
+     "Origin",
+     "X_Axis",
+     "Y_Axis",
+     "Z_Axis",
+     "XY_Plane",
+     "XZ_Plane",
+     "YZ_Plane",
+     "Origin001",
+     "Lift",
+     "Profile",
+     "Pad"
+    ],
+    "undo_count": 7,
+    "errors": []
+   },
+   "text": "Undid 'buddy: define parameters on Params' on CAP2d_VarSet: restored the pre-op state (0fcf115cda05 -> b48d72056b24).\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "query3",
+  "tool": "query_parameters",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.026,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "varsets": [
+     {
+      "object": "Params",
+      "label": "Params",
+      "parameters": [
+       {
+        "name": "height",
+        "type": "length",
+        "value": 10.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "shift",
+        "type": "length",
+        "value": 5.0,
+        "unit": "mm",
+        "group": "Placement",
+        "description": ""
+       },
+       {
+        "name": "width",
+        "type": "length",
+        "value": 20.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": "plate width"
+       }
+      ]
+     }
+    ],
+    "spreadsheets": [],
+    "bindings": [
+     {
+      "object": "Pad",
+      "path": "Length",
+      "expression": "Params.height"
+     },
+     {
+      "object": "Profile",
+      "path": ".AttachmentOffset.Base.x",
+      "expression": "Params.shift"
+     },
+     {
+      "object": "Profile",
+      "path": ".Constraints.width",
+      "expression": "Params.width"
+     }
+    ],
+    "totals": {
+     "varset_parameters": 3,
+     "spreadsheet_parameters": 0,
+     "bindings": 3
+    },
+    "truncated": false
+   },
+   "text": "3 VarSet parameter(s) in 1 VarSet(s), 0 spreadsheet parameter(s), 3 binding(s).\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "mass3",
+  "tool": "query_mass_properties",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "object": "Pad"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.071,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Pad",
+    "solid": true,
+    "volume": {
+     "value": 1600.0,
+     "unit": "mm^3"
+    },
+    "area": {
+     "value": 880.0,
+     "unit": "mm^2"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 5.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 25.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 8.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 10.0,
+      "unit": "mm"
+     }
+    },
+    "com": {
+     "x": {
+      "value": 15.0,
+      "unit": "mm"
+     },
+     "y": {
+      "value": 4.0,
+      "unit": "mm"
+     },
+     "z": {
+      "value": 5.0,
+      "unit": "mm"
+     }
+    },
+    "counts": {
+     "faces": 6,
+     "edges": 12,
+     "vertices": 8,
+     "solids": 1
+    },
+    "is_valid": true
+   },
+   "text": "Pad: volume 1600.0 mm^3 (solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "refuse_unit",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "W",
+     "type": "length",
+     "value": {
+      "value": 3,
+      "unit": "mm"
+     }
+    }
+   ]
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.059,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "parameters.unit_symbol_name",
+    "message": "parameters[0].name 'W' is a unit or constant to FreeCAD's expression parser, so any expression that reads it fails to parse; choose another name, for example W_value",
+    "data": {
+     "exception": "ParameterRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1615, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 571, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2162, in feature_parameters_define\n    return _feature_mutation(\n           ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 412, in _feature_mutation\n    _, envelope = registry.with_document(doc, call)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 380, in call\n    precheck(document)\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2145, in precheck\n    _precheck_parameters(document, varset, _parameter_specs(parameters))\n                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2012, in _parameter_specs\n    specs = [\n            ^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2013, in <listcomp>\n    _parameter_spec(raw, index, builtin, attributes) for index, raw in enumerate(parameters)\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 1925, in _parameter_spec\n    raise ParameterRefusal(\nfreecad_buddy.usecases.features.ParameterRefusal: parameters[0].name 'W' is a unit or constant to FreeCAD's expression parser, so any expression that reads it fails to parse; choose another name, for example W_value\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "step": "refuse_type",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "width",
+     "type": "float",
+     "value": 3.0
+    }
+   ]
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.013,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "parameters.type_conflict",
+    "message": "Params.width is a App::PropertyLength; a float parameter is a App::PropertyFloat",
+    "data": {
+     "exception": "ParameterRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1615, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 571, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2162, in feature_parameters_define\n    return _feature_mutation(\n           ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 412, in _feature_mutation\n    _, envelope = registry.with_document(doc, call)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 380, in call\n    precheck(document)\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2145, in precheck\n    _precheck_parameters(document, varset, _parameter_specs(parameters))\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2052, in _precheck_parameters\n    raise ParameterRefusal(\nfreecad_buddy.usecases.features.ParameterRefusal: Params.width is a App::PropertyLength; a float parameter is a App::PropertyFloat\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "step": "refuse_negative",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "varset": "Params",
+   "parameters": [
+    {
+     "name": "width",
+     "type": "length",
+     "value": {
+      "value": -1,
+      "unit": "mm"
+     }
+    }
+   ]
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.058,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "parameters[0].value must not be negative, got -1.0 mm",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1615, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 571, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2162, in feature_parameters_define\n    return _feature_mutation(\n           ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 412, in _feature_mutation\n    _, envelope = registry.with_document(doc, call)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 380, in call\n    precheck(document)\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2145, in precheck\n    _precheck_parameters(document, varset, _parameter_specs(parameters))\n                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2012, in _parameter_specs\n    specs = [\n            ^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2013, in <listcomp>\n    _parameter_spec(raw, index, builtin, attributes) for index, raw in enumerate(parameters)\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 1946, in _parameter_spec\n    parsed = _parameter_write_value(kind, value, f\"{where}.value\")\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 1968, in _parameter_write_value\n    raise ValidationError(f\"{what} must not be negative, got {millimetres} mm\")\nfreecad_buddy.usecases.documents.ValidationError: parameters[0].value must not be negative, got -1.0 mm\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "step": "refuse_not_varset",
+  "tool": "feature_parameters_define",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "varset": "Pad",
+   "parameters": [
+    {
+     "name": "x1",
+     "type": "float",
+     "value": 1.0
+    }
+   ]
+  },
+  "note": "",
+  "isError": true,
+  "elapsed_s": 0.013,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "parameters.not_a_varset",
+    "message": "Pad is a PartDesign::Pad, not an App::VarSet",
+    "data": {
+     "exception": "ParameterRefusal",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1615, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 571, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2162, in feature_parameters_define\n    return _feature_mutation(\n           ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 412, in _feature_mutation\n    _, envelope = registry.with_document(doc, call)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 380, in call\n    precheck(document)\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2145, in precheck\n    _precheck_parameters(document, varset, _parameter_specs(parameters))\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2041, in _precheck_parameters\n    raise ParameterRefusal(\nfreecad_buddy.usecases.features.ParameterRefusal: Pad is a PartDesign::Pad, not an App::VarSet\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "step": "query4",
+  "tool": "query_parameters",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.071,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "varsets": [
+     {
+      "object": "Params",
+      "label": "Params",
+      "parameters": [
+       {
+        "name": "height",
+        "type": "length",
+        "value": 10.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": ""
+       },
+       {
+        "name": "shift",
+        "type": "length",
+        "value": 5.0,
+        "unit": "mm",
+        "group": "Placement",
+        "description": ""
+       },
+       {
+        "name": "width",
+        "type": "length",
+        "value": 20.0,
+        "unit": "mm",
+        "group": "Parameters",
+        "description": "plate width"
+       }
+      ]
+     }
+    ],
+    "spreadsheets": [],
+    "bindings": [
+     {
+      "object": "Pad",
+      "path": "Length",
+      "expression": "Params.height"
+     },
+     {
+      "object": "Profile",
+      "path": ".AttachmentOffset.Base.x",
+      "expression": "Params.shift"
+     },
+     {
+      "object": "Profile",
+      "path": ".Constraints.width",
+      "expression": "Params.width"
+     }
+    ],
+    "totals": {
+     "varset_parameters": 3,
+     "spreadsheet_parameters": 0,
+     "bindings": 3
+    },
+    "truncated": false
+   },
+   "text": "3 VarSet parameter(s) in 1 VarSet(s), 0 spreadsheet parameter(s), 3 binding(s).\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.72,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "fit",
+  "tool": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ"
+  },
+  "note": "",
+  "isError": false,
+  "elapsed_s": 0.067,
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "fitted": true,
+    "document": "CAP2d_VarSet",
+    "camera_recorded": true
+   },
+   "text": "fitted the live viewport to 'CAP2d_VarSet'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.94,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ }
+]

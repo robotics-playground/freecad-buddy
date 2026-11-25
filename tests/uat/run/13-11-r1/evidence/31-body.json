@@ -1,0 +1,69 @@
+{
+ "tool": "feature_body_create",
+ "args": {
+  "doc": "fcb-doc:dYgwCWXxb154oXxBatWDhg",
+  "name": "Body"
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "mutation": {
+    "schema": "fcb.mutation/2",
+    "fingerprint_before": {
+     "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+     "serializer": "exportBinary"
+    },
+    "fingerprint_after": {
+     "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+     "serializer": "exportBinary"
+    },
+    "changed": [
+     {
+      "name": "Body",
+      "volume": 0.0,
+      "area": 0.0,
+      "com": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     }
+    ],
+    "post_verify": {
+     "recompute_clean": true,
+     "is_valid": true,
+     "fully_constrained": null,
+     "tnp_audit": {
+      "status": "CLEAN",
+      "element_map_version": "15.70200.5",
+      "counts": {},
+      "findings": []
+     },
+     "passed": true,
+     "explanation": null
+    },
+    "rolled_back": false,
+    "rollback_proven": null,
+    "touched": [
+     "Body"
+    ]
+   },
+   "feature": "Body",
+   "feature_state": {
+    "schema": "fcb.feature-state/1",
+    "feature": "Body",
+    "readable": false
+   }
+  },
+  "text": "Mutation committed; fingerprint 283569b3f782.",
+  "framing": {
+   "fits": null,
+   "ratio": null,
+   "checked": "unavailable",
+   "stale_reason": "no visible shape-bearing objects to measure"
+  }
+ }
+}

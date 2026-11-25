@@ -1865,6 +1865,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: Discovery files `rpc-<pid>.json` of dead FreeCADs are never removed: 61 in `%APPDATA%\FreeCAD\v1-1\freecad-buddy` at the end of run 2026-10-23-02, the oldest from 2026-08-01, each holding a dead token. AD-25 binds every file writer ("unbounded artifact growth"). Proposed fix, not made: the bridge-start sweep also deletes `rpc-<pid>.json` whose pid is dead.
   evidence: Lead log §5 W5; run P9 finding B8; TC-10-03 picked a stale file through `glob(...)[0]` (`bugs.md` N-02, B-18).
+  resolution: resolved by Story 13-20: `RpcListener._sweep_orphan_discovery` (`adapters/rpc_listener.py`) runs at bridge start and deletes `rpc-<pid>.json` whose JSON pid is an integer and `pid_alive` is False; it keeps live, own, unreadable and non-integer-pid files.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: The H1 stdio front can deadlock on a pip-installed numpy: with numpy 2.4.6, `verify_export_stl` hangs in `import trimesh` because a thread is blocked on `sys.stdin.buffer.readline()` when `import numpy` runs. FreeCAD's conda numpy 1.26.4 does not hang. Possible fix: import the oracle modules at front start, before the stdio reader starts. Owner decision needed.
@@ -2145,3 +2146,189 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `_bmad-output/implementation-artifacts/verify-13-4.md` "Round 2", product notes.
   blocker: outside Story 13-4 (skills only); needs a reproduction in FreeCAD before any fix.
   unblock: a Story that touches `sketch_add_constraint`, or a small bug Story after a measured run confirms the drop.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-6-query-mass-properties-objects.md`
+  summary: Skill references still say `query_mass_properties` takes one `object` per call (`skills/freecad-scripting-idioms/references/gap-list.md:14`, `skills/code-cad-conversion/references/verification-kit.md:4`, `gap-list.md:64` validity via `verify_shape`; `urdf-export` and `sdf-export` loop per link).
+  evidence: Blind Hunter and Edge Case lens of Story 13-6; skills are outside the 13-6 files.
+  blocker: skills text belongs to the skill-update Stories, not to the tool change.
+  unblock: the Epic 13 Story that updates skills after the typed tools land (the gap list owner), or a skills-only Story.
+  resolution: resolved by Story 13-12: `gap-list.md` and `verification-kit.md` name `query_mass_properties` `objects` (1 to 50 names), and `urdf-export` and `sdf-export` call it once for every body or link.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-6-query-mass-properties-objects.md`
+  summary: `tool-contracts.md` T-2 still lists a `solids` field and gives no exception for the `object` path with no shape; code follows decision 8 and the approved plan.
+  evidence: Blind Hunter lens of Story 13-6; `tool-contracts.md:55-59`.
+  blocker: `tool-contracts.md` is the SPEC contract, owned by the leader.
+  unblock: leader edits T-2 to match decisions 8 and 21.
+  resolution: resolved at the Story 13-6 merge: `tool-contracts.md` T-2 drops `solids` (decision 8), names the unknown-name error (decision 21) and the empty-shape record.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-6-query-mass-properties-objects.md`
+  summary: (unverified, would be medium) `query_mass_properties` now runs `isValid()` per object under the fixed 30 s query budget; 50 heavy shapes or a heavy single shape could reach TIMEOUT.
+  evidence: Blind Hunter and Edge Case lens; no measurement yet. Settle by timing a 50-object call on a large multi-feature part in the container.
+  blocker: needs a container run (verifier).
+  unblock: container UAT of Story 13-6 with a large part.
+  resolution: measured by verifier-13-6 in `fcb-desktop`: 50 objects x 172 faces (8,600 faces) took 3.68-3.71 s over 3 runs against the 30 s budget (`verify-13-6.md`, `tests/uat/run/13-6-r1/evidence/live-13-6.json`).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-6-query-mass-properties-objects.md`
+  summary: `query_mass_properties` reports `is_valid: true` and the last good volume for an object in an error state that keeps its previous shape (for example a Pad whose recompute failed); nothing in the record shows the error.
+  evidence: `_bmad-output/implementation-artifacts/redteam-13-6.md` RT-3 (reproduced; also true before Story 13-6 on the `object` path).
+  blocker: reporting object state in the record is a contract addition outside T-2.
+  unblock: a Story that adds an object-state field to measurement records, or a skill rule to run `verify_recompute` before trusting measurements.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
+  summary: `query_interference` measures each object's own container-local `Shape`; parts inside `App::Part` or `App::Link` instances need a global-frame shape.
+  evidence: `queries.py` `_interference_shape` reads `obj.Shape`; a part under a placed container, or a feature inside a moved Body, is measured in its local frame. Assemblies are Phase 5 (M-20); `query_mass_properties` has the same frame.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
+  summary: A `query_interference` call with many large pairs can still pass the 60 s budget; the face-product guard limits one pair, not the sum.
+  evidence: The pair loop has no deadline check. Unverified (medium): a container run with a disjoint pair of large compounds (`distToShape` 45 s each, several pairs) would show whether the main thread stays blocked.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
+  summary: T-2 in `tool-contracts.md` lists `min_distance` as a non-null Quantity; the code returns null when `distToShape` fails.
+  evidence: `queries.py` `query_interference`; design doc §3.2.3 states the widening. The leader owns the contract text.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
+  summary: `query_interference` does not detect solids that overlap each other inside one `Compound`, or a self-intersecting solid that passes `isValid()`.
+  evidence: `_is_measurable_solid` uses `isValid()` and per-solid volume only. A BOP self-interference check (`shape.check(True)`) or pairwise solid checks would close it at a cost not yet measured.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
+  summary: The `query_interference` text and record do not say why a pair is `boolean_failed` (untrusted input, or a kernel failure at contact).
+  evidence: Both give the same text line; a reason field or a named object in the text would be additive.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
+  summary: The bridge cannot recover from one long FreeCAD/OCC call that holds the Python GIL. The marshal timeout cannot fire during the call; after the proxy `TIMEOUT` the bridge answers `WORKER_CRASHED` "handshake rejected" for minutes while FreeCAD stays alive. Seen with `query_interference` on two 900-box compounds (13-7 F2, about 8 minutes) and with `query_section` on a 3-face coil spring (13-8 RT-1, 112-210 s). Each tool now refuses inputs above measured cost limits, but any typed tool (fillet, boolean, export) can hit the same state.
+  evidence: `_bmad-output/implementation-artifacts/verify-13-7.md` (F2), `_bmad-output/implementation-artifacts/redteam-13-8.md` (RT-1).
+  blocker: architecture decision under AD-27 (worker isolation, a watchdog that restarts the worker, or a documented limit); approval tier: architecture.
+  unblock: the user decides the AD-27 direction; then a Story implements it.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
+  summary: `skills/freecad-scripting-idioms/references/gap-list.md:38` still routes "Section or slice of a shape" to `shape.slice(...)` in `script_exec`, the method that returns no wires within 1e-5 mm of a face.
+  evidence: Review finding (Blind Hunter): the gap list says no typed tool covers sections; `query_section` now does, and `slice` gives false misses (probe in the spec).
+  blocker: skill routing to the new measure tools is Story 13-12 (plan: "Skill routing to the new measure, parameter and delete tools").
+  unblock: Story 13-12 replaces the row with `query_section` and drops the `slice` advice.
+  resolution: resolved by Story 13-12: `gap-list.md` drops the section row and the `shape.slice` advice, and lists `query_section` as covered; `verification-thinking` routes sections to it with the `section.plane_on_face` fix.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
+  summary: `query_section` and `query_interference` do not detect solids that touch or overlap inside one `Compound`: the section area counts each solid and touching solids merge into shared wire groups.
+  evidence: Probe: two stacked 10x10x5 boxes cut on the shared face read area 200; two boxes side by side cut at mid height give one closed and one open wire. Same class as the 13-7 entry on overlapping solids.
+  blocker: a compound self-check (`shape.check(True)` or pairwise solid checks) has no measured cost yet.
+  unblock: a Story that measures the check cost and adds a refusal code.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
+  summary: `queries.py` `_mm_quantity` is a third copy of the `{value, unit}` parser (`features.py:89`, `sketches.py:111`), and it is stricter (rejects extra keys).
+  evidence: Review finding (Blind Hunter, Duplicated Code). Sharing one helper edits `features.py` and `sketches.py`, outside this Story.
+  blocker: touching two other tool modules for a cosmetic gain; the stricter key check would change their behaviour.
+  unblock: a refactor Story that moves the parser to one module and decides on extra keys.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
+  summary: `query_section` pole-load guard counts only BSpline and Bezier faces; surfaces of extrusion or revolution over a BSpline curve and offset surfaces over a BSpline surface are not counted.
+  evidence: Round-2 Edge Case Hunter: an OffsetSurface face has no `NbUPoles`, so it bypasses `_bspline_pole_load`. Cost of these surfaces in `Shape.section` was not measured.
+  blocker: no measurement of section cost on swept-curve and offset surfaces.
+  unblock: a probe of section time against basis-curve poles, then extend `_bspline_pole_load`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-14-typed-verify-shape-check-schema.md`
+  summary: `verify_shape` value rules (expect type, positive diameter, non-zero direction, `hole_spacing` form) are written twice, as JSON Schema in `hosts/tool_catalog.py` and as Python in `usecases/assertions.py`.
+  evidence: Only the key tables moved to `contracts/assertions.py` (decision 11). Review found seven disagreements between the two; they are fixed and tested, but a new value rule needs both edits.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-14-typed-verify-shape-check-schema.md`
+  summary: No test sends a bad `verify_shape` check through the server's `tools/call` handler to pin the SDK's input validation and its message.
+  evidence: Gap lens. Story 13-14 relies on the MCP SDK validating `inputSchema` before dispatch; its verifier checks this with one live call. A permanent test would catch an SDK change.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-5-multi-object-export.md`
+  summary: `export_step`, `export_stl` and `export_3mf` write `obj.Shape` in the object's own coordinates, so the placement of an `App::Part` that holds the object is not applied (one object or several).
+  evidence: measured on host FreeCAD 1.1: Box inside an `App::Part` placed at x=100 exports with `XMin` 0.0 in STEP for `shape.exportStep` and for `Import.export`; `getGlobalPlacement().Base.x` is 100.0. Pre-existing for the single-object path. Edge Hunter finding in the Story 13-5 review.
+  blocker: the intended behaviour (global or local coordinates) is a product decision; assemblies are not in SPEC-mcp-usage-improvement.
+  unblock: a decision on global coordinates, then a Story that applies `getGlobalPlacement()` to the shapes before export and verification.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-5-multi-object-export.md`
+  summary: Default selection (omitted `objects`) ignores `App::Link` objects, which have no `Shape`.
+  evidence: Edge Hunter finding in the Story 13-5 review (low, not reproduced; Assembly workbench documents are outside the Phase 1 to 3 flows).
+  blocker: no reproduction document; assemblies are not in scope.
+  unblock: an assembly Story, or a measured report of a document that loses a solid this way.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-5-multi-object-export.md`
+  summary: `verify_export_step` fails `export_step.topology_counts` for a BooleanFragments object, in the single-object path and in the several-object path.
+  evidence: red team RT-7 (`_bmad-output/implementation-artifacts/redteam-13-5.md`): faces 25 against 19 on re-import, same on the single path (`bf_single`); not caused by Story 13-5.
+  blocker: needs a decision whether FreeCAD's re-import of fragments (split faces) is a verification fault or an expected difference.
+  unblock: a Story that measures the fragment topology on re-import and sets the count rule for compound results.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-20-usage-report.md`
+  summary: `rpc_client._live_records` sorts discovery files with `p.stat()` inside the sort key, so a file deleted between `glob` and `stat` (now possible when a bridge start sweeps orphans) raises `FileNotFoundError`, which the `except OSError: return` turns into no discovery at all.
+  evidence: `adapters/rpc_client.py:123`; reached only when a client discovers while another bridge starts, unverified in practice; a fix wraps `stat()` per file and skips a vanished one.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-20-usage-report.md`
+  summary: The spill-stub patterns `_SPILL` (`scripts/automation/replay_result_sizes.py`) and `_PERSISTED` (`scripts/automation/session_metrics.py`) match the file path with `\S+?\.txt`, so a spill path with a space (a Windows profile name with a space) is not recognised by `session_metrics` or `usage_report`.
+  evidence: both patterns use `\S`; the current profile path has no space, so no report was affected; unverified for other profiles.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-9-varset-parameters.md`
+  summary: The AD-6 fingerprint hashes shapes only, so a change to a VarSet or a Spreadsheet that no shape reflects is invisible to the fingerprint, to `mutation.changed` and to the rollback proof.
+  evidence: `fingerprint.py` skips objects without a shape; `feature_parameters_define` on a VarSet with no bound object leaves the digest unchanged. Story 13-9 added a `state_probe` to `run_mutation` for its own tool only; `feature_set_parameters` on a VarSet property and a future spreadsheet writer have no such proof.
+  blocker: an architecture decision: put VarSet and Spreadsheet property state in the fingerprint (changes every digest) or require a `state_probe` from every tool that writes non-shape state.
+  unblock: a decision record from the leader or architect, then a Story.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-9-varset-parameters.md`
+  summary: No G2 fault-injection case plants a VarSet-only rollback, so `run_mutation` sensitivity for the new state proof is measured by infc tests only.
+  evidence: `benchmarks/_registry/validators.yaml` `run_mutation` stays `not_scored`; the two planted tests live in `tests/infc/test_feature_parameters.py`.
+  blocker: the G2 suite and its scorer are outside this Story.
+  unblock: a Story that adds a VarSet-only planted case to `benchmarks/g2/fault-injection/rollback-boundary/`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-9-varset-parameters.md`
+  summary: A VarSet that already holds a property named like an object attribute (`TypeId`, `PropertiesList`) breaks `feature_parameters_define` and `query_parameters`.
+  evidence: Edge Case Hunter probe: `vs.TypeId` reads the property. Only `script_exec` can create it, since the tool now refuses such names.
+  blocker: no tool path creates the state; reading through non-shadowable accessors is a wider change.
+  unblock: a report of a real document holding such a property.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-9-varset-parameters.md`
+  summary: `skills/parametric-patterns/SKILL.md` Decision Rules still say no typed tool adds a VarSet property or calls `setExpression`.
+  evidence: `feature_parameters_define` now adds the property; `feature_set_expression` is Story 13-10.
+  blocker: Story 13-12 owns the skill routing text.
+  unblock: Story 13-12.
+  resolution: resolved by Story 13-12: `parametric-patterns` routes VarSet variables to `feature_parameters_define`, bindings to `feature_set_expression` and reads to `query_parameters`; `gap-list.md` drops the VarSet row.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-11-object-delete.md`
+  summary: `document_object_delete` does not scan objects in other open documents that link to a deleted object.
+  evidence: `_dependents` reads `document.Objects` only; an `App::Link` or XLink in another document breaks silently (edge-case lens, probed on 1.1).
+  blocker: needs a cross-document `InList` scan and a decision on refusing versus listing.
+  unblock: a real multi-document case.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-11-object-delete.md`
+  summary: Unverified (medium): the expression re-link may add an undo step or clear redo in the GUI host.
+  evidence: measured only under `FreeCADCmd` (UndoCount and RedoCount equal before and after); `Document::_checkTransaction` opens a transaction when the application has an active transaction name, which a GUI command sets.
+  blocker: needs the container GUI.
+  unblock: container UAT reads UndoCount and RedoCount after `document_undo` of a bound-pad delete.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-11-object-delete.md`
+  summary: `skills/freecad-scripting-idioms/references/gap-list.md` and `SKILL.md` still route object deletion to `script_exec`.
+  evidence: `document_object_delete` now ships.
+  blocker: Story 13-12 owns the skill routing text.
+  unblock: Story 13-12.
+  resolution: resolved by Story 13-12: `gap-list.md` drops the delete row and lists `document_object_delete` as covered; `freecad-scripting-idioms` no longer advises `body.removeObject` in a script.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-11-object-delete.md`
+  summary: The `document_object_delete` container exemption compares names only (`features.py:2414`): a GroupExtension holder that also links to one of its Group members through a `PropertyLink` is treated as a pure container, so the delete returns OK and clears that link.
+  evidence: `_bmad-output/implementation-artifacts/verify-13-11.md` "Round 2" R2-1 (synthetic Python object; no stock FreeCAD type found affected).
+  blocker: no stock FreeCAD type reproduces it; low.
+  unblock: a real document type that holds a member in Group and also links to it, or a small refactor that checks link properties besides Group.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-10-set-expression.md`
+  summary: A mutation that leaves a shape with an infinite dimension commits, and the document then cannot be fingerprinted (`feature_set_expression` now rolls this back through `recompute_check`; other tools do not).
+  evidence: Items `Other.Height = 5 mm` then `Box.Height = 1 mm / (Other.Height - 5 mm)` pass the pre-call checks and commit; `fingerprint` raises on `PrincipalProperties`, the bracket reports `SPEC_FAILED` with the snapshot kept, and later calls on the document fail at setup. `post_verify` does not check for a non-finite property or shape. The same state follows any recompute that makes a dependent expression infinite (for example `feature_parameters_define` changing a value that an existing binding divides by).
+  blocker: the check belongs in `post_verify` or `fingerprint`, shared code that every tool uses.
+  unblock: an AD-5 decision on a non-finite check before commit.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-10-set-expression.md`
+  summary: No G2 fault case measures the `audit_references` rule that excuses a binding the op removed.
+  evidence: `ExpressionBindingTest` in `tests/infc/test_tnp_guard.py` covers the rule, but `benchmarks/g2/fault-injection/` has no case for "binding removed by the op" and "binding lost during the recompute", so `audit_references` is scored without them.
+  blocker: a new fault suite case and a re-score, not asked by this Story.
+  unblock: a G2 fault-suite story.
+
+- source_spec: `_bmad-output/implementation-artifacts/epic-13-status.md`
+  summary: External tests fail intermittently on the Windows host and pass on re-run (also `tests/external/test_headless_two_process` GIL timing, verify-13-18 N2): `tests/external/test_marshal_self_submit.py::test_submitting_to_a_loop_this_thread_must_pump_deadlocks` (failed once in 5 runs alone at 04574455, and in several full runs) and `tests/external/test_mcp_cache_proxy.py::test_should_answer_both_calls_when_two_parallel_calls_meet_a_lost_session` (verifiers 13-9/13-10/13-11 saw it fail on base too). Neither file is touched by Epic 13. A flaky test can hide a real failure in CI (the repo rule is that CI must not hide failures).
+  evidence: leader gate runs on the integration head after the 13-1..13-10 merges; verify-13-9.md N1; verify-13-11.md.
+  blocker: timing races outside Epic 13 scope; needs a root-cause look, not a retry.
+  unblock: a small Story that finds the race in each test and makes it deterministic.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-18-loft-sweep.md`
+  summary: `feature_sweep` does not detect a BSpline spine with a zero-velocity point and no tangent reversal.
+  evidence: Review finding (unverified, would be medium): `_check_spine_tangents` refuses only a negative tangent dot product. A zero-velocity cusp without reversal may still hold the interpreter in `AdditivePipe`. A probe of such a curve (derivative length near zero at one sample, tangent continuous) settles it.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-18-loft-sweep.md`
+  summary: Three low follow-ups from the Story 13-18 round-2 verification. (1) No test pins the sweep cost limit: setting it back to 10,000 turns no test red (R2-F1). (2) The design doc says every closed loft tried builds invalid, but 8 squares on a smooth ring build valid and the tool accepts them (R2-F2). (3) The code comments cite lower timings than measured: worst accepted loft 13.7 s (500 sections of 44-gons), sweep 9.3 s (circle along 3,000 lines).
+  evidence: `_bmad-output/implementation-artifacts/verify-13-18.md` "Round 2"; `tests/uat/run/13-18-r2/`.
+  blocker: the user stopped the run after Story 13-18; all three are low and within the 60 s budget.
+  unblock: a small follow-up in the next run (one boundary test, two text corrections).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-18-loft-sweep.md`
+  summary: A self-intersecting sweep built from a BSpline profile returns OK; the boolean self-intersection check is skipped for BSpline inputs because it did not finish in 50 s on a 3-face helix sweep (documented limit, residual R2-R1).
+  evidence: `verify-13-18.md` "Round 2" R2-R1; design `mcp-tools-design.md` §3.7.4.
+  blocker: no bounded-cost self-intersection check for BSpline results is known.
+  unblock: a measured check with a time bound, or the AD-27 bridge-recovery decision (worker isolation would allow a timed check).

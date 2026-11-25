@@ -1,0 +1,56 @@
+{
+ "tool": "document_undo",
+ "args": {
+  "doc": "fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA"
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "doc": "fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA",
+   "name": "Del1311",
+   "undone": "buddy: delete Sketch1",
+   "fingerprint_before": "f3cc2c02027ddc5642ca99a9b5be4f06f64fce0ac7e394097fd1c51f1e174d20",
+   "fingerprint_after": "05f5a5457275bd01be9ff8e8344d12800688d390d0553b1849a063bb1ba73626",
+   "matches_pre_op": null,
+   "restored_objects": [
+    "Body",
+    "Origin",
+    "X_Axis",
+    "Y_Axis",
+    "Z_Axis",
+    "XY_Plane",
+    "XZ_Plane",
+    "YZ_Plane",
+    "Origin001",
+    "Sketch2",
+    "VS",
+    "Body001",
+    "Origin002",
+    "X_Axis001",
+    "Y_Axis001",
+    "Z_Axis001",
+    "XY_Plane001",
+    "XZ_Plane001",
+    "YZ_Plane001",
+    "Origin003",
+    "Sketch3",
+    "Pad3",
+    "Pad2",
+    "Pad1",
+    "Sketch1"
+   ],
+   "undo_count": 2,
+   "errors": []
+  },
+  "text": "Undid 'buddy: delete Sketch1' on Del1311: no pre-op digest supplied to compare against (f3cc2c02027d -> 05f5a5457275).\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+  "framing": {
+   "fits": false,
+   "ratio": 0.99,
+   "checked": "computed",
+   "stale_reason": null
+  }
+ }
+}
