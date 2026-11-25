@@ -1,23 +1,26 @@
 # Generator kit
 
-Copy this into the generator file, then add the part functions under it. The file runs inside
+Use the generator for an object the typed tools cannot make: `Part::Wedge` (`taper_z`), another Part
+type, or an `App::Link` purchased part. Primitives and booleans of the five offered kinds go
+through `feature_part_primitive` and `feature_part_boolean` (`SKILL.md`). Copy this into the
+generator file, then add the part functions under it. The file runs inside
 the live FreeCAD through `script_exec` (`doc` and `STAGE` injected) or headless through
 `freecadcmd` on a closed document.
 
 ## Run it
 
 On the live document the parameter layer and the clearing use typed tools, and `script_exec`
-builds the parts, because no typed tool makes Part primitives:
+builds only the parts the typed tools cannot make, and creates enumeration properties:
 
-1. Clear a document this generator owns (skip an empty one): `document_object_delete` `{"objects": ["Params", "Box", "Box001", "Cut"]}`
+1. Clear a document this generator owns (skip an empty one): `document_object_delete` `{"doc": "bracket", "objects": ["Params", "Box", "Box001", "Cut"]}`
    naming every object Name (not Label) in the tree, the Cut's Base and Tool objects included:
    a Name left out is a dependent and `delete.has_dependents` refuses the call.
-2. Create every variable, plain and derived: `feature_parameters_define` `{"varset": "Params",
+2. Create every variable, plain and derived: `feature_parameters_define` `{"doc": "bracket", "varset": "Params",
    "parameters": [{"name": "PLATE_T", "type": "float", "value": 5.0}, {"name": "BOSS_H", "type":
    "float", "value": 0}, {"name": "COUNTERSINK", "type": "bool", "value": true}]}` (a call takes
    at most 100 parameters; use a type `float` for a unitless source constant; give a derived
    variable any value, step 3 binds it).
-3. Bind each derived variable: `feature_set_expression` `{"expressions": [{"object": "Params",
+3. Bind each derived variable: `feature_set_expression` `{"doc": "bracket", "expressions": [{"object": "Params",
    "path": "BOSS_H", "expression": "Params.PLATE_T + 7"}]}`.
 4. Run the generator once per stage with `script_exec`. Its `params()` reuses the variables that
    exist and creates the rest, so the enumeration properties (no typed type) appear here. A
@@ -293,3 +296,18 @@ def show_only(*keep):
 
 The generator ends with `params()`, then the part functions that `STAGE` selects, then
 `show_only(...)` on the finished parts that exist.
+
+## Worked generator example
+
+A plate with a tapered block. The generator makes only the object the typed tools cannot make,
+the `Part::Wedge`; `feature_part_primitive` makes the plate and `feature_part_boolean` fuses
+both, naming the wedge by its Name (`Wedge`, `Wedge001`: read it with `query_tree_summary`):
+
+```python
+prm("L", 60.0, "1 Plate"); prm("TOP_W", 20.0, "2 Block")
+taper_z(5.0, 10.0, ((-P.L / 2, P.L / 2), (-20.0, 20.0)),
+        ((-P.TOP_W / 2, P.TOP_W / 2), (-10.0, 10.0)))
+```
+
+Headless, with no typed tools, the whole part runs in the generator: build the plate with
+`box(...)`, add the wedge with `Solid`, and finish with `.done()`.

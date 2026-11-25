@@ -107,7 +107,7 @@ it — otherwise none of these checks can run.
   geometry missed, but it can never rescue a part geometry already failed.
 - When a mating part is **inserted, slid, or tilted into place**, check clearance
   along that path, not only at the final position: set the mating part's pose for
-  each step (a placement write is a gap: `freecad-scripting-idioms`), run
+  each step (write the Body's `Placement` with `feature_set_parameters`), run
   `query_interference` for the pair, then restore the pose, because a wall that
   clears the installed part can still block it on the way in.
 - Re-check an earlier clearance after **every edit near it**: widening a gap on one

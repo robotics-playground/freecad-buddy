@@ -79,9 +79,10 @@ MCP client at it — otherwise none of these steps can run.
 - **Exhaust the typed tools before any fallback**: `feature_set_parameters` writes
   booleans, numbers, quantities, enum members, strings (including `Label`), and
   placements (`Placement`, `AttachmentOffset`) on any object — including
-  `Visibility` — and `feature_parameters_define`, `feature_set_expression`,
+  `Visibility` — and `feature_part_primitive`, `feature_part_boolean`, `feature_loft`,
+  `feature_sweep`, `feature_parameters_define`, `feature_set_expression`,
   `document_object_delete`, `query_interference`, `query_section` and
-  `query_parameters` cover parameters, bindings, deletes and measurements, so try
+  `query_parameters` cover solids, parameters, bindings, deletes and measurements, so try
   them before GUI input or a script. `references/gap-list.md`
   names every operation with no typed tool; only a row there, or a tool list that
   shows no typed tool, justifies a fallback. Before each `script_exec` call, state

@@ -4,6 +4,16 @@ Each row: source construct, FreeCAD object, and the property that carries the ex
 CadQuery uses the same OCC kernel; its `Workplane.box`, `.cylinder`, `.hole`, `.cskHole`,
 `.union`, `.cut` and `Location` map to the same rows.
 
+`Part::Box`, `Part::Cylinder`, `Part::Cone`, `Part::Sphere` and `Part::Torus` come from
+`feature_part_primitive` (`kind` box, cylinder, cone, sphere, torus; a torus needs `radius2`
+below `radius1`; a fixed rotation is `placement.rotation` with an `axis` and an `angle`), then
+`feature_set_expression` binds the properties in the next column. A partial primitive
+writes its `Angle*` with `feature_set_parameters` (degrees) or binds it with
+`feature_set_expression`. Every other FreeCAD type in the table (`Part::Wedge`,
+`Part::Prism`, `Part::Offset2D`, `Part::Extrusion`, `Part::Fillet`, `Part::Chamfer`) needs
+the generator.
+Booleans come from `feature_part_boolean` (below).
+
 ## Solids
 
 | build123d / CadQuery | FreeCAD object | Expression properties | Notes |
@@ -28,10 +38,10 @@ CadQuery uses the same OCC kernel; its `Workplane.box`, `.cylinder`, `.hole`, `.
 
 | Source | FreeCAD |
 | --- | --- |
-| `body = a + b + c`, `body += x` | `Part::MultiFuse` (`Shapes`, `Refine = True`) |
-| `body -= x` | `Part::Cut` (`Base`, `Tool`); several consecutive tools fused first |
-| `a & b`, `intersect` | `Part::MultiCommon` |
-| loop of `body -= hole` | one `Part::Cut` with all holes fused as the tool, labelled `<part>_stepN` |
+| `body = a + b + c`, `body += x` | `feature_part_boolean` `fuse` (`Part::MultiFuse` for several tools, `Refine` true) |
+| `body -= x` | `feature_part_boolean` `cut` (`Part::Cut`; several tools: their fuse `<name>_tools` is the `Tool`) |
+| `a & b`, `intersect` | `feature_part_boolean` `common` (`Part::MultiCommon` for several tools: the intersection of the base and every tool) |
+| loop of `body -= hole` | one `feature_part_boolean` `cut` with all holes as `tools` (at most 20; chain further cuts), named `<part>_stepN` |
 
 ## Placement
 
