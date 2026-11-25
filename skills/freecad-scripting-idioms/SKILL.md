@@ -72,7 +72,8 @@ MCP client at it — otherwise none of these steps can run.
   index at call time, because indexed names (`Face6`) are valid only until the next
   recompute reshuffles them; never store an index for later reuse.
 - **Exhaust the typed tools before any fallback**: `feature_set_parameters` writes
-  booleans, numbers, quantities, and enum members on any object — including
+  booleans, numbers, quantities, enum members, strings (including `Label`), and
+  placements (`Placement`, `AttachmentOffset`) on any object — including
   `Visibility` — and `feature_parameters_define`, `feature_set_expression`,
   `document_object_delete`, `query_interference`, `query_section` and
   `query_parameters` cover parameters, bindings, deletes and measurements, so try

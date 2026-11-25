@@ -2345,3 +2345,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: Lid on a row of unit boxes: 13.6 s at 100 boxes and 108 s at 200 boxes at face product 7,200 (red team RT-5). A section plus fuse proof skipped `distToShape` for touching pairs (1.4 s for 200 boxes) but read distance 0 across small real gaps at an edge, a vertex or a curved surface (verify-13-fu-r2 D1), so it was removed.
   blocker: no measured cost bound for `distToShape` with many contact solutions; decision 45 documents long GIL-holding calls as a limit.
   unblock: a bound that keeps the true distance, or the worker isolation decision (AD-27, decision 45) that lets a timed call stop.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-16-set-parameters-placement-strings.md`
+  summary: `skills/freecad-scripting-idioms/references/gap-list.md:33` and `:42` still say `feature_set_parameters` refuses a placement and a string and route them to `script_exec`.
+  evidence: Story 13-16 makes the tool write `Placement`, `AttachmentOffset` and `Label`; `SKILL.md:74-78` now says so. The plan assigns the gap-list row removal to Story 13-19.
+  blocker: Story 13-19 owns the gap list.
+  unblock: Story 13-19 removes both rows (and the `Label` row beside them).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-16-set-parameters-placement-strings.md`
+  summary: `feature_set_parameters` writes a numeric, boolean or enumeration property that an expression drives and returns `OK`; the recompute then puts the bound value back.
+  evidence: the new read-back (`recompute_check` in `feature_set_parameters`) covers placement and string families only; `feature_parameters_define` refuses a bound property with `parameters.bound_by_expression` before the bracket. Pre-existing for numeric writes (`gap-list.md:26` notes the reset).
+  blocker: widening the read-back changes the numeric families' equality rules (Quantity, enumeration, bool) and their tests, outside Story 13-16.
+  unblock: a Story that adds a bound-property refusal or a read-back for the numeric families.

@@ -432,6 +432,7 @@ directory of FreeCAD is the container's `/tmp`.
 | TC-14 | Viewport framing & auto-fit (Epic 8) | Critical | Quality/Output | spine §AD-29..§AD-33, FR24-FR26 |
 | TC-16 | Lean agent loop (Epic 11) | Critical | Mutation/Output | spine §AD-5, §AD-6, §AD-7, §AD-10, §AD-17 |
 | TC-17 | `query_interference` touching solids (Story 13-fu) | High | Query/Verification | decision 41, mcp-tools-design §3.2.3 |
+| TC-20 | `feature_set_parameters` placements and strings (Story 13-16) | High | Mutation | tool-contracts T-4, decisions 34, 38 |
 | TC-99 | AD conformance gaps (EXPECTED-FAIL) | Informational | Conformance | spine §AD-3, §AD-25 |
 
 ## 8. Test Data

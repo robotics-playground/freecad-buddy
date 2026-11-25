@@ -877,16 +877,22 @@ def _feature_specs():
                         "type": "object",
                         "description": "property name -> Quantity or number for a quantity "
                         "property, number for a unitless float, integer for an integer property, "
-                        "boolean for a boolean one, member string for an enumeration; validated "
-                        "against the live feature",
+                        "boolean for a boolean one, member string for an enumeration, string for "
+                        "a string property such as Label, {base: {x, y, z}, rotation: {axis: "
+                        "[x, y, z], angle}} for a Placement or AttachmentOffset (x, y, z and angle "
+                        "are {value, unit} Quantities in mm and deg, not bare numbers; omitted "
+                        "keys keep their value); validated against the live feature",
                     },
                 },
                 ["feature", "parameters"],
             ),
-            "Edit a feature's driving properties and re-verify the solid in the same "
-            "transaction. Unknown, read-only, wrong-type or wrong-unit values are rejected before "
-            "it opens. A call whose parameters hold only Visibility (true/false) is display state "
-            "and needs no confirm in any posture.",
+            "Edit an object's properties and re-verify the solid in the same transaction. "
+            "Unknown, read-only, wrong-type or wrong-unit values are rejected before it opens; the "
+            "Placement of an attached object is read-only, write its AttachmentOffset. A Label "
+            "FreeCAD makes unique is reported as label {requested, stored}. A call that changes "
+            "only placements or strings already held opens no transaction (undo_steps 0). A call "
+            "whose parameters hold only Visibility (true/false) is display state and needs no "
+            "confirm in any posture.",
         ),
         _feature_method(
             "feature_parameters_define",

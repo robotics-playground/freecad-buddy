@@ -137,7 +137,7 @@ repository. Do not trim those scenarios.
 | `feature_mirror` | TC-04 | 08 |
 | `feature_datum` | TC-04 | 08 |
 | `feature_body_create` | TC-04 | 03, 05, 08 |
-| `feature_set_parameters` | TC-04 | 02, 03, 05, 06, 08, 09 |
+| `feature_set_parameters` | TC-04 | 02, 03, 05, 06, 08, 09, 20 |
 
 ### `preview_` (1) and the operator tool
 

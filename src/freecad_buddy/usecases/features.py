@@ -370,6 +370,7 @@ def _feature_mutation(
     deleted: set[str] | None = None,
     recompute_check: Callable[[object], None] | None = None,
     removed_bindings: Collection[tuple[str, str]] = (),
+    keep_state: bool = False,
 ) -> ResultEnvelope:
     """Run ``op`` through the mutation bracket and attach the post-op ``feature_state``.
 
@@ -389,6 +390,8 @@ def _feature_mutation(
         bracket opens and passed to ``run_mutation``.
     :param recompute_check: runs after the bracket's recompute; passed to ``run_mutation``.
     :param removed_bindings: the expression bindings ``op`` removes; passed to ``run_mutation``.
+    :param keep_state: with ``report``, add ``feature`` and ``feature_state`` to every result and
+        let ``report`` add its fields to an ``OK`` one, instead of replacing them.
     :raises ValidationError: the call carries no confirm authorizing it, or the request is
         malformed; neither writes a snapshot nor opens a transaction.
     """
@@ -425,10 +428,10 @@ def _feature_mutation(
         if not isinstance(content, dict):
             content = {}
             result[1]["structured_content"] = content
-        if report is None:
+        if report is None or keep_state:
             content["feature"] = feature
             content["feature_state"] = _feature_state(result[0], feature)
-        elif result[1]["status"] == "OK":
+        if report is not None and result[1]["status"] == "OK":
             content.update(report(result[0]))
         return result
 
@@ -2262,7 +2265,12 @@ def _parameter_writes(feature: object, parameters: object) -> list[tuple[str, ob
         if prop not in list(feature.PropertiesList):
             raise ValidationError(f"{feature.Name} has no property named {prop!r}")
         if "ReadOnly" in list(feature.getEditorMode(prop) or []):
-            raise ValidationError(f"{feature.Name}.{prop} is read-only")
+            hint = (
+                "; its attachment sets it, so write AttachmentOffset instead"
+                if prop == "Placement" and "AttachmentOffset" in feature.PropertiesList
+                else ""
+            )
+            raise ValidationError(f"{feature.Name}.{prop} is read-only{hint}")
         writes.append((prop, _parameter_value(feature, prop, raw)))
     return writes
 
@@ -2275,8 +2283,9 @@ def _is_number(value: object) -> bool:
 def _property_family(feature: object, prop: str, type_id: str) -> str | None:
     """Return the wire value family ``feature.prop`` accepts, or ``None`` when it takes none.
 
-    ``"bool"`` for ``App::PropertyBool`` and ``"enum"`` for ``App::PropertyEnumeration``. The
-    numeric families are read from the current value: ``"quantity"`` when it is a ``Quantity``
+    ``"bool"`` for ``App::PropertyBool``, ``"enum"`` for ``App::PropertyEnumeration``,
+    ``"placement"`` for ``App::PropertyPlacement`` and ``"string"`` for ``App::PropertyString``.
+    The numeric families are read from the current value: ``"quantity"`` when it is a ``Quantity``
     (every unit-bearing property), ``"integer"`` when it is an int, ``"float"`` when it is a plain
     float. A type-id list would miss the many unit property types.
     """
@@ -2284,6 +2293,10 @@ def _property_family(feature: object, prop: str, type_id: str) -> str | None:
         return "bool"
     if type_id == "App::PropertyEnumeration":
         return "enum"
+    if type_id == _PLACEMENT_TYPE:
+        return "placement"
+    if type_id == _STRING_TYPE:
+        return "string"
     import FreeCAD
 
     current = getattr(feature, prop)
@@ -2296,13 +2309,196 @@ def _property_family(feature: object, prop: str, type_id: str) -> str | None:
     return None
 
 
+_PLACEMENT_TYPE = "App::PropertyPlacement"
+_STRING_TYPE = "App::PropertyString"
+_PLACEMENT_KEYS = frozenset({"base", "rotation"})
+_BASE_KEYS = ("x", "y", "z")
+_ROTATION_KEYS = frozenset({"axis", "angle"})
+
+
+def _only_keys(raw: dict, allowed: Collection[str], what: str) -> None:
+    unknown = sorted(str(key) for key in raw if key not in allowed)
+    if unknown:
+        raise ValidationError(f"{what} has unknown keys {unknown}; allowed: {sorted(allowed)}")
+
+
+# FreeCAD normalises a rotation axis and silently turns one it cannot normalise into the Z axis.
+# Probed on 1.1.4 with an axis (m, m, 0): m from 1e-150 to 1e150 normalises exactly, 1e-160 is
+# off in the sixth digit, and 1e-200 and 1e200 and beyond give Z. The bounds keep a decade of
+# margin inside the exact range.
+_MIN_AXIS_LENGTH = 1e-100
+_MAX_AXIS_LENGTH = 1e100
+
+
+def _rotation_axis(raw: object, what: str) -> tuple[float, float, float]:
+    """Return a wire rotation axis: three finite numbers whose length FreeCAD normalises exactly."""
+    if not isinstance(raw, (list, tuple)) or len(raw) != 3 or not all(map(_is_number, raw)):
+        raise ValidationError(f"{what} must be three numbers [x, y, z], got {raw!r}")
+    try:
+        axis = tuple(float(component) for component in raw)
+    except OverflowError:
+        raise ValidationError(f"{what} holds a number outside the float range") from None
+    if not all(math.isfinite(component) for component in axis):
+        raise ValidationError(f"{what} must be finite, got {raw!r}")
+    if not _MIN_AXIS_LENGTH <= math.hypot(*axis) <= _MAX_AXIS_LENGTH:
+        raise ValidationError(
+            f"{what} must have a length between {_MIN_AXIS_LENGTH:g} and {_MAX_AXIS_LENGTH:g}, "
+            f"got {raw!r}"
+        )
+    return axis
+
+
+def _placement_value(raw: object, what: str, current: object = None) -> object:
+    """Return the ``FreeCAD.Placement`` a wire placement describes.
+
+    The wire shape is ``{base: {x, y, z}, rotation: {axis: [x, y, z], angle}}``: ``x``, ``y`` and
+    ``z`` are ``{value, unit}`` lengths in mm, ``angle`` is a ``{value, unit}`` angle in degrees.
+    Every key is optional. An omitted key keeps its component of ``current``, or its default
+    (base at the origin, no rotation) when ``current`` is ``None``. A ``rotation`` naming only one
+    of ``axis`` and ``angle`` keeps the other from ``current``.
+
+    :param what: the ``<object>.<property>`` named in a refusal.
+    :param current: the placement the omitted keys keep, or ``None`` for a new object.
+    :raises ValidationError: an unknown key, a malformed or non-finite value, a unit of another
+        dimension, or a zero axis.
+    """
+    import FreeCAD
+
+    if not isinstance(raw, dict):
+        raise ValidationError(f"{what} must be a {{base, rotation}} object, got {raw!r}")
+    _only_keys(raw, _PLACEMENT_KEYS, what)
+    base_raw = raw.get("base", {})
+    rotation_raw = raw.get("rotation", {})
+    if not isinstance(base_raw, dict):
+        raise ValidationError(f"{what}.base must be an {{x, y, z}} object, got {base_raw!r}")
+    if not isinstance(rotation_raw, dict):
+        raise ValidationError(
+            f"{what}.rotation must be an {{axis, angle}} object, got {rotation_raw!r}"
+        )
+    _only_keys(base_raw, _BASE_KEYS, f"{what}.base")
+    _only_keys(rotation_raw, _ROTATION_KEYS, f"{what}.rotation")
+    origin = current.Base if current is not None else FreeCAD.Vector(0.0, 0.0, 0.0)
+    base = FreeCAD.Vector(
+        *(
+            _length_mm(base_raw[key], f"{what}.base.{key}")
+            if key in base_raw
+            else getattr(origin, key)
+            for key in _BASE_KEYS
+        )
+    )
+    rotation = current.Rotation if current is not None else FreeCAD.Rotation()
+    if rotation_raw:
+        if "axis" in rotation_raw and "angle" not in rotation_raw and abs(rotation.Angle) < 1e-12:
+            raise ValidationError(
+                f"{what}.rotation.axis needs an angle: the current rotation is zero, which holds "
+                "no axis"
+            )
+        axis = (
+            _rotation_axis(rotation_raw["axis"], f"{what}.rotation.axis")
+            if "axis" in rotation_raw
+            else tuple(rotation.Axis)
+        )
+        angle = (
+            _angle_degrees(rotation_raw["angle"], f"{what}.rotation.angle")
+            if "angle" in rotation_raw
+            else math.degrees(rotation.Angle)
+        )
+        rotation = FreeCAD.Rotation(FreeCAD.Vector(*axis), angle)
+    return FreeCAD.Placement(base, rotation)
+
+
+def _require_attached_offset(feature: object, prop: str) -> None:
+    """Refuse an ``AttachmentOffset`` write on an object that is not attached.
+
+    :raises ParameterRefusal: ``parameters.not_attached`` when FreeCAD hides the property.
+    """
+    if prop == "AttachmentOffset" and "Hidden" in feature.getPropertyStatus(prop):
+        raise ParameterRefusal(
+            "parameters.not_attached",
+            f"{feature.Name} is not attached, so FreeCAD hides and ignores its AttachmentOffset "
+            "(AttachExtension.cpp); attach it first",
+        )
+
+
+def _is_placement_or_string(feature: object, prop: str) -> bool:
+    return str(feature.getTypeIdOfProperty(prop)) in (_PLACEMENT_TYPE, _STRING_TYPE)
+
+
+def _holds_text_or_placement(feature: object, prop: str, value: object) -> bool:
+    """Whether a placement or string property already holds ``value``."""
+    current = getattr(feature, prop)
+    if isinstance(value, str):
+        return current == value
+    return current.isSame(value, 0.0)
+
+
+def _comparable(value: object) -> object:
+    """Return ``value`` in a form two readings of an unchanged property compare equal.
+
+    A placement and a quantity are read as rounded floats: a snapshot restore reads them back from
+    the saved file, and an exact float comparison there could fail on the last digit.
+    """
+    if hasattr(value, "Rotation") and hasattr(value, "Base"):
+        base, quaternion = value.Base, value.Rotation.Q
+        return tuple(round(float(c), 9) for c in (base.x, base.y, base.z, *quaternion))
+    if hasattr(value, "Value") and hasattr(value, "Unit"):
+        return round(float(value.Value), 9)
+    return value
+
+
+def _written_state(feature: str, parameters: object) -> Callable[[object], object]:
+    """Return a reader of the ``parameters`` properties of ``feature``, for the rollback proof.
+
+    The shape fingerprint cannot see a label or a placement change on an object without a shape.
+    """
+
+    def read(document: object) -> object:
+        target = document.getObject(feature)
+        if target is None or not isinstance(parameters, dict):
+            return None
+        return {
+            prop: _comparable(getattr(target, prop))
+            for prop in sorted(parameters)
+            if prop in target.PropertiesList
+        }
+
+    return read
+
+
+def _unchanged_parameters_envelope(feature: str, names: list[str]) -> ResultEnvelope:
+    """The ``OK`` result of a call that changes nothing: no transaction, no mutation block."""
+    return {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": None,
+        "structured_content": {"feature": feature, "unchanged": names, "undo_steps": 0},
+        "text": f"{feature}: {', '.join(names)} already hold the values; no undo step recorded, "
+        "so document_undo would revert an earlier step.",
+    }
+
+
+_PARAMETER_CALLS = itertools.count(1)
+
+
+def _recorded_undo_steps(document: object, label: str) -> int:
+    """Return 1 when the transaction ``label`` recorded an undo step, else 0.
+
+    The call recorded a step when its own transaction name heads the undo list. The document's
+    step count is no measure: it stops growing once the stack holds 20 steps, and a no-change call
+    on a document with touched objects still commits a step.
+    """
+    names = list(document.UndoNames)
+    return 1 if names and names[0] == f"buddy: {label}" else 0
+
+
 def _parameter_value(feature: object, prop: str, raw: object) -> object:
     """Return the raw value to write to ``feature.prop`` from one wire parameter value.
 
     The value must match the property's family: a ``{value, unit}`` quantity or a bare number for
     a quantity property, a bare number for a unitless float property, an int for an integer
-    property, a boolean for a boolean property, and a member string for an enumeration. FreeCAD
-    would raise on any other pairing inside the transaction.
+    property, a boolean for a boolean property, a member string for an enumeration, a
+    ``{base, rotation}`` object for a placement and a string for a string property. FreeCAD would
+    raise on any other pairing inside the transaction.
 
     :raises ValidationError: naming ``<feature>.<prop>`` and its type when the value does not
         match the family, or when the property is of a type this tool cannot write.
@@ -2326,12 +2522,19 @@ def _parameter_value(feature: object, prop: str, raw: object) -> object:
         return raw
     if family == "enum" and isinstance(raw, str):
         return _checked_enum(feature, prop, raw, f"{prop} value")
+    if family == "placement" and isinstance(raw, dict):
+        _require_attached_offset(feature, prop)
+        return _placement_value(raw, where, getattr(feature, prop))
+    if family == "string" and isinstance(raw, str):
+        return _storable_text(raw, where)
     expected = {
         "quantity": "a {value, unit} quantity or a number",
         "float": "a number",
         "integer": "an integer",
         "bool": "a boolean",
         "enum": "an enumeration member string",
+        "placement": "a {base, rotation} object",
+        "string": "a string",
     }[family]
     raise ValidationError(f"{where} is a {type_id} and takes {expected}, got {raw!r}")
 
@@ -2344,44 +2547,104 @@ def feature_set_parameters(
     confirm: dict | None = None,
     audit_sink: object = None,
 ) -> ResultEnvelope:
-    """Edit a feature's driving properties and re-verify the solid inside the same transaction.
+    """Edit an object's properties and re-verify the solid inside the same transaction.
 
     ``parameters`` maps property names to values: a ``{value, unit}`` quantity or a bare number
     for a quantity property (``deg`` for an angle property, ``mm`` otherwise), a bare number for
     a unitless float property, an int for an integer property, a boolean for a boolean property,
-    or a string for an enumerated property. Each is validated
-    against the live feature before the bracket opens.
+    a string for an enumerated or string property (``Label`` included), or a
+    ``{base: {x, y, z}, rotation: {axis, angle}}`` object for a placement, where an omitted key
+    keeps its current value. Each is validated against the live object before the bracket opens.
 
-    :raises ValidationError: the feature is unknown, a named property does not exist, is
-        read-only or is of a type this tool cannot write, or a value's type, unit or enumeration
-        member is wrong for its property.
+    The ``Placement`` of an attached object or a feature inside a Body is read-only and refused
+    before the bracket. A placement or string the recompute still leaves different from the
+    request (a value an expression or a Python feature drives) fails the call as
+    ``RECOMPUTE_ERROR`` with
+    ``detail.code`` ``parameters.value_overwritten``; ``Label`` is exempt because FreeCAD makes it
+    unique, and the result's ``label`` reports ``{requested, stored}``. A call that writes only
+    placements and strings equal to the current values opens no transaction and has no
+    ``mutation`` block: ``unchanged`` lists them and ``undo_steps`` is 0. Every other ``OK``
+    result carries ``undo_steps``, the number of undo steps the call recorded.
+
+    :raises ValidationError: the object is unknown, a named property does not exist, is
+        read-only or is of a type this tool cannot write, or a value's type, unit, enumeration
+        member or placement key is wrong for its property.
+    :raises ParameterRefusal: ``parameters.not_attached`` for an ``AttachmentOffset`` of an
+        unattached object, ``parameters.invalid_string`` for a string FreeCAD cannot store
+        unchanged; the dispatcher puts the code in ``detail.code``.
     """
     _require_partdesign()
 
+    def writes_of(document: object) -> tuple[object, list[tuple[str, object]]]:
+        target = _resolve_object(document, feature, "feature")
+        return target, _parameter_writes(target, parameters)
+
+    def unchanged_names(_handle: str, document: object) -> list[str] | None:
+        target, writes = writes_of(document)
+        if all(_is_placement_or_string(target, prop) for prop, _ in writes) and all(
+            _holds_text_or_placement(target, prop, value) for prop, value in writes
+        ):
+            return [prop for prop, _ in writes]
+        return None
+
+    names = registry.with_document(doc, unchanged_names)
+    if names is not None:
+        return _unchanged_parameters_envelope(feature, names)
+
+    applied: list[tuple[str, object]] = []
+    label = f"set parameters on {feature} {next(_PARAMETER_CALLS)}"
+
     def precheck(document: object) -> None:
-        _parameter_writes(_resolve_object(document, feature, "feature"), parameters)
+        writes_of(document)
 
     def op(document: object) -> list[str]:
-        target = _resolve_object(document, feature, "feature")
-        for prop, value in _parameter_writes(target, parameters):
+        target, writes = writes_of(document)
+        for prop, value in writes:
             setattr(target, prop, value)
+        applied.extend(writes)
         body = getattr(target, "_Body", None)
         touched = [target.Name]
         if body is not None:
             touched.append(body.Name)
         return touched
 
+    def recompute_check(document: object) -> None:
+        target = document.getObject(feature)
+        for prop, value in applied:
+            if prop == "Label" or not _is_placement_or_string(target, prop):
+                continue
+            if not _holds_text_or_placement(target, prop, value):
+                raise transaction.RecomputeFailure(
+                    "parameters.value_overwritten",
+                    f"{feature}.{prop} reads {getattr(target, prop)!r} after the recompute, not "
+                    f"the requested {value!r}: an expression or the feature itself sets this value",
+                )
+
+    def report(document: object) -> dict:
+        content: dict = {}
+        if isinstance(parameters, dict) and "Label" in parameters:
+            content["label"] = {
+                "requested": parameters["Label"],
+                "stored": document.getObject(feature).Label,
+            }
+        content["undo_steps"] = _recorded_undo_steps(document, label)
+        return content
+
     params = {"doc": doc, "feature": feature, "parameters": parameters, "confirm": confirm}
     return _feature_mutation(
         registry,
         doc,
         feature,
-        f"set parameters on {feature}",
+        label,
         "feature_set_parameters",
         params,
         op,
         audit_sink,
         precheck,
+        report,
+        _written_state(feature, parameters),
+        recompute_check=recompute_check,
+        keep_state=True,
     )
 
 
@@ -2455,7 +2718,8 @@ def _unstorable(character: str) -> bool:
 
 
 class ParameterRefusal(CodedValidationError):
-    """A refused ``feature_parameters_define`` request, carrying its ``detail.code`` (AD-17)."""
+    """A refused ``feature_parameters_define`` or ``feature_set_parameters`` request, carrying its
+    ``detail.code`` (AD-17)."""
 
 
 def _storable_text(text: str, what: str) -> str:
@@ -3316,11 +3580,7 @@ def feature_set_expression(
             else:
                 group = "bound" if spec["expression"] is not None else "cleared"
             content[group].append(_value_row(document, spec))
-        # The call recorded a step when its own transaction name heads the undo list. The
-        # document's step count is no measure: it stops growing once the stack holds 20 steps,
-        # and a no-change call on a document with touched objects still commits a step.
-        names = list(document.UndoNames)
-        content["undo_steps"] = 1 if names and names[0] == f"buddy: {label}" else 0
+        content["undo_steps"] = _recorded_undo_steps(document, label)
         return content
 
     params = {"doc": doc, "expressions": expressions, "confirm": confirm}
