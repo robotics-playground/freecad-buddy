@@ -2421,3 +2421,9 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `verify-13-13-r2.md` "Round 3" (limit noted, not measured); `script_exec.py` `_FULL_UNDO_STACK`.
   blocker: the bridge does not read the preference today; reading `User parameter:BaseApp/Preferences/General` `MaxUndoSize` (or the document's own limit) needs a probe in the GUI container.
   unblock: a probe that reads the effective stack size from the document or the preference; then use it instead of the constant.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-17-part-primitive-boolean.md`
+  summary: `feature_part_boolean` is a second caller of `is_measurable_solid` and has the gap recorded for `query_interference` (solids that overlap inside one `Compound`, a self-intersecting solid that passes `isValid()`): a fuse or cut of such an input returns `OK` with the overlap counted twice.
+  evidence: review round 1 (Edge probe on FreeCAD 1.1.4: fuse 3000 instead of 2500); decision 51 defers it with the 13-fu entry above (`shape.check(True)` cost not measured; 13-18 limits it to 300 faces); the limit is stated in `mcp-tools-design.md` §3.7.5.
+  blocker: the cost of `shape.check(True)` or a pairwise solid check on up to 3,000 faces is not measured, and it holds the interpreter lock.
+  unblock: a measured cost model for the check; then add it to `shape_trust.is_measurable_solid` for both callers.

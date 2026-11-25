@@ -2,7 +2,7 @@
 title: 'Part primitive and Part boolean tools'
 type: 'feature'
 created: '2026-11-24'
-status: 'in-progress'
+status: 'in-review'
 route: 'dispatch'
 spec_checkpoint: true
 review_loop_iteration: 0
@@ -154,3 +154,19 @@ Each has a recommendation; answer only the ones you want to change.
 6. **Placement parser owner.** 13-16 is first in the plan; recommend it owns `_placement_value`, 13-17 reuses it. If 13-17 builds first, 13-17 adds it.
 7. **Cost limits** (3,000 faces, 1,000 pairs, 20 tools) are measured above; recommend accept. Bridge recovery after a long OCC call stays deferred (AD-27).
 8. **Merge order.** `CodedValidationError` is in 13-9. Recommend merge 13-9 before the 13-17 build starts.
+
+## Spec Change Log
+
+- Review round 1, decision 51: the solid-pair cost limit counts every cross-input pair (the solids of each input times the solids of each other input), not only base solids times tool solids. Trigger: a plate cut by two families of 100 crossing cylinders (606 faces, 200 base-by-tool pairs) took 68.9 s. The limit stays 1,000. KEEP: the face limit of 3,000, the 20-tool limit.
+- Review round 1: the sections names `part_boolean.invalid_input` (a repeated input, tools not 1 to 20 Names) and `part_boolean.invalid_result` for a boolean object in an error state; a part tool refuses a name that is another object's Label (Name = Label); a primitive size above 3.4e38 mm is refused (FreeCAD clamps it silently).
+
+## Review Triage Log
+
+| Round | Finding | Verdict | Route | Evidence |
+| --- | --- | --- | --- | --- |
+| 1 | Pair guard misses tool-by-tool pairs | high | intent_gap, answered (decision 51) | Edge probe, 68.9 s |
+| 1 | Overlapping solids in one compound pass the trust check | medium | defer | `deferred-work.md` 13-fu entry and the 13-17 entry |
+| 1 | Cost counted after isValid; trust check run twice | medium | patch | f693e7f8 |
+| 1 | Failed boolean reported as empty result | medium | patch | f693e7f8, real Invalid boolean test |
+| 1 | Label clash, size clamp, non-string kind, stale text, tests at limit values, TC-21 | low to medium | patch | f693e7f8 |
+| 1 | Tiny-size tolerance, sliver noise floor, stale input shape, shared reason helper, coded plain errors, matrix totals | low | reject | builder report |

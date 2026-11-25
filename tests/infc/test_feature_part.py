@@ -27,6 +27,25 @@ class _PartFixture(_FeatureFixture):
     def add_box(self, name, x=0.0, y=0.0, z=0.0, size=10.0):
         return self.add_shape(name, Part.makeBox(size, size, size, App.Vector(x, y, z)))
 
+    def crossing_family(self, axis, count, pitch):
+        """``count`` parallel cylinders of radius 1 and length 100, ``pitch`` apart.
+
+        The "x" family runs along y at x offsets and the "y" family along x at y offsets, so every
+        solid of one family crosses every solid of the other.
+        """
+        solids = []
+        for index in range(count):
+            offset = pitch * index
+            if axis == "x":
+                solids.append(
+                    Part.makeCylinder(1.0, 100.0, App.Vector(offset, 0, 0), App.Vector(0, 1, 0))
+                )
+            else:
+                solids.append(
+                    Part.makeCylinder(1.0, 100.0, App.Vector(0, offset, 0), App.Vector(1, 0, 0))
+                )
+        return Part.Compound(solids)
+
     def two_cubes(self):
         """A 10 mm cube and the same cube shifted 5 mm along x: the overlap is 5 x 10 x 10."""
         self.add_box("A")
@@ -907,7 +926,7 @@ class PartBooleanRefusalTest(_PartFixture):
         message = self.assert_refusal(
             lambda: self.boolean(base="Many", tools=["Few"]), "part_boolean.too_complex"
         )
-        self.assertIn("1100 base-solid", message)
+        self.assertIn("1100 solid pairs", message)
 
     def test_Should_count_the_size_before_checking_the_shape_When_an_input_is_too_complex(self):
         # Arrange
@@ -919,6 +938,22 @@ class PartBooleanRefusalTest(_PartFixture):
 
         # Act and Assert
         self.assert_refusal(lambda: self.boolean(tools=["Many"]), "part_boolean.too_complex")
+
+    def test_Should_refuse_crossing_tools_When_their_pairs_with_each_other_pass_the_limit(self):
+        # Arrange
+        # 606 faces and only 200 base-by-tool pairs, but the two families cross each other:
+        # 10,200 pairs in all. Raw recompute took 68.9 s in the probe.
+        self.add_shape("Plate", Part.makeBox(400.0, 400.0, 10.0))
+        self.add_shape("FamilyX", self.crossing_family("x", 100, 3.0))
+        self.add_shape("FamilyY", self.crossing_family("y", 100, 3.0))
+
+        # Act and Assert
+        message = self.assert_refusal(
+            lambda: self.boolean(base="Plate", tools=["FamilyX", "FamilyY"]),
+            "part_boolean.too_complex",
+        )
+        self.assertIn("606 faces", message)
+        self.assertIn("10200 solid pairs", message)
 
     def test_Should_accept_exactly_twenty_tools_When_they_are_disjoint_boxes(self):
         # Arrange
@@ -1060,7 +1095,7 @@ class PartBooleanRefusalTest(_PartFixture):
             )
         finally:
             features._PART_BOOLEAN_MAX_SOLID_PAIRS = limit
-        self.assertIn("8 base-solid by tool-solid pairs", message)
+        self.assertIn("11 solid pairs", message)
 
     def test_Should_run_When_the_solid_pairs_are_exactly_at_the_limit(self):
         # Arrange
@@ -1157,26 +1192,29 @@ class PartBooleanCostTest(_PartFixture):
         # Arrange
         # Two families of 30 cylinders that cross each other: 180 faces, 900 solid pairs, both
         # under the limits. Measured at 13.4 s for a common in the spec probe.
-        def family(axis):
-            solids = []
-            for index in range(30):
-                offset = 3.0 * index
-                if axis == "x":
-                    solids.append(
-                        Part.makeCylinder(1.0, 100.0, App.Vector(offset, 0, 0), App.Vector(0, 1, 0))
-                    )
-                else:
-                    solids.append(
-                        Part.makeCylinder(1.0, 100.0, App.Vector(0, offset, 0), App.Vector(1, 0, 0))
-                    )
-            return Part.Compound(solids)
-
-        self.add_shape("FamilyX", family("x"))
-        self.add_shape("FamilyY", family("y"))
+        self.add_shape("FamilyX", self.crossing_family("x", 30, 3.0))
+        self.add_shape("FamilyY", self.crossing_family("y", 30, 3.0))
         started = time.monotonic()
 
         # Act
         envelope = self.boolean(base="FamilyX", tools=["FamilyY"], operation="common")
+        elapsed = time.monotonic() - started
+
+        # Assert
+        self.assert_ok(envelope)
+        self.assertLess(elapsed, 60.0)
+
+    def test_Should_finish_inside_the_budget_When_a_several_tool_cut_sits_at_960_pairs(self):
+        # Arrange
+        # A plate and two crossing families of 30 cylinders: 30 + 30 + 900 = 960 pairs, just
+        # under the limit of 1,000.
+        self.add_shape("Plate", Part.makeBox(120.0, 120.0, 10.0))
+        self.add_shape("FamilyX", self.crossing_family("x", 30, 3.0))
+        self.add_shape("FamilyY", self.crossing_family("y", 30, 3.0))
+        started = time.monotonic()
+
+        # Act
+        envelope = self.boolean(base="Plate", tools=["FamilyX", "FamilyY"])
         elapsed = time.monotonic() - started
 
         # Assert

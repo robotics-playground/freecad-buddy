@@ -4041,7 +4041,9 @@ _PART_BOOLEAN_MAX_TOOLS = 20
 # (1,296 pairs). The slowest case measured within both limits is 13.4 s (the 30 x 30 crossing
 # cylinders, 900 pairs); an interleaved box cut took 22.4 s at 3,072 faces, just above the face
 # limit. Both are under the 120 s feature timeout. The bridge cannot interrupt a long OCC call, so
-# the limits apply to the input.
+# the limits apply to the input. Pairs are counted across every two inputs, because several tools
+# are intersected with each other too: a plate cut by two families of 100 crossing cylinders (606
+# faces, 200 base-by-tool pairs, 10,200 pairs in all) took 68.9 s.
 _PART_BOOLEAN_MAX_FACES = 3000
 _PART_BOOLEAN_MAX_SOLID_PAIRS = 1000
 
@@ -4108,12 +4110,12 @@ def _check_part_boolean_inputs(base_obj: object, tool_objs: list[object]) -> Non
     shapes = [getattr(obj, "Shape", None) for obj in objects]
     faces = sum(len(shape.Faces) for shape in shapes if shape is not None)
     solids = [len(shape.Solids) if shape is not None else 0 for shape in shapes]
-    pairs = solids[0] * sum(solids[1:])
+    pairs = sum(a * b for a, b in itertools.combinations(solids, 2))
     if faces > _PART_BOOLEAN_MAX_FACES or pairs > _PART_BOOLEAN_MAX_SOLID_PAIRS:
         raise PartToolRefusal(
             "part_boolean.too_complex",
             f"the inputs hold {faces} faces (limit {_PART_BOOLEAN_MAX_FACES}) and {pairs} "
-            f"base-solid by tool-solid pairs (limit {_PART_BOOLEAN_MAX_SOLID_PAIRS}); the "
+            f"solid pairs across the inputs (limit {_PART_BOOLEAN_MAX_SOLID_PAIRS}); the "
             "kernel call would hold the bridge for tens of seconds or more. Use fewer or "
             "simpler inputs",
         )
