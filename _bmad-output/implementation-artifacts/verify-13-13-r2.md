@@ -77,3 +77,29 @@ Setup: `build_addon.py --release`, `compose up -d --build` from wt-13-13; mount 
 | D1 live reproduction | FAIL as described above (`out-r2-e1.json`) |
 
 Teardown: `fcb-freecad stop`; `compose down` from wt-13-13; `docker ps` shows no `fcb-desktop`. UAT files left uncommitted: `tests/uat/run/13-13-r2/`.
+
+## Round 3 at 87d9cc49 (host only)
+
+Batch: `dcacd4c7` (D1 fix) and `87d9cc49` (stack-length boundary). Only `script_exec.py` `_undid_entries` changed in `src/`:
+
+```python
+remaining = after[added:]
+expected = min(len(before), _FULL_UNDO_STACK - added)
+return remaining != before[: len(remaining)] or len(remaining) < expected
+```
+
+**Verdict: PASS. D1 is closed.**
+
+| Check | Result |
+| --- | --- |
+| Static gates (ruff, check_imports, check_status_vocab, gen_schemas --check, check_skill_shape, check_provenance) | all OK |
+| `pytest tests/external -q` | first full run: 1 failed, 2116 passed, 6 skipped. The failure is `test_mcp_cache_proxy.py::test_should_answer_both_calls_when_two_parallel_calls_meet_a_lost_session`, the known intermittent test. Alone it failed once and then passed 3 times. A second full run had the same single failure. The batch does not touch `scripts/` or the proxy |
+| `freecadcmd tests/run_tests.py` (private cfg and `FREECAD_USER_HOME`) | Ran 1323 tests, OK (skipped=1) |
+| D1 reproduction (`probe_v2.py`) | E1 (undo the only entry, then write), E2 (undo both entries, then write), E3 (`doc.undo()` alone): `undid_note True`. E4 (undo of an entry with the script's own name) stays the documented repeated-name limit: `undo_steps` 0, "earlier step" note |
+| Boundary (`probe_v3.py`) | no note: 19+2 (`before 19 after 20 undo_steps 2`), 20+1, 18+2, 20+2, 3+1. Note: 19 entries then undo + write, 20 entries then undo + write |
+| Mutant: old `_undid_entries` condition | RED, 2 failures (`..._When_the_script_undoes_every_earlier_entry_and_writes`, `..._When_the_script_undoes_the_only_earlier_entry_and_writes`) |
+| Mutant: `min(...)` bound removed (`expected = len(before)`) | RED, 1 failure (`test_Should_not_note_an_undo_When_the_script_adds_two_entries_to_a_stack_of_19`) |
+
+Limit (Low, not measured): the rule assumes a stack of 20 entries. In the GUI the size comes from the preference `MaxUndoSize` (`Gui/Document.cpp:540`, default 20), and Python cannot read it. With a smaller value, a write on a full stack would get the undid note when it should not. The `undo_steps` null rule and the documented overcount already assume 20.
+
+Probe files: `tests/uat/run/13-13-r2/evidence/probe_v2.py` (round 2 copy) and `scratchpad/verifier-13-13/rt2/probes/probe_v3.py`; the mutant copy was removed.
